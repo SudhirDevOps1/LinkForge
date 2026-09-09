@@ -24,6 +24,12 @@ const nextConfig: NextConfig = {
   // Dockerfile `.next/standalone` copy karta hai — isliye standalone output
   // zaroori hai (Docker/Railway/Render self-hosting ke liye).
   output: "standalone",
+  // pg-cloudflare workerd shims (dist/esm) ko standalone trace me force karo —
+  // warna opennext esbuild pass fail hota hai ("Could not resolve pg-cloudflare",
+  // upstream opennextjs-cloudflare#1214). Local/Docker par koi effect nahi.
+  outputFileTracingIncludes: {
+    "**/*": ["./node_modules/pg-cloudflare/dist/**/*", "./node_modules/pg-cloudflare/esm/**/*"],
+  },
   // Avatars/logos kisi bhi HTTPS host se aa sakte hain (B2, R2, Supabase, ...)
   images: {
     remotePatterns: [{ protocol: "https", hostname: "**" }],
