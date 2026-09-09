@@ -148,6 +148,7 @@ const MINI_LINKS = [
   { t: "GitHub — @SudhirDevOps1", brand: "github", tile: "bg-white/10 text-white" },
   { t: "LinkForge", brand: null, tile: "bg-violet-500/25 text-violet-200" },
   { t: "Blog & Portfolio", brand: "globe", tile: "bg-sky-500/20 text-sky-300" },
+  { t: "FormForge", brand: null, tile: "bg-emerald-500/20 text-emerald-300" },
 ] as const;
 
 export function HeroPhone3D() {
@@ -219,83 +220,85 @@ export function HeroPhone3D() {
         <div
           role="img"
           aria-label="LinkForge bio page running on a phone"
-          className="relative z-[2] mx-auto w-[252px] rounded-[44px] border border-white/25 bg-gradient-to-b from-zinc-800 via-[#101018] to-black p-[10px] shadow-[0_50px_120px_-30px_rgba(139,92,246,.6)] sm:w-[272px]"
+          className="relative z-[2] mx-auto w-[300px] rounded-[52px] border border-zinc-600/60 bg-gradient-to-b from-zinc-700 via-[#14141c] to-black p-[11px] shadow-[0_60px_130px_-30px_rgba(139,92,246,.65)] sm:w-[320px]"
           style={{ transform: "translateZ(46px)" }}
         >
           {/* Side buttons */}
-          <span aria-hidden className="absolute -left-[2px] top-24 h-10 w-[3px] rounded-l bg-zinc-700" />
-          <span aria-hidden className="absolute -left-[2px] top-40 h-14 w-[3px] rounded-l bg-zinc-700" />
-          <span aria-hidden className="absolute -right-[2px] top-32 h-16 w-[3px] rounded-r bg-zinc-700" />
+          <span aria-hidden className="absolute -left-[2px] top-28 h-8 w-[3px] rounded-l-md bg-zinc-600" />
+          <span aria-hidden className="absolute -left-[2px] top-44 h-12 w-[3px] rounded-l-md bg-zinc-600" />
+          <span aria-hidden className="absolute -left-[2px] top-60 h-12 w-[3px] rounded-l-md bg-zinc-600" />
+          <span aria-hidden className="absolute -right-[2px] top-52 h-20 w-[3px] rounded-r-md bg-zinc-600" />
           {/* Screen */}
-          <div className="rounded-[34px] bg-gradient-to-b from-violet-950/70 via-[#101019] to-[#0b0b14] px-4 pb-5 pt-3">
-            {/* Status bar */}
-            <div className="flex items-center justify-between text-[9px] font-semibold text-zinc-400">
+          <div className="overflow-hidden rounded-[42px] bg-gradient-to-b from-violet-950/70 via-[#101019] to-[#0b0b14] px-4 pb-4 pt-3">
+            {/* Status bar + Dynamic Island */}
+            <div className="relative flex items-center justify-between px-2 text-[11px] font-semibold text-zinc-200">
               <span>9:41</span>
-              <span className="flex items-center gap-1">
+              <span className="absolute left-1/2 top-1/2 h-[22px] w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black shadow-[inset_0_0_0_1px_rgba(255,255,255,.06)]" />
+              <span className="flex items-center gap-1.5">
                 <span className="flex items-end gap-[2px]">
-                  <span className="h-[3px] w-[2px] rounded-sm bg-zinc-400" />
-                  <span className="h-[5px] w-[2px] rounded-sm bg-zinc-400" />
-                  <span className="h-[7px] w-[2px] rounded-sm bg-zinc-400" />
+                  <span className="h-[4px] w-[3px] rounded-sm bg-zinc-200" />
+                  <span className="h-[6px] w-[3px] rounded-sm bg-zinc-200" />
+                  <span className="h-[8px] w-[3px] rounded-sm bg-zinc-200" />
+                  <span className="h-[10px] w-[3px] rounded-sm bg-zinc-400/50" />
                 </span>
-                <span className="h-2 w-4 rounded-[3px] border border-zinc-500 p-[1px]">
+                <span className="h-3 w-6 rounded-[4px] border border-zinc-400/70 p-[1.5px]">
                   <span className="block h-full w-3/4 rounded-[2px] bg-emerald-400" />
                 </span>
               </span>
             </div>
-            <div className="mx-auto mt-1.5 h-5 w-24 rounded-full bg-black/80" />
             <div
-              className="mx-auto mt-3 flex h-14 w-14 items-center justify-center rounded-full border-2 text-xl font-bold"
+              className="mx-auto mt-4 flex h-[72px] w-[72px] items-center justify-center rounded-full border-[3px] text-[26px] font-bold"
               style={{
-                borderColor: "rgba(167,139,250,.8)",
+                borderColor: "rgba(167,139,250,.85)",
                 background: "rgba(139,92,246,.15)",
                 color: "#ddd6fe",
-                boxShadow: "0 0 28px rgba(139,92,246,.45)",
+                boxShadow: "0 0 34px rgba(139,92,246,.5)",
               }}
             >
               S
             </div>
-            <p className="mt-2 text-center text-sm font-bold text-white">Sudhir Singh</p>
-            <p className="mx-auto mt-1 max-w-[200px] text-center text-[10px] leading-snug text-zinc-400">
+            <p className="mt-2.5 text-center text-[17px] font-bold text-white">Sudhir Singh</p>
+            <p className="mx-auto mt-1 max-w-[220px] text-center text-[11px] leading-snug text-zinc-400">
               BCA Student · Full-Stack Developer
             </p>
-            <div className="mt-3 space-y-2">
+            <div className="mt-4 space-y-2.5">
               {MINI_LINKS.map((l) => (
                 <div
                   key={l.t}
-                  className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,.06)]"
+                  className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.06] px-3.5 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,.06)]"
                 >
                   <span
-                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${l.tile}`}
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${l.tile}`}
                   >
                     {l.brand === "github" ? (
-                      <BrandIcon id="github" className="h-4 w-4" />
+                      <BrandIcon id="github" className="h-[18px] w-[18px]" />
                     ) : l.brand === "globe" ? (
-                      <Globe className="h-4 w-4" />
+                      <Globe className="h-[18px] w-[18px]" />
                     ) : (
-                      <Link2 className="h-4 w-4" />
+                      <Link2 className="h-[18px] w-[18px]" />
                     )}
                   </span>
-                  <span className="truncate text-[11px] font-semibold text-zinc-100">{l.t}</span>
-                  <span className="ml-auto text-[10px] text-violet-300">→</span>
+                  <span className="truncate text-xs font-semibold text-zinc-100">{l.t}</span>
+                  <span className="ml-auto text-xs text-violet-300">→</span>
                 </div>
               ))}
             </div>
-            <div className="mx-auto mt-3 flex items-center justify-center gap-2">
-              <span className="rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] text-zinc-300">
+            <div className="mx-auto mt-4 flex items-center justify-center gap-2">
+              <span className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] font-medium text-zinc-300">
                 Share
               </span>
-              <span className="rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] text-zinc-300">
+              <span className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] font-medium text-zinc-300">
                 QR
               </span>
             </div>
-            <div className="mx-auto mt-3 h-1 w-24 rounded-full bg-white/20" />
+            <div className="mx-auto mt-4 h-1 w-28 rounded-full bg-white/25" />
           </div>
         </div>
         {/* Moving glare */}
         <div
           aria-hidden
           ref={glareRef}
-          className="pointer-events-none absolute inset-0 z-[3] rounded-[44px]"
+          className="pointer-events-none absolute inset-0 z-[3] rounded-[52px]"
           style={{ transform: "translateZ(47px)" }}
         />
         {/* Floating provider chips — depth layers */}
