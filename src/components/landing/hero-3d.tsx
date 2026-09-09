@@ -151,6 +151,18 @@ const MINI_LINKS = [
   { t: "FormForge", brand: null, tile: "bg-emerald-500/20 text-emerald-300" },
 ] as const;
 
+/** Orbit providers — teeno category chips ka content (koi naam hata nahi) */
+const ORBIT_PILLS = [
+  { name: "Neon", icon: Database, color: "text-violet-300" },
+  { name: "Turso", icon: Database, color: "text-violet-300" },
+  { name: "D1", icon: Database, color: "text-violet-300" },
+  { name: "Supabase", icon: Database, color: "text-emerald-300" },
+  { name: "B2", icon: HardDrive, color: "text-fuchsia-300" },
+  { name: "R2", icon: HardDrive, color: "text-fuchsia-300" },
+  { name: "S3", icon: HardDrive, color: "text-amber-300" },
+  { name: "Vercel", icon: Cloud, color: "text-indigo-300" },
+] as const;
+
 export function HeroPhone3D() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -301,37 +313,54 @@ export function HeroPhone3D() {
           className="pointer-events-none absolute inset-0 z-[3] rounded-[52px]"
           style={{ transform: "translateZ(47px)" }}
         />
-        {/* Floating provider chips — depth layers */}
-        <div className="absolute -left-28 top-14 z-[3] hidden sm:block">
-          <div style={{ transform: "translateZ(90px)" }}>
-            <div className="animate-float rounded-2xl glass px-4 py-3 text-xs font-semibold">
-              <Database className="mb-1 h-4 w-4 text-violet-300" />
-              Neon · Turso · D1
-            </div>
-          </div>
-        </div>
-        <div className="absolute -right-28 top-44 z-[3] hidden sm:block">
-          <div style={{ transform: "translateZ(70px)" }}>
+      </div>
+      {/* Ground shadow — phone ko zameen par tikata hai */}
+      <div
+        aria-hidden
+        className="absolute -bottom-8 left-1/2 h-10 w-72 -translate-x-1/2 rounded-full bg-violet-600/25 blur-2xl"
+      />
+      {/* Provider orbit — scattered chips ki jagah structured 3D ring (lg+).
+          Saare provider names preserved, kuch kata nahi, kuch hata nahi. */}
+      <style>{`@keyframes lf-orbit { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }`}</style>
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 top-1/2 hidden h-0 w-0 lg:block"
+        style={{ transformStyle: "preserve-3d" }}
+      >
+        <div
+          className="relative h-0 w-0"
+          style={{
+            transformStyle: "preserve-3d",
+            animation: "lf-orbit 32s linear infinite",
+          }}
+        >
+          {ORBIT_PILLS.map((p, i) => (
             <div
-              className="animate-float rounded-2xl glass px-4 py-3 text-xs font-semibold"
-              style={{ animationDelay: "1.4s" }}
+              key={p.name}
+              className="absolute left-0 top-0"
+              style={{
+                transform: `rotateY(${i * (360 / ORBIT_PILLS.length)}deg) translateZ(300px)`,
+              }}
             >
-              <HardDrive className="mb-1 h-4 w-4 text-fuchsia-300" />
-              B2 · R2 · S3
+              <div className="glass -ml-14 -mt-5 flex w-28 items-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-semibold [backface-visibility:hidden]">
+                <p.icon className={`h-3.5 w-3.5 shrink-0 ${p.color}`} />
+                <span className="truncate">{p.name}</span>
+              </div>
             </div>
-          </div>
+          ))}
         </div>
-        <div className="absolute -left-24 bottom-24 z-[3] hidden sm:block">
-          <div style={{ transform: "translateZ(110px)" }}>
-            <div
-              className="animate-float rounded-2xl glass px-4 py-3 text-xs font-semibold"
-              style={{ animationDelay: "2.6s" }}
-            >
-              <Cloud className="mb-1 h-4 w-4 text-indigo-300" />
-              Vercel · CF · Netlify
-            </div>
-          </div>
-        </div>
+      </div>
+      {/* Mobile / tablet: same providers, tidy wrap row (orbit ke bina) */}
+      <div className="mt-10 flex flex-wrap items-center justify-center gap-2 lg:hidden">
+        {ORBIT_PILLS.map((p) => (
+          <span
+            key={p.name}
+            className="glass inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-semibold"
+          >
+            <p.icon className={`h-3.5 w-3.5 ${p.color}`} />
+            {p.name}
+          </span>
+        ))}
       </div>
     </div>
   );
