@@ -105,6 +105,13 @@ export const profiles = sqliteTable(
     isPublished: integer("is_published", { mode: "boolean" })
       .notNull()
       .default(true),
+    // Manual custom design (pg jsonb ka mirror — JSON text).
+    design: text("design", { mode: "json" }).$type<{
+      accent?: string;
+      radiusPx?: number;
+      fontScale?: number;
+      iconSize?: number;
+    }>(),
     createdAt: ts("created_at"),
     updatedAt: ts("updated_at"),
   },

@@ -134,23 +134,29 @@ function group(rows: AnalyticsEvent[], key: keyof AnalyticsEvent) {
 export async function getAnalyticsSummary(
   profileId: string,
   days = 7,
+  opts?: { device?: string; endDate?: Date },
 ): Promise<AnalyticsSummary> {
-  const since = new Date(Date.now() - days * 86_400_000);
-  const rows = await db
+  const end = opts?.endDate ?? new Date();
+  const since = new Date(end.getTime() - days * 86_400_000);
+  let rows = await db
     .select()
     .from(events)
-    .where(and(eq(events.profileId, profileId), gte(events.createdAt, since)))
+    .where(and(eq(events.profileId, profileId), gte(events.createdAt, since), lt(events.createdAt, end)))
     .orderBy(desc(events.createdAt))
     .limit(50_000);
+  // Device filter (dashboard ?device=Mobile) — saare aggregations respect karte hain
+  if (opts?.device) {
+    rows = rows.filter((r) => r.device === opts.device);
+  }
 
   const views = rows.filter((r) => r.type === "view");
   const clicks = rows.filter((r) => r.type === "click");
   const uniqueVisitors = new Set(rows.map((r) => r.ipHash).filter(Boolean)).size;
 
-  // Timeseries — fill zero days
+  // Timeseries — fill zero days (window end = `end`, comparison-safe)
   const series = new Map<string, { views: number; clicks: number }>();
   for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(Date.now() - i * 86_400_000).toISOString().slice(0, 10);
+    const d = new Date(end.getTime() - i * 86_400_000).toISOString().slice(0, 10);
     series.set(d, { views: 0, clicks: 0 });
   }
   for (const r of rows) {
@@ -191,4 +197,46 @@ export async function getAnalyticsSummary(
     countries: group(rows.filter((r) => r.country), "country"),
     referrers: group(views, "referrer"),
   };
+}
+
+// ---- Activity feed ------------------------------------------------------------
+export interface RecentEvent {
+  id: string | number;
+  type: string;
+  linkTitle: string | null;
+  referrer: string;
+  country: string;
+  device: string;
+  createdAt: Date;
+}
+
+/** Latest events (dashboard activity feed) — link titles ke saath */
+export async function getRecentEvents(
+  profileId: string,
+  limit = 15,
+): Promise<RecentEvent[]> {
+  const rows = await db
+    .select()
+    .from(events)
+    .where(eq(events.profileId, profileId))
+    .orderBy(desc(events.createdAt))
+    .limit(Math.min(Math.max(limit, 1), 50));
+  const linkIds = [...new Set(rows.map((r) => r.linkId).filter((v): v is string => !!v))];
+  const linkRows =
+    linkIds.length > 0
+      ? await db
+          .select({ id: links.id, title: links.title })
+          .from(links)
+          .where(eq(links.profileId, profileId))
+      : [];
+  const titles = new Map(linkRows.map((l) => [l.id, l.title]));
+  return rows.map((r) => ({
+    id: r.id,
+    type: r.type,
+    linkTitle: r.linkId ? (titles.get(r.linkId) ?? "(deleted link)") : null,
+    referrer: r.referrer,
+    country: r.country,
+    device: r.device,
+    createdAt: r.createdAt,
+  }));
 }

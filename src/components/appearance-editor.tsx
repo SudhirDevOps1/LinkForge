@@ -3,13 +3,15 @@
 // =============================================================================
 // 🎨 AppearanceEditor — theme picker + layout toggle + live preview
 // =============================================================================
-import { Check, LayoutGrid, List, Loader2 } from "lucide-react";
+import { Check, LayoutGrid, List, Loader2, RotateCcw } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { Link } from "@/db/schema";
 import type { BioProfileShape } from "@/components/bio-renderer";
 import { PhonePreview } from "@/components/phone-preview";
 import { cn } from "@/components/ui";
+import type { DesignPrefs } from "@/lib/design";
+import { DESIGN_LIMITS, DEFAULT_ICON_SIZE } from "@/lib/design";
 import { THEMES } from "@/lib/themes";
 
 export function AppearanceEditor({
@@ -21,29 +23,71 @@ export function AppearanceEditor({
 }) {
   const [theme, setTheme] = useState(initialProfile.theme);
   const [layout, setLayout] = useState(initialProfile.layout);
+  const initialDesign: DesignPrefs = initialProfile.design ?? {};
+  const [accent, setAccent] = useState(initialDesign.accent ?? "");
+  const [radiusPx, setRadiusPx] = useState<number | undefined>(initialDesign.radiusPx);
+  const [fontScale, setFontScale] = useState(initialDesign.fontScale ?? 1);
+  const [iconSize, setIconSize] = useState(initialDesign.iconSize ?? DEFAULT_ICON_SIZE);
   const [saving, setSaving] = useState(false);
-  const dirty = theme !== initialProfile.theme || layout !== initialProfile.layout;
+  const themeDirty = theme !== initialProfile.theme || layout !== initialProfile.layout;
+  const designDirty =
+    accent !== (initialDesign.accent ?? "") ||
+    radiusPx !== initialDesign.radiusPx ||
+    fontScale !== (initialDesign.fontScale ?? 1) ||
+    iconSize !== (initialDesign.iconSize ?? DEFAULT_ICON_SIZE);
+  const dirty = themeDirty || designDirty;
 
-  const previewProfile = { ...initialProfile, theme, layout };
+  const previewProfile = {
+    ...initialProfile,
+    theme,
+    layout,
+    design: { accent: accent || undefined, radiusPx, fontScale, iconSize },
+  };
 
   async function save() {
     setSaving(true);
     try {
-      const res = await fetch("/api/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ theme, layout }),
-      });
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) {
-        toast.error(data.error ?? "Save failed");
-        return;
+      if (themeDirty) {
+        const res = await fetch("/api/profile", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ theme, layout }),
+        });
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        if (!res.ok) {
+          toast.error(data.error ?? "Save failed");
+          return;
+        }
+      }
+      if (designDirty) {
+        const res = await fetch("/api/design", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...(accent ? { accent } : {}),
+            ...(radiusPx != null ? { radiusPx } : {}),
+            fontScale,
+            iconSize,
+          }),
+        });
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        if (!res.ok) {
+          toast.error(data.error ?? "Design save failed");
+          return;
+        }
       }
       toast.success("Appearance save ho gayi");
       window.location.reload();
     } finally {
       setSaving(false);
     }
+  }
+
+  function resetDesign() {
+    setAccent("");
+    setRadiusPx(undefined);
+    setFontScale(1);
+    setIconSize(DEFAULT_ICON_SIZE);
   }
 
   return (
@@ -133,6 +177,93 @@ export function AppearanceEditor({
                 </button>
               );
             })}
+          </div>
+        </section>
+
+        {/* Custom design — theme ke upar manual override layer */}
+        <section>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+              Custom design
+            </h2>
+            {designDirty ? (
+              <button
+                type="button"
+                onClick={resetDesign}
+                className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-white"
+              >
+                <RotateCcw className="h-3 w-3" /> Theme defaults
+              </button>
+            ) : null}
+          </div>
+          <div className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+            <div className="flex items-center gap-3">
+              <input
+                type="color"
+                value={accent || "#8b5cf6"}
+                onChange={(e) => setAccent(e.target.value)}
+                className="h-9 w-12 cursor-pointer rounded-lg border border-white/10 bg-transparent"
+                aria-label="Accent color"
+              />
+              <div className="flex-1">
+                <p className="text-sm font-semibold">Accent color</p>
+                <p className="text-xs text-zinc-500">
+                  {accent ? accent : "Theme default"} — cards, icons, glow
+                </p>
+              </div>
+              {accent ? (
+                <button
+                  type="button"
+                  onClick={() => setAccent("")}
+                  className="text-xs text-zinc-500 hover:text-white"
+                >
+                  Clear
+                </button>
+              ) : null}
+            </div>
+            <label className="block">
+              <span className="mb-1 flex justify-between text-xs text-zinc-400">
+                <span>Card radius</span>
+                <span>{radiusPx != null ? `${radiusPx}px` : "Theme"}</span>
+              </span>
+              <input
+                type="range"
+                min={DESIGN_LIMITS.radiusPx.min}
+                max={DESIGN_LIMITS.radiusPx.max}
+                value={radiusPx ?? 16}
+                onChange={(e) => setRadiusPx(Number(e.target.value))}
+                className="w-full accent-violet-500"
+              />
+            </label>
+            <label className="block">
+              <span className="mb-1 flex justify-between text-xs text-zinc-400">
+                <span>Title font size</span>
+                <span>{Math.round(fontScale * 100)}%</span>
+              </span>
+              <input
+                type="range"
+                min={DESIGN_LIMITS.fontScale.min}
+                max={DESIGN_LIMITS.fontScale.max}
+                step={0.01}
+                value={fontScale}
+                onChange={(e) => setFontScale(Number(e.target.value))}
+                className="w-full accent-violet-500"
+              />
+            </label>
+            <label className="block">
+              <span className="mb-1 flex justify-between text-xs text-zinc-400">
+                <span>Icon size</span>
+                <span>{iconSize}px</span>
+              </span>
+              <input
+                type="range"
+                min={DESIGN_LIMITS.iconSize.min}
+                max={DESIGN_LIMITS.iconSize.max}
+                value={iconSize}
+                onChange={(e) => setIconSize(Number(e.target.value))}
+                className="w-full accent-violet-500"
+              />
+            </label>
           </div>
         </section>
       </div>

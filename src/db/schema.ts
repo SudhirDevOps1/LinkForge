@@ -10,6 +10,7 @@ import {
   boolean,
   index,
   integer,
+  jsonb,
   pgTable,
   text,
   timestamp,
@@ -97,6 +98,14 @@ export const profiles = pgTable(
     ogImageUrl: text("og_image_url"),
     analyticsEnabled: boolean("analytics_enabled").notNull().default(true),
     isPublished: boolean("is_published").notNull().default(true),
+    // Manual custom design (accent/radius/font/icon-size) — nullable JSON,
+    // theme/layout ke upar override layer. NULL = theme defaults.
+    design: jsonb("design").$type<{
+      accent?: string;
+      radiusPx?: number;
+      fontScale?: number;
+      iconSize?: number;
+    }>(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

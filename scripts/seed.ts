@@ -78,16 +78,27 @@ async function main() {
   console.log("🌱 Seeding LinkForge demo data...\n");
 
   // ---- Demo user -------------------------------------------------------------
+  // Demo identity = Sudhir Singh (SudhirDevOps1) — real GitHub data.
+  // Koi fake persona nahi (Aarav Kapoor purani fake identity thi).
   const email = "demo@linkforge.dev";
   let [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
   if (user) {
-    console.log("✓ Demo user pehle se exists karta hai, skip");
+    if (user.name === "Aarav Kapoor") {
+      [user] = await db
+        .update(users)
+        .set({ name: "Sudhir Singh" })
+        .where(eq(users.id, user.id))
+        .returning();
+      console.log("✓ Demo user ka fake naam real kiya: Sudhir Singh");
+    } else {
+      console.log("✓ Demo user pehle se exists karta hai, skip");
+    }
   } else {
     [user] = await db
       .insert(users)
       .values({
         email,
-        name: "Aarav Kapoor",
+        name: "Sudhir Singh",
         passwordHash: await bcrypt.hash("demo1234", 10),
         avatarUrl: null,
       })
@@ -109,13 +120,13 @@ async function main() {
       .values({
         userId: user.id,
         slug: "demo",
-        displayName: "Aarav Kapoor",
-        bio: "Creator & Developer — shipping products, videos and code every week. Building in public.",
-        avatarUrl: "/api/files/avatars/demo-avatar.png",
+        displayName: "Sudhir Singh",
+        bio: "BCA Student · Aspiring Full-Stack Developer — coding, problem-solving & AI · Learning Python, JavaScript & Ethical Hacking · Bihar, India",
+        avatarUrl: "https://avatars.githubusercontent.com/u/234449571?v=4",
         theme: "midnight",
         layout: "bento",
-        seoTitle: "Aarav Kapoor — Creator & Developer",
-        seoDescription: "Aarav ke saare projects, videos aur socials ek jagah.",
+        seoTitle: "Sudhir Singh — Developer",
+        seoDescription: "Sudhir Singh (SudhirDevOps1) ke projects aur links ek jagah.",
       })
       .returning();
     console.log("✓ Demo profile banaya: /demo");
@@ -135,17 +146,20 @@ async function main() {
       .from(links)
       .where(eq(links.profileId, profile.id));
   } else {
+    // Real links — SudhirDevOps1 ke live GitHub repos (2026-09-09 fetch).
+    // Fake placeholder links (youtube dQw4w9WgXcQ, spotify, vercel, cal.com,
+    // coleam00, x.com, instagram.com, substack, shopify, w3.org dummy) hata diye.
     const seedLinks = [
-      { title: "Latest YouTube Video", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", description: "Building a link-in-bio SaaS in 24 hours", type: "youtube", size: "feature", icon: "video", position: 0 },
-      { title: "My Spotify Playlist", url: "https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M", description: "Code karne wala mix", type: "spotify", size: "wide", icon: "music", position: 1 },
-      { title: "Portfolio Website", url: "https://vercel.com", description: "Saare projects ek jagah", type: "link", size: "standard", icon: "globe", position: 2 },
-      { title: "Book a 1:1 Call", url: "https://cal.com", description: "30 min mentorship", type: "link", size: "standard", icon: "calendar", position: 3 },
-      { title: "GitHub", url: "https://github.com/coleam00/link-in-bio-page-builder", description: "Open source contributions", type: "github", size: "standard", icon: "link", position: 4 },
-      { title: "X (Twitter)", url: "https://x.com", description: "Daily build-in-public updates", type: "x", size: "standard", icon: "at", position: 5 },
-      { title: "Instagram", url: "https://instagram.com", description: "Behind the scenes", type: "instagram", size: "wide", icon: "camera", position: 6 },
-      { title: "Newsletter — Ship Weekly", url: "https://substack.com", description: "Har hafte ek naya build", type: "link", size: "wide", icon: "mail", position: 7 },
-      { title: "Merch Store", url: "https://shopify.com", description: "Limited edition dev merch", type: "link", size: "standard", icon: "shop", position: 8 },
-      { title: "Resume.pdf", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", description: "Hire me", type: "link", size: "standard", icon: "file", position: 9 },
+      { title: "GitHub — @SudhirDevOps1", url: "https://github.com/SudhirDevOps1", description: "82 public repos · Full-stack & AI builds", type: "github", size: "feature", icon: "github", position: 0 },
+      { title: "Blog & Portfolio", url: "https://sudhirdevops1.github.io", description: "Notes, projects aur experiments", type: "link", size: "wide", icon: "globe", position: 1 },
+      { title: "LinkForge", url: "https://github.com/SudhirDevOps1/LinkForge", description: "Advanced link-in-bio builder — isi app ka repo", type: "github", size: "wide", icon: "github", position: 2 },
+      { title: "FormForge", url: "https://github.com/SudhirDevOps1/FormForge", description: "TypeScript forms toolkit", type: "github", size: "standard", icon: "github", position: 3 },
+      { title: "SafeVault", url: "https://github.com/SudhirDevOps1/SafeVault", description: "Secure offline-first zero-knowledge credential manager", type: "github", size: "standard", icon: "github", position: 4 },
+      { title: "BlindShare", url: "https://github.com/SudhirDevOps1/BlindShare", description: "Enterprise-grade zero-knowledge document sharing & pitch analytics", type: "github", size: "standard", icon: "github", position: 5 },
+      { title: "Code to Image", url: "https://github.com/SudhirDevOps1/code-to-image-generator", description: "Code snippets → beautiful shareable images", type: "github", size: "standard", icon: "github", position: 6 },
+      { title: "Brainwave Tone Generator", url: "https://github.com/SudhirDevOps1/Brainwave-Audio-Tone-Generator", description: "Production-level audio tone app (Python)", type: "github", size: "standard", icon: "github", position: 7 },
+      { title: "TypeFlow Web", url: "https://github.com/SudhirDevOps1/TypeFlow-Web", description: "Typing practice app", type: "github", size: "standard", icon: "github", position: 8 },
+      { title: "PrismAnalytics", url: "https://github.com/SudhirDevOps1/PrismAnalytics", description: "Analytics experiments", type: "github", size: "standard", icon: "github", position: 9 },
     ];
     for (const link of seedLinks) {
       const [created] = await db
@@ -166,6 +180,87 @@ async function main() {
       createdLinks.push(created);
     }
     console.log(`✓ ${createdLinks.length} links banaye`);
+  }
+
+  // ---- Fake-demo refresh (existing DBs: Aarav Kapoor → Sudhir Singh) -----------
+  // Purane seed se bani fake identity ho to real data se replace karo.
+  // Manual/user-added links (fake list me nahi) kabhi delete nahi hote.
+  const FAKE_URLS = new Set([
+    "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M",
+    "https://vercel.com",
+    "https://cal.com",
+    "https://github.com/coleam00/link-in-bio-page-builder",
+    "https://x.com",
+    "https://instagram.com",
+    "https://substack.com",
+    "https://shopify.com",
+    "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+  ]);
+  const REAL_LINKS = [
+    { title: "GitHub — @SudhirDevOps1", url: "https://github.com/SudhirDevOps1", description: "82 public repos · Full-stack & AI builds", type: "github", size: "feature", icon: "github" },
+    { title: "Blog & Portfolio", url: "https://sudhirdevops1.github.io", description: "Notes, projects aur experiments", type: "link", size: "wide", icon: "globe" },
+    { title: "LinkForge", url: "https://github.com/SudhirDevOps1/LinkForge", description: "Advanced link-in-bio builder — isi app ka repo", type: "github", size: "wide", icon: "github" },
+    { title: "FormForge", url: "https://github.com/SudhirDevOps1/FormForge", description: "TypeScript forms toolkit", type: "github", size: "standard", icon: "github" },
+    { title: "SafeVault", url: "https://github.com/SudhirDevOps1/SafeVault", description: "Secure offline-first zero-knowledge credential manager", type: "github", size: "standard", icon: "github" },
+    { title: "BlindShare", url: "https://github.com/SudhirDevOps1/BlindShare", description: "Enterprise-grade zero-knowledge document sharing & pitch analytics", type: "github", size: "standard", icon: "github" },
+    { title: "Code to Image", url: "https://github.com/SudhirDevOps1/code-to-image-generator", description: "Code snippets → beautiful shareable images", type: "github", size: "standard", icon: "github" },
+    { title: "Brainwave Tone Generator", url: "https://github.com/SudhirDevOps1/Brainwave-Audio-Tone-Generator", description: "Production-level audio tone app (Python)", type: "github", size: "standard", icon: "github" },
+    { title: "TypeFlow Web", url: "https://github.com/SudhirDevOps1/TypeFlow-Web", description: "Typing practice app", type: "github", size: "standard", icon: "github" },
+    { title: "PrismAnalytics", url: "https://github.com/SudhirDevOps1/PrismAnalytics", description: "Analytics experiments", type: "github", size: "standard", icon: "github" },
+  ];
+  {
+    const [freshProfile] = await db
+      .select()
+      .from(profiles)
+      .where(eq(profiles.slug, "demo"))
+      .limit(1);
+    if (freshProfile && freshProfile.displayName === "Aarav Kapoor") {
+      await db
+        .update(profiles)
+        .set({
+          displayName: "Sudhir Singh",
+          bio: "BCA Student · Aspiring Full-Stack Developer — coding, problem-solving & AI · Learning Python, JavaScript & Ethical Hacking · Bihar, India",
+          avatarUrl: "https://avatars.githubusercontent.com/u/234449571?v=4",
+          seoTitle: "Sudhir Singh — Developer",
+          seoDescription: "Sudhir Singh (SudhirDevOps1) ke projects aur links ek jagah.",
+          updatedAt: new Date(),
+        })
+        .where(eq(profiles.id, freshProfile.id));
+      console.log("✓ Fake demo profile → real (Sudhir Singh)");
+      const profLinks = await db
+        .select({ id: links.id, url: links.url, position: links.position })
+        .from(links)
+        .where(eq(links.profileId, freshProfile.id));
+      let removed = 0;
+      for (const l of profLinks) {
+        if (FAKE_URLS.has(l.url)) {
+          await db.delete(links).where(eq(links.id, l.id));
+          removed++;
+        }
+      }
+      const have = new Set(profLinks.map((l) => l.url));
+      const basePos =
+        profLinks.length > 0 ? Math.max(...profLinks.map((l) => l.position)) + 1 : 0;
+      let added = 0;
+      for (const [i, rl] of REAL_LINKS.entries()) {
+        if (have.has(rl.url)) continue;
+        await db.insert(links).values({
+          id: crypto.randomUUID(),
+          profileId: freshProfile.id,
+          title: rl.title,
+          url: rl.url,
+          description: rl.description,
+          type: rl.type,
+          size: rl.size,
+          icon: rl.icon,
+          position: basePos + i,
+          isActive: true,
+        });
+        added++;
+      }
+      console.log(`✓ Fake links removed: ${removed}, real links added: ${added}`);
+    }
   }
 
   // ---- Demo PDF + media file + file link -------------------------------------------

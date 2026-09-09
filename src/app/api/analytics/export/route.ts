@@ -1,15 +1,11 @@
 // 📥 GET /api/analytics/export?days=30 — events CSV download (owner-only)
-// Excel/Sheets me kholne layak proper CSV escaping ke saath.
+// Formula-injection-safe (lib/csv.ts) + Excel/Sheets RFC-4180 quoting.
 import { and, asc, eq, gte } from "drizzle-orm";
 import { db } from "@/db";
 import { events, links } from "@/db/schema";
 import { ApiError, guardRateLimit, handle } from "@/lib/api";
 import { requireUser } from "@/lib/auth";
-
-function csvCell(value: string | number | null | undefined): string {
-  const s = String(value ?? "");
-  return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-}
+import { buildCsv } from "@/lib/csv";
 
 export const GET = handle(async (req: Request) => {
   await guardRateLimit(req, "analytics:export", 10);
@@ -57,12 +53,10 @@ export const GET = handle(async (req: Request) => {
       r.device,
       r.browser,
       r.os,
-    ]
-      .map(csvCell)
-      .join(",");
+    ];
   });
 
-  const csv = [header.join(","), ...lines].join("\n");
+  const csv = buildCsv(header, lines);
   return new Response(csv, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",

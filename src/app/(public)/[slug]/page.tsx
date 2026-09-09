@@ -7,7 +7,9 @@ import { after } from "next/server";
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import { BioRenderer } from "@/components/bio-renderer";
+import { ShareButton } from "@/components/share-button";
 import { trackEvent } from "@/lib/analytics";
+import { parseDesign } from "@/lib/design";
 import { getBioBySlug } from "@/lib/queries";
 import { triggerWebhooks } from "@/lib/webhooks";
 import { getTheme } from "@/lib/themes";
@@ -92,9 +94,19 @@ export default async function PublicBioPage({ params }: Ctx) {
           theme: profile.theme,
           layout: profile.layout,
           slug: profile.slug,
+          design: parseDesign(profile.design),
         }}
         links={links}
       />
+      <div
+        className="mx-auto w-full max-w-xl px-5 pb-14"
+        style={{ background: theme.vars.bg, color: theme.vars.text }}
+      >
+        <ShareButton
+          url={`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/${profile.slug}`}
+          title={`${profile.displayName} | LinkForge`}
+        />
+      </div>
     </>
   );
 }

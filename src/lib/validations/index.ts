@@ -174,6 +174,17 @@ export const importSchema = z.object({
     .max(500),
 });
 
+// ---- Manual custom design (PATCH /api/design) -------------------------------
+export const designPrefsSchema = z.object({
+  accent: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, "Accent #rrggbb hex me do")
+    .optional(),
+  radiusPx: z.number().int().min(0).max(24).optional(),
+  fontScale: z.number().min(0.9).max(1.15).optional(),
+  iconSize: z.number().int().min(16).max(32).optional(),
+});
+
 // ---- Media ticket flow (presign → PUT → complete) ---------------------------
 export const presignSchema = z.object({
   fileName: z.string().trim().min(1).max(100),

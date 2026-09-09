@@ -28,24 +28,11 @@ import { toast } from "sonner";
 import type { Link } from "@/db/schema";
 import { linkIcon, type BioProfileShape } from "@/components/bio-renderer";
 import { FileDropzone } from "@/components/file-dropzone";
+import { IconPicker } from "@/components/icon-picker";
 import { PhonePreview } from "@/components/phone-preview";
 import { Button, Dialog, Field, Input, Select, Switch, Textarea, cn } from "@/components/ui";
 import { nameWithoutExtension } from "@/lib/media";
 import { LINK_SIZES, LINK_TYPES } from "@/lib/validations";
-
-const ICON_OPTIONS = [
-  { id: "link", label: "Link" },
-  { id: "globe", label: "Website" },
-  { id: "mail", label: "Email" },
-  { id: "calendar", label: "Booking" },
-  { id: "camera", label: "Photos" },
-  { id: "video", label: "Video" },
-  { id: "music", label: "Music" },
-  { id: "shop", label: "Shop" },
-  { id: "file", label: "File / PDF" },
-  { id: "star", label: "Featured" },
-  { id: "heart", label: "Support" },
-];
 
 const SIZE_LABELS: Record<string, string> = {
   standard: "Standard (1×1)",
@@ -361,14 +348,8 @@ export function LinksEditor({
               ))}
             </Select>
           </Field>
-          <Field label="Icon">
-            <Select value={form.icon} onChange={(e) => setForm({ ...form, icon: e.target.value })}>
-              {ICON_OPTIONS.map((i) => (
-                <option key={i.id} value={i.id}>
-                  {i.label}
-                </option>
-              ))}
-            </Select>
+          <Field label="Icon" hint="29 real brand icons + generics" className="sm:col-span-2">
+            <IconPicker value={form.icon} onChange={(icon) => setForm({ ...form, icon })} />
           </Field>
           <Field label="Card size" hint="Bento layout me spans control karta hai" className="sm:col-span-2">
             <Select value={form.size} onChange={(e) => setForm({ ...form, size: e.target.value })}>

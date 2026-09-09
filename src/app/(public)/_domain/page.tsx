@@ -5,6 +5,7 @@ import { after } from "next/server";
 import { notFound } from "next/navigation";
 import { BioRenderer } from "@/components/bio-renderer";
 import { trackEvent } from "@/lib/analytics";
+import { parseDesign } from "@/lib/design";
 import { getBioByDomain } from "@/lib/queries";
 import { triggerWebhooks } from "@/lib/webhooks";
 
@@ -40,6 +41,7 @@ export default async function CustomDomainPage() {
         theme: profile.theme,
         layout: profile.layout,
         slug: profile.slug,
+        design: parseDesign(profile.design),
       }}
       links={links}
     />

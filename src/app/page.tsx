@@ -114,7 +114,7 @@ export default function LandingPage() {
           <a href="#themes" className="transition-colors hover:text-white">Themes</a>
           <a href="#faq" className="transition-colors hover:text-white">FAQ</a>
           <a href="#free" className="transition-colors hover:text-white">Pricing</a>
-          <a href="https://github.com/coleam00/link-in-bio-page-builder" target="_blank" rel="noreferrer" className="flex items-center gap-1.5 transition-colors hover:text-white">
+          <a href="https://github.com/SudhirDevOps1/LinkForge" target="_blank" rel="noreferrer" className="flex items-center gap-1.5 transition-colors hover:text-white">
             <GithubIcon className="h-4 w-4" /> GitHub
           </a>
         </nav>
@@ -400,7 +400,7 @@ export default function LandingPage() {
             </p>
             <div className="mt-5 flex gap-2.5">
               <a
-                href="https://github.com/coleam00/link-in-bio-page-builder"
+                href="https://github.com/SudhirDevOps1/LinkForge"
                 target="_blank"
                 rel="noreferrer"
                 className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 text-zinc-400 transition-colors hover:border-white/25 hover:text-white"
