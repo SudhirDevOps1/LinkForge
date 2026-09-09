@@ -21,9 +21,11 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  // Dockerfile `.next/standalone` copy karta hai — isliye standalone output
-  // zaroori hai (Docker/Railway/Render self-hosting ke liye).
-  output: "standalone",
+  // Vercel apni file-tracing khud karta hai (standalone + Turbopack par uska
+  // onBuildComplete `next-server.js.nft.json` dhoondhta reh jata hai) — isliye
+  // Vercel builds par standalone OFF. Dockerfile `.next/standalone` copy karta
+  // hai — self-hosting (Docker/Railway/Render) ke liye standalone ON rehta hai.
+  ...(process.env.VERCEL ? {} : { output: "standalone" as const }),
   // pg-cloudflare workerd shims (dist/esm) ko standalone trace me force karo —
   // warna opennext esbuild pass fail hota hai ("Could not resolve pg-cloudflare",
   // upstream opennextjs-cloudflare#1214). Local/Docker par koi effect nahi.
