@@ -25,7 +25,7 @@ import {
   Testimonials,
 } from "@/components/landing/sections";
 import { ThemePlayground } from "@/components/landing/theme-playground";
-import { CursorGlow, HeroPhone3D } from "@/components/landing/hero-3d";
+import { CursorGlow, HeroPhone3D, ParticleField } from "@/components/landing/hero-3d";
 import { Reveal } from "@/components/landing/anim";
 import { THEMES } from "@/lib/themes";
 
@@ -134,6 +134,7 @@ export default function LandingPage() {
 
       {/* Hero */}
       <section className="noise relative z-10 mx-auto max-w-6xl px-5 pt-16 pb-10 text-center sm:pt-24">
+        <ParticleField />
         <CursorGlow />
         <Reveal>
           <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-violet-400/25 bg-violet-500/10 px-4 py-1.5 text-xs font-medium text-violet-300">
@@ -175,7 +176,7 @@ export default function LandingPage() {
         </Reveal>
 
         {/* Hero phone mock */}
-        <div className="relative mx-auto mt-16 max-w-3xl">
+        <div className="relative mx-auto mt-16 max-w-4xl">
           <div aria-hidden className="absolute inset-x-16 top-10 h-72 rounded-full bg-violet-600/25 blur-[110px]" />
           <HeroPhone3D />
         </div>
