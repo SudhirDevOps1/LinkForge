@@ -37,6 +37,25 @@ liye scanning service jodo.
 
 `STORAGE_PROVIDER` + credentials `.env.example` se (server-side only).
 Bucket-scoped keys: PutObject, GetObject, HeadObject, DeleteObject.
+
+### B2 private bucket (free tier) — recommended agar public paid ho
+
+```env
+STORAGE_PROVIDER=b2
+B2_PRIVATE_BUCKET=true
+# B2_PUBLIC_URL NOT needed
+```
+
+Private bucket par public file URLs 403 dete — isliye app **proxy** se serve
+karta hai: upload/complete flows automatically `/api/file/<key>` URLs banate
+hain, aur `GET /api/file/[...key]` server credentials se B2 se laakar stream
+karta hai (Range/206 seek + immutable edge-cache ke saath). Koi code change
+upload flows me nahi chahiye — sirf env flag.
+
+### B2 public bucket (paid) / R2 / S3 / MinIO
+
+`STORAGE_PROVIDER` + credentials `.env.example` se (server-side only).
+Bucket-scoped keys: PutObject, GetObject, HeadObject, DeleteObject.
 R2 me `R2_PUBLIC_URL` = public/custom domain (S3 API endpoint **nahi**).
 
 Bucket CORS — apne exact app origin ke liye (example, apne domain se replace

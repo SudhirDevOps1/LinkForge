@@ -35,6 +35,16 @@ export interface StorageService {
    */
   stat?(key: string): Promise<{ sizeBytes: number; contentType?: string }>;
   readPrefix?(key: string, maxBytes: number): Promise<Uint8Array>;
+  /**
+   * Private-bucket proxy streaming (S3-family): object ko stream karke do.
+   * Range passthrough (audio/video seek). Na ho to proxy route 501 deta hai.
+   */
+  stream?(key: string, rangeHeader?: string): Promise<{
+    body: ReadableStream;
+    contentType?: string;
+    sizeBytes?: number;
+    contentRange?: string;
+  }>;
 }
 
 /** Path traversal se bachne ke liye keys sanitize */
