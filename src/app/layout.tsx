@@ -20,10 +20,18 @@ const jetbrains = JetBrains_Mono({
   weight: ["400", "500", "600"],
 });
 
+/** Empty-string-proof base URL (dashboard me khaali var bhi safe) */
+function appBaseUrl(): URL {
+  const raw = (process.env.NEXT_PUBLIC_APP_URL ?? "").trim().replace(/\/+$/, "");
+  try {
+    return new URL(raw || "http://localhost:3000");
+  } catch {
+    return new URL("http://localhost:3000");
+  }
+}
+
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
-  ),
+  metadataBase: appBaseUrl(),
   title: {
     default: "LinkForge — Open-source link-in-bio builder. Zero lock-in.",
     template: "%s · LinkForge",
