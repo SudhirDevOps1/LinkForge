@@ -8,6 +8,7 @@
 - [ ] `git status` clean, naya branch `next-patch` banao
 - [ ] DB backup: `pg_dump $DATABASE_URL > backups/pre-patch.sql` + `uploads/` copy
 - [ ] `npm audit` baseline note karo (4 moderate drizzle-kit expected)
+  - Verified 2026-09-09 (`npm install` fresh): **7 vulns = 4 moderate + 2 high + 1 critical** — PRD §8 ka "0 critical/high" claim galat nikla; patch me `npm audit` detail + fix-plan add karo (breaking `audit fix --force` bina approval mat chalao).
 
 ## Phase 1 — P0-A Auth (half day)
 
