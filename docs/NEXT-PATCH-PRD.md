@@ -147,3 +147,33 @@ manual: presign→PUT→complete, referenced-delete 409, Range 206, health 503 o
   3. Verify gate: `npm run typecheck` + `npx vitest run` (+ `npm run lint` best-effort) — sab green tabhi push-ready.
   4. Push: sirf user ke "push karo" bolne par — `git push -u origin <branch>` (default `main`, ya user-batayi branch). Force-push kabhi nahi.
 - Never push: `.env`/secrets, `node_modules/`, `.next/`, uploaded media, local `*.sqlite/*.db`, `backups/`.
+
+## 12. Verified Working Matrix (disk + test evidence, 2026-09-09)
+
+> Sawal: "jo jo esmein hai wo app mein working hai na?" — Jawab: **neeche wali list disk par maujood + test me green hai.** Baaki sab (§0 gaps 1–20) missing/skeleton hai aur Phases 1–7 me fix hoga. Koi purani line edit/delete nahi ki — ye section sirf ADD hai.
+
+### ✅ WORKING (file exists + vitest/typecheck green)
+
+| Area | Evidence | Status |
+|------|----------|--------|
+| Builtin auth signup/signin/sessions (bcrypt 10r, 30d cookie) | `src/lib/auth/index.ts:35-39,62-165` | Working |
+| Reset tokens (SHA-256, 1h, single-use, enumeration-safe) + `mailOutbox` queue | `src/lib/auth/index.ts:213-248`, `src/app/api/auth/forgot/route.ts:27-31` | Working (delivery adapter P0-A3 me baki) |
+| Rate-limit buckets (login/signup 10/min, forgot 5/min) | `src/lib/rate-limit.ts:33-49,98-107` | Working single-instance (Upstash global P0 me baki) |
+| Postgres + Neon + Turso drivers | `src/db/providers/postgres.ts:11-27`, `neon.ts:6-10`, `turso.ts:6-15` | Working |
+| Full schema topology (users/sessions/profiles/links/events/webhooks/api_keys/team_members/mailOutbox/mediaFiles) | `src/db/schema.ts:25-280` | Working (pg dialect) |
+| Local + S3-family (B2/R2/S3/MinIO) + Vercel-Blob factory | `src/lib/storage/s3.ts:27-132`, `src/lib/storage/index.ts:76-108` | Working basic (ticket flow C2 baki) |
+| Multipart upload `POST /api/media` (MIME whitelist, 10 MiB, sanitize) | `src/app/api/media/route.ts:36-85` | Working |
+| Avatar server-proxy (2 MiB, images only) | `src/app/api/profile/avatar/route.ts:11-39` | Working |
+| Local file serving (traversal guard, nosniff, immutable) | `src/app/api/files/[folder]/[name]/route.ts:38-55` | Working basic (Range C5 baki) |
+| Theme (12) + List/Bento + live phone preview + persist | `src/lib/themes.ts:28-263`, `src/components/appearance-editor.tsx:15-144`, `bio-renderer.tsx:156-299` | Working narrow (30+ controls P1 me baki) |
+| Links drag-drop reorder (dnd-kit + atomic tx) | `src/components/links-editor.tsx:87-106`, `src/app/api/links/reorder/route.ts:17-24` | Working |
+| Analytics summary (views/clicks/unique/CTR/devices/geo/referrers) + charts + CSV | `src/lib/analytics/index.ts:134-194`, `analytics-charts.tsx`, `api/analytics/export/route.ts` | Working basic (filters/comparison P1, CSV-sanitize P0 baki) |
+| API keys (`lfk_` + SHA-256-only) + webhooks CRUD + HMAC delivery | `src/app/api/keys/route.ts:36-59`, `src/lib/webhooks.ts:17-64` | Working basic (SSRF E1 baki) |
+| Landing page + ThemePlayground + SEO (sitemap/robots/OG) | `src/app/page.tsx:83-454`, `landing/theme-playground.tsx` | Working (testimonial honesty P1 me baki) |
+| Privacy + Terms pages (12 sections each, footer-linked) | `src/app/privacy/page.tsx`, `src/app/terms/page.tsx` | Working |
+| Health endpoint (env echo) | `src/app/api/health/route.ts:8-20` | Working basic (DB-ping E3 baki) |
+| Tests: **83/83 green** (`65 security` + `18 media`), typecheck **0 errors** | `npx vitest run` + `npm run typecheck` 2026-09-09 | Verified |
+
+### ❌ NOT working / missing (disk par file hi nahi — `Test-Path` False verified)
+
+`upload-validation.ts`, `outbound.ts`, `csv.ts`, `github.ts/github-sync.ts`, `api/media/presign+complete`, `scripts/cleanup-uploads/check-database/sync-github`, `docs/media.md/production.md`, `.github/workflows/ci.yml`, `icons.tsx/icon-picker/share-button/analytics-extras/github-integration/marketing-home/legal-document`, `api/design`, `api/integrations/github`, `app/docs` — ye sab Phases 1–7 me NEW banenge.

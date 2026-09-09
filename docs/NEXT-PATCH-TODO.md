@@ -117,3 +117,15 @@ Patch tabhi DONE jab: koi documented claim bina implementation ke "working" nahi
 - [ ] P9.3 Local commit: `git commit -m "docs: add NEXT-PATCH PRD + TODO (strict gap-fix plan)"` — sirf docs files staged ho to wahi commit
 - [ ] P9.4 Verify (push se PEHLE): `npm run typecheck` + `npx vitest run` green; result TODO me note karo
 - [ ] P9.5 Push GATE (blocked until user says): user ke "push karo" ke baad hi `git push -u origin <branch>`; kabhi `--force` nahi; push ke baad URL + commit hash report karo
+
+## Phase 10 — Working-verified (2026-09-09, Test-Path + vitest evidence — sirf ADD, koi tick-overwrite nahi)
+
+> Ye items app me **working verified** hain — inhe dobara fix nahi karna, sirf regression-guard rakhna hai. Baaki (Phases 1–7) abhi bhi OPEN hain.
+
+- [x] W1 Builtin auth (signup/signin/session/reset/rate-limit) — `src/lib/auth/index.ts` exists + `tests/security.test.ts` 65/65 green
+- [x] W2 DB drivers postgres/neon/turso + full pg schema — files exist + typecheck 0 errors
+- [x] W3 Storage factory (local/S3-family/blob) + multipart upload + avatar proxy + file serving — files exist + `tests/media.test.ts` 18/18 green
+- [x] W4 Themes(12)/layouts/preview + links drag-drop reorder + analytics summary/charts + keys/webhooks-basic + landing + privacy/terms + health-basic — files exist, app-level working
+- [x] W5 Full gate (docs-scope): `npm run typecheck` 0 errors + `npx vitest run` 83/83 green (2026-09-09 fresh install)
+- [ ] W6 Regression-guard: har Phase 1–7 ke fix ke baad W1–W5 dobara green hona chahiye (`vitest` + `typecheck`); fail = phase BLOCKED
+- [ ] W7 Pre-existing lint debt (8 errors: `global-error.tsx`, `bio-renderer.tsx:286`, `landing/anim.tsx:25,71`, `live-data-panel.tsx:47`) — patch me fix karo, par in files ka working behavior mat todo (additive fix only)
