@@ -1,0 +1,90 @@
+# =============================================================================
+# 🐳 LinkForge — Docker Compose (multi-profile)
+# -----------------------------------------------------------------------------
+# Profiles (har provider combo ke liye alag):
+#   docker compose up                      → sirf app (external DB/Storage use karein)
+#   docker compose --profile postgres up   → app + local Postgres
+#   docker compose --profile minio up      → app + MinIO (self-hosted S3)
+#   docker compose --profile full up       → sab kuch (postgres + minio + mailhog)
+# =============================================================================
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/linkforge
+      UPLOAD_DIR: /data/uploads
+    volumes:
+      - uploads:/data/uploads
+    depends_on:
+      postgres:
+        condition: service_started
+        required: false
+      minio:
+        condition: service_started
+        required: false
+    restart: unless-stopped
+
+  # ---- Profile: postgres (self-hosted DB) -------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    profiles: ["postgres", "full"]
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: linkforge
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ---- Profile: minio (self-hosted S3 storage) -----------------------------------
+  minio:
+    image: minio/minio:latest
+    profiles: ["minio", "full"]
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/data
+
+  minio-init:
+    image: minio/mc:latest
+    profiles: ["minio", "full"]
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 3;
+      mc alias set local http://minio:9000 minioadmin minioadmin;
+      mc mb -p local/linkforge || true;
+      mc anonymous set download local/linkforge;
+      echo 'MinIO bucket linkforge ready';
+      "
+
+  # ---- Profile: mail (dev email catcher — password reset testing) -----------------
+  mailhog:
+    image: mailhog/mailhog:latest
+    profiles: ["mail", "full"]
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+
+volumes:
+  pgdata:
+  miniodata:
+  uploads:

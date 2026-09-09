@@ -1,0 +1,19 @@
+# =============================================================================
+# 🟠 Cloudflare Pages + D1 config (@opennextjs/cloudflare ke saath)
+# Setup: docs/deployment.md → Cloudflare section
+# =============================================================================
+name = "linkforge"
+compatibility_date = "2025-06-01"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".vercel/output/static"
+
+# ---- D1 database binding (DATABASE_PROVIDER=d1) ------------------------------
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "linkforge"
+# database_id = "<D1_DATABASE_ID>"
+
+# ---- R2 bucket binding (alternative to S3 API) --------------------------------
+# [[r2_buckets]]
+# binding = "BUCKET"
+# bucket_name = "linkforge"

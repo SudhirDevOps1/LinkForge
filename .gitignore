@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+.vercel/output/
+
+# Env & secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Local storage uploads (runtime data)
+uploads/
+!uploads/avatars/demo-avatar.png
+
+# Database
+*.sqlite
+*.db
+drizzle/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+
+# Build artifacts (regenerated)
+tsconfig.tsbuildinfo
+next-env.d.ts

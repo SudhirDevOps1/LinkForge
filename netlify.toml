@@ -1,0 +1,19 @@
+# =============================================================================
+# 🟣 Netlify deploy config — Next.js runtime plugin auto-detect hota hai
+# Docs: docs/deployment.md
+# =============================================================================
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[functions]
+  # API routes Netlify Functions par chalenge
+  node_bundler = "esbuild"
+
+[[headers]]
+  for = "/api/files/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
