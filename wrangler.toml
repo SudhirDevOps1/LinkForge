@@ -5,7 +5,9 @@
 name = "linkforge"
 compatibility_date = "2025-06-01"
 compatibility_flags = ["nodejs_compat"]
-pages_build_output_dir = ".vercel/output/static"
+# OpenNext output (opennextjs-cloudflare build) — Pages yahi upload karta hai.
+# Purana next-on-pages path (.vercel/output/static) ab use nahi hota.
+pages_build_output_dir = ".open-next/assets"
 
 # ---- D1 database binding (DATABASE_PROVIDER=d1) ------------------------------
 # [[d1_databases]]
