@@ -30,3 +30,5 @@ drizzle/
 # Build artifacts (regenerated)
 tsconfig.tsbuildinfo
 next-env.d.ts
+.open-next/
+.wrangler/
