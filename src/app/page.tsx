@@ -25,6 +25,7 @@ import {
   Testimonials,
 } from "@/components/landing/sections";
 import { ThemePlayground } from "@/components/landing/theme-playground";
+import { CursorGlow, HeroPhone3D } from "@/components/landing/hero-3d";
 import { Reveal } from "@/components/landing/anim";
 import { THEMES } from "@/lib/themes";
 
@@ -133,6 +134,7 @@ export default function LandingPage() {
 
       {/* Hero */}
       <section className="noise relative z-10 mx-auto max-w-6xl px-5 pt-16 pb-10 text-center sm:pt-24">
+        <CursorGlow />
         <Reveal>
           <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-violet-400/25 bg-violet-500/10 px-4 py-1.5 text-xs font-medium text-violet-300">
             <Sparkles className="h-3.5 w-3.5" />
@@ -175,62 +177,7 @@ export default function LandingPage() {
         {/* Hero phone mock */}
         <div className="relative mx-auto mt-16 max-w-3xl">
           <div aria-hidden className="absolute inset-x-16 top-10 h-72 rounded-full bg-violet-600/25 blur-[110px]" />
-          <div className="relative mx-auto w-fit animate-float-slow">
-            {/* Live CSS phone mockup (koi image asset nahi — kabhi 404 nahi) */}
-            <div
-              role="img"
-              aria-label="LinkForge bio page running on a phone"
-              className="relative z-[2] mx-auto w-[280px] rounded-[40px] border border-white/20 bg-[#0b0b14] p-2.5 shadow-[0_50px_120px_-30px_rgba(139,92,246,.55)] sm:w-[300px]"
-            >
-              <div className="rounded-[32px] bg-gradient-to-b from-violet-950/60 via-[#101019] to-[#0b0b14] px-4 pb-5 pt-3">
-                <div className="mx-auto h-5 w-24 rounded-full bg-black/70" />
-                <div className="mx-auto mt-3 flex h-14 w-14 items-center justify-center rounded-full border-2 border-violet-400/70 bg-violet-500/15 text-xl font-bold text-violet-200">
-                  S
-                </div>
-                <p className="mt-2 text-center text-sm font-bold text-white">Sudhir Singh</p>
-                <p className="mx-auto mt-1 max-w-[200px] text-center text-[10px] leading-snug text-zinc-400">
-                  BCA Student · Full-Stack Developer
-                </p>
-                <div className="mt-3 space-y-2">
-                  {[
-                    { t: "GitHub — @SudhirDevOps1", c: "bg-emerald-400" },
-                    { t: "LinkForge", c: "bg-violet-400" },
-                    { t: "Blog & Portfolio", c: "bg-sky-400" },
-                  ].map((l) => (
-                    <div
-                      key={l.t}
-                      className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5"
-                    >
-                      <span className={`h-6 w-6 shrink-0 rounded-lg ${l.c}/20`} />
-                      <span className="truncate text-[11px] font-semibold text-zinc-100">{l.t}</span>
-                      <span className="ml-auto text-[10px] text-violet-300">→</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mx-auto mt-3 flex items-center justify-center gap-2">
-                  <span className="rounded-lg border border-white/10 px-2.5 py-1 text-[10px] text-zinc-300">
-                    Share
-                  </span>
-                  <span className="rounded-lg border border-white/10 px-2.5 py-1 text-[10px] text-zinc-300">
-                    QR
-                  </span>
-                </div>
-              </div>
-            </div>
-            {/* Floating provider chips */}
-            <div className="absolute -left-24 top-16 z-[3] hidden animate-float rounded-2xl glass px-4 py-3 text-xs font-semibold sm:block">
-              <Database className="mb-1 h-4 w-4 text-violet-300" />
-              Neon · Turso · D1
-            </div>
-            <div className="absolute -right-24 top-40 z-[3] hidden animate-float rounded-2xl glass px-4 py-3 text-xs font-semibold sm:block" style={{ animationDelay: "1.4s" }}>
-              <HardDrive className="mb-1 h-4 w-4 text-fuchsia-300" />
-              B2 · R2 · S3
-            </div>
-            <div className="absolute -left-20 bottom-20 z-[3] hidden animate-float rounded-2xl glass px-4 py-3 text-xs font-semibold sm:block" style={{ animationDelay: "2.6s" }}>
-              <Cloud className="mb-1 h-4 w-4 text-indigo-300" />
-              Vercel · CF · Netlify
-            </div>
-          </div>
+          <HeroPhone3D />
         </div>
       </section>
 
