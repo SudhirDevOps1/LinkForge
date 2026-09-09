@@ -12,6 +12,7 @@
     "db:push:d1": "drizzle-kit push --config drizzle.config.d1.ts",
     "cleanup:uploads": "tsx scripts/cleanup-uploads.ts",
     "deploy:vercel": "vercel --prod",
+    "deploy:cloudflare": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "deploy:netlify": "netlify deploy --prod"
   },
   "dependencies": {
@@ -29,7 +30,7 @@
     "drizzle-orm": "0.45.2",
     "file-type": "^22.0.2",
     "lucide-react": "^1.43.0",
-    "next": "16.2.6",
+    "next": "^16.3.4",
     "pg": "8.20.0",
     "qrcode.react": "^4.2.0",
     "react": "19.2.6",
@@ -41,6 +42,7 @@
     "zod": "^4.5.4"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.20.6",
     "@tailwindcss/postcss": "4.1.17",
     "@types/node": "22.19.15",
     "@types/pg": "8.18.0",
@@ -48,9 +50,10 @@
     "@types/react-dom": "19.2.3",
     "drizzle-kit": "0.31.10",
     "eslint": "9.39.4",
-    "eslint-config-next": "16.2.6",
+    "eslint-config-next": "^16.3.4",
     "postcss": "8.5.8",
     "tailwindcss": "4.1.17",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "wrangler": "^4.130.0"
   }
 }
