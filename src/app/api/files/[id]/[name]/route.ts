@@ -32,12 +32,12 @@ const MIME: Record<string, string> = {
   pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
 };
 
-type Ctx = { params: Promise<{ folder: string; name: string }> };
+type Ctx = { params: Promise<{ id: string; name: string }> };
 
 export async function GET(req: Request, ctx: Ctx) {
   try {
-    const { folder, name } = await ctx.params;
-    const key = sanitizeKey(`${folder}/${name}`);
+    const { id, name } = await ctx.params;
+    const key = sanitizeKey(`${id}/${name}`);
     const full = path.join(localUploadDir, key);
     // path traversal double-check
     if (!full.startsWith(path.resolve(localUploadDir))) {
