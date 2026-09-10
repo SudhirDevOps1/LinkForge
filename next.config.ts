@@ -43,14 +43,9 @@ const nextConfig: NextConfig = {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
   async redirects() {
-    return [
-      {
-        source: "/demo",
-        destination: "/#playground",
-        permanent: false,
-      },
-    ];
+    return [];
   },
 };
+
 
 export default nextConfig;

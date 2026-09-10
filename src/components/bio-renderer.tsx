@@ -591,19 +591,22 @@ export function BioRenderer({
         ) : null}
 
         {/* ✍️ Daily Blog / Journal Link */}
-        <a
-          href={`/${profile.slug}/blog`}
-          className="mt-3.5 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border transition-all hover:scale-105"
-          style={{
-            borderColor: `${accent}35`,
-            background: `${accent}12`,
-            color: accent,
-          }}
-        >
-          <BookOpen className="h-3.5 w-3.5" />
-          <span>Read Daily Blog</span>
-          <span className="text-[10px] opacity-70">→</span>
-        </a>
+        {profile.slug ? (
+          <a
+            href={`/${profile.slug}/blog`}
+            className="mt-3.5 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border transition-all hover:scale-105"
+            style={{
+              borderColor: `${accent}35`,
+              background: `${accent}12`,
+              color: accent,
+            }}
+          >
+            <BookOpen className="h-3.5 w-3.5" />
+            <span>Read Daily Blog</span>
+            <span className="text-[10px] opacity-70">→</span>
+          </a>
+        ) : null}
+
 
         {/* Links Container */}
         <div

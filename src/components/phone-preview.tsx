@@ -49,13 +49,13 @@ export function PhonePreview({
   const [previewTheme, setPreviewTheme] = useState<string | null>(null);
   const [key, setKey] = useState(0);
 
-  const activeThemeId = previewTheme || profile.theme;
+  const profileSlug = slug || profile.slug || profile.displayName.toLowerCase().replace(/[^a-z0-9]/g, "") || "bio";
   const activeProfile: BioProfileShape = {
     ...profile,
     theme: activeThemeId,
+    slug: profileSlug,
   };
 
-  const profileSlug = slug || profile.displayName.toLowerCase().replace(/[^a-z0-9]/g, "") || "bio";
   const publicUrl = typeof window !== "undefined"
     ? `${window.location.origin}/${profileSlug}`
     : `https://linkforge-demo.vercel.app/${profileSlug}`;
