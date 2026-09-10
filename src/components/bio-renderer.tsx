@@ -9,7 +9,7 @@
 import type { Link } from "@/db/schema";
 import { getTheme } from "@/lib/themes";
 import type { DesignPrefs } from "@/lib/design";
-import { BrandIcon, BRAND_IDS } from "./icons";
+import { BrandIcon, BRAND_IDS, LUCIDE_ICONS, parseIcon } from "./icons";
 import {
   AtSign,
   BookOpen,
@@ -35,44 +35,31 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
-// ---- Generic lucide icon map ---------------------------------------------------
-const LUCIDE_ICONS: Record<string, typeof Globe> = {
-  link: Link2,
-  globe: Globe,
-  mail: Mail,
-  calendar: Calendar,
-  camera: Camera,
-  video: Video,
-  music: Music,
-  play: Play,
-  shop: ShoppingBag,
-  star: Star,
-  heart: Heart,
-  file: FileText,
-  at: AtSign,
-};
-
 export function linkIcon(
   link: Pick<Link, "icon" | "type">,
   className?: string,
   sizePx?: number,
 ) {
-  const style =
-    sizePx && Number.isFinite(sizePx) ? { width: sizePx, height: sizePx } : undefined;
+  const { id, color } = parseIcon(link.icon);
+  const baseStyle: React.CSSProperties =
+    sizePx && Number.isFinite(sizePx) ? { width: sizePx, height: sizePx } : {};
+  const style: React.CSSProperties = color ? { ...baseStyle, color } : baseStyle;
   const cls = sizePx ? undefined : (className ?? "h-5 w-5");
-  // 1. Explicit brand icon id (icon picker se — 29 real brands)
-  if (link.icon && BRAND_IDS.includes(link.icon)) {
-    return <BrandIcon id={link.icon} className={cls} style={style} />;
+
+  // 1. Explicit brand or Indian platform icon id
+  if (id && BRAND_IDS.includes(id)) {
+    return <BrandIcon id={id} className={cls} style={style} />;
   }
-  // 2. Type-based brand (youtube/spotify/github/...) — purana behavior, ab 29 brands
+  // 2. Type-based brand fallback (youtube/spotify/github/...)
   if (link.type && BRAND_IDS.includes(link.type)) {
     return <BrandIcon id={link.type} className={cls} style={style} />;
   }
-  if (link.icon && link.icon !== "link" && LUCIDE_ICONS[link.icon]) {
-    const Icon = LUCIDE_ICONS[link.icon];
+  // 3. Lucide icons registry
+  if (id && id !== "link" && LUCIDE_ICONS[id]) {
+    const Icon = LUCIDE_ICONS[id];
     return <Icon className={cls} style={style} />;
   }
-  const Icon = LUCIDE_ICONS[link.icon ?? "link"] ?? Link2;
+  const Icon = LUCIDE_ICONS[id ?? "link"] ?? Link2;
   return <Icon className={cls} style={style} />;
 }
 
@@ -105,10 +92,12 @@ export function detectMediaType(link: Pick<Link, "url" | "type" | "icon">): Medi
   if (link.type === "spotify" || spotifyEmbedUrl(rawUrl)) return "spotify";
 
   const cleanUrl = rawUrl.split("?")[0].split("#")[0].toLowerCase();
+  const iconId = parseIcon(link.icon).id;
 
   // Video check
   if (
     link.type === "video" ||
+    iconId === "video" ||
     /\.(mp4|webm|mov|mkv|avi|m4v|ogv)$/i.test(cleanUrl)
   ) {
     return "video";
@@ -117,7 +106,7 @@ export function detectMediaType(link: Pick<Link, "url" | "type" | "icon">): Medi
   // Audio check
   if (
     link.type === "audio" ||
-    link.icon === "music" ||
+    iconId === "music" ||
     /\.(mp3|m4a|wav|ogg|aac|flac|wma)$/i.test(cleanUrl)
   ) {
     return "audio";
@@ -126,7 +115,7 @@ export function detectMediaType(link: Pick<Link, "url" | "type" | "icon">): Medi
   // Image check
   if (
     link.type === "image" ||
-    link.icon === "camera" ||
+    iconId === "camera" ||
     /\.(jpg|jpeg|png|webp|gif|avif|svg)$/i.test(cleanUrl)
   ) {
     return "image";

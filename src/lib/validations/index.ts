@@ -110,7 +110,7 @@ export const linkCreateSchema = z.object({
   title: z.string().trim().min(1, "Title zaroori hai").max(120),
   url: urlSchema,
   description: z.string().trim().max(200).optional().default(""),
-  icon: z.string().trim().max(40).optional().default("link"),
+  icon: z.string().trim().max(100).optional().default("link"),
   type: z.enum(LINK_TYPES).optional().default("link"),
   size: z.enum(LINK_SIZES).optional().default("standard"),
   thumbnailUrl: z.union([urlSchema, z.literal(""), z.null()]).optional(),

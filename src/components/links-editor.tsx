@@ -377,7 +377,7 @@ export function LinksEditor({
               ))}
             </Select>
           </Field>
-          <Field label="Icon" hint="29 real brand icons + generics" className="sm:col-span-2">
+          <Field label="Icon" hint="150+ brands, Indian platforms (UPI, Paytm, PhonePe) & generic icons with custom colors" className="sm:col-span-2">
             <IconPicker value={form.icon} onChange={(icon) => setForm({ ...form, icon })} />
           </Field>
           <Field label="Card size" hint="Bento layout me spans control karta hai" className="sm:col-span-2">
