@@ -13,19 +13,33 @@ import { requireUser } from "@/lib/auth";
 import { getStorageAdapter } from "@/lib/storage";
 import { B2StorageAdapter } from "@/lib/storage/b2-adapter";
 
-export const GET = handle(async () => {
+export const GET = handle(async (req: Request) => {
+  const url = new URL(req.url);
+  const shouldSync = url.searchParams.get("sync") === "1" || url.searchParams.get("sync") === "true";
+
   const origins = getCorsAllowedOrigins();
+  let syncResult: { success: boolean; message?: string } | null = null;
+
+  if (shouldSync) {
+    const adapter = await getStorageAdapter();
+    if (adapter instanceof B2StorageAdapter) {
+      syncResult = await adapter.ensureCorsRules(origins);
+    }
+  }
+
   const rawRules = JSON.parse(getB2CorsRulesJson(origins)) as unknown;
 
   return json({
     driver: storageDriver,
     allowedOrigins: origins,
+    syncResult,
     corsRules: rawRules,
     instructions: {
       step1: "Go to Backblaze B2 Console -> Buckets",
-      step2: "Click 'Bucket Settings' next to your private bucket",
-      step3: "Under 'CORS Rules', select 'Custom' and paste the corsRules JSON",
-      step4: "Save changes. Direct browser-to-B2 uploads will now work without CORS blocking.",
+      step2: "Click 'Bucket Settings' next to your bucket",
+      step3: "Under 'CORS Rules', select: 'Share everything in this bucket with this one origin:'",
+      step4: "Enter: https://linkforge-demo.vercel.app and select 'Both'",
+      step5: "Click 'Update CORS Rules'. Direct browser-to-B2 uploads will now work.",
     },
   });
 });
