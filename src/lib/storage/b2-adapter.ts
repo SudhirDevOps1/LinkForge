@@ -23,7 +23,7 @@ import {
   getCorsAllowedOrigins,
 } from "@/config/storage.config";
 import { sanitizeKey } from "./index";
-import { encryptFilePayload, isPayloadEncrypted } from "@/lib/file-cipher";
+import { decryptFilePayload, encryptFilePayload, isPayloadEncrypted } from "@/lib/file-cipher";
 import type { StorageAdapter } from "./types";
 
 function clean(val: string | undefined): string | undefined {
@@ -246,8 +246,11 @@ export class B2StorageAdapter implements StorageAdapter {
         bytes = Buffer.concat(chunks);
       }
 
+      const rawData = Buffer.from(bytes);
+      const data = isPayloadEncrypted(rawData) ? decryptFilePayload(rawData) : rawData;
+
       return {
-        data: Buffer.from(bytes),
+        data,
         contentType: res.ContentType || "application/octet-stream",
         contentEncoding: res.ContentEncoding,
       };

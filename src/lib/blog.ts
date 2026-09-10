@@ -7,6 +7,7 @@
 // Manifest index is maintained at `blogs/${profileId}/manifest.json`.
 // =============================================================================
 import { getStorageAdapter } from "./storage";
+import { decryptFilePayload, isPayloadEncrypted } from "./file-cipher";
 import { db } from "@/db";
 import { profiles } from "@/db/schema";
 import { eq, or } from "drizzle-orm";
@@ -77,7 +78,11 @@ export async function getBlogManifest(profileIdentifier: string): Promise<BlogMa
     try {
       const obj = await adapter.getObject(key);
       if (!obj || !obj.data) return null;
-      const parsed = JSON.parse(obj.data.toString("utf8")) as BlogManifest;
+      let rawData = obj.data;
+      if (isPayloadEncrypted(rawData)) {
+        rawData = decryptFilePayload(rawData);
+      }
+      const parsed = JSON.parse(rawData.toString("utf8")) as BlogManifest;
       return parsed && Array.isArray(parsed.posts) ? parsed : null;
     } catch {
       return null;
@@ -169,7 +174,7 @@ export async function saveBlogPost(
     "application/json; charset=utf-8",
   );
 
-  // 4. Resolve slug and mirror manifest for 100% resilient lookup
+  // 4. Resolve slug and mirror manifest & post content for 100% resilient lookup & B2 console visibility
   let altSlug = knownSlug;
   if (!altSlug) {
     const pair = await resolveProfileIdentifiers(profileId);
@@ -182,6 +187,11 @@ export async function saveBlogPost(
         `blogs/${altSlug}/manifest.json`,
         manifestBuffer,
         "application/json; charset=utf-8",
+      );
+      await adapter.putObject(
+        `blogs/${altSlug}/${slug}.${ext}`,
+        Buffer.from(input.content, "utf8"),
+        contentType,
       );
     } catch {
       // Non-critical mirror
@@ -200,7 +210,11 @@ export async function getBlogPost(profileIdentifier: string, slug: string): Prom
   try {
     const obj = await adapter.getObject(header.fileKey);
     if (obj && obj.data) {
-      return { ...header, content: obj.data.toString("utf8") };
+      let rawData = obj.data;
+      if (isPayloadEncrypted(rawData)) {
+        rawData = decryptFilePayload(rawData);
+      }
+      return { ...header, content: rawData.toString("utf8") };
     }
   } catch (err) {
     console.error(`[blog] Failed to fetch primary content for ${header.fileKey}:`, err);
@@ -215,7 +229,11 @@ export async function getBlogPost(profileIdentifier: string, slug: string): Prom
     try {
       const obj = await adapter.getObject(altKey);
       if (obj && obj.data) {
-        return { ...header, fileKey: altKey, content: obj.data.toString("utf8") };
+        let rawData = obj.data;
+        if (isPayloadEncrypted(rawData)) {
+          rawData = decryptFilePayload(rawData);
+        }
+        return { ...header, fileKey: altKey, content: rawData.toString("utf8") };
       }
     } catch {
       // ignore
@@ -256,6 +274,8 @@ export async function deleteBlogPost(profileIdentifier: string, slug: string): P
         manifestBuffer,
         "application/json; charset=utf-8",
       );
+      const ext = header.format === "html" ? "html" : header.format === "txt" ? "txt" : "md";
+      await adapter.deleteObject(`blogs/${pair.slug}/${slug}.${ext}`);
     } catch {
       // ignore
     }
