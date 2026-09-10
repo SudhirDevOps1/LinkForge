@@ -103,11 +103,12 @@ export function getCorsAllowedOrigins(): string[] {
  */
 export function getB2CorsRulesJson(customOrigins?: string[]): string {
   const origins = customOrigins ?? getCorsAllowedOrigins();
+  const b2Origins = origins.includes("*") ? ["*"] : origins;
   return JSON.stringify(
     [
       {
         corsRuleName: "AllowDirectUpload",
-        allowedOrigins: origins,
+        allowedOrigins: b2Origins,
         allowedOperations: ["s3_put", "s3_head", "s3_get", "s3_delete"],
         allowedHeaders: ["*"],
         exposeHeaders: ["ETag"],

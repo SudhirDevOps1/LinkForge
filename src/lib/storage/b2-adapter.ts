@@ -482,6 +482,9 @@ export class B2StorageAdapter implements StorageAdapter {
         throw new Error(`Bucket "${this.config.bucket}" not found in B2 account`);
       }
 
+      // Backblaze B2 rule: If '*' is in allowedOrigins, it must be the only value!
+      const b2Origins = origins.includes("*") ? ["*"] : origins;
+
       // Update bucket with CORS rules
       const updateRes = await fetch(
         `${apiUrl}/b2api/v2/b2_update_bucket`,
@@ -497,7 +500,7 @@ export class B2StorageAdapter implements StorageAdapter {
             corsRules: [
               {
                 corsRuleName: "AllowDirectUpload",
-                allowedOrigins: origins,
+                allowedOrigins: b2Origins,
                 allowedOperations: [
                   "b2_download_file_by_id",
                   "b2_download_file_by_name",
