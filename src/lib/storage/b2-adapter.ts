@@ -409,7 +409,7 @@ export class B2StorageAdapter implements StorageAdapter {
       ).toString("base64");
 
       const authRes = await fetch(
-        "https://api.backblazeb2.com/b2api/v3/b2_authorize_account",
+        "https://api.backblazeb2.com/b2api/v2/b2_authorize_account",
         {
           headers: {
             Authorization: `Basic ${basicAuth}`,
@@ -423,16 +423,38 @@ export class B2StorageAdapter implements StorageAdapter {
       }
 
       const authData = (await authRes.json()) as {
-        accountId: string;
-        apiUrl: string;
-        authorizationToken: string;
+        accountId?: string;
+        apiUrl?: string;
+        authorizationToken?: string;
+        apiInfo?: {
+          storageApi?: {
+            apiUrl?: string;
+            accountId?: string;
+          };
+        };
       };
 
-      const { accountId, apiUrl, authorizationToken } = authData;
+      const apiUrl =
+        authData.apiUrl ||
+        authData.apiInfo?.storageApi?.apiUrl ||
+        "";
+
+      const accountId =
+        authData.accountId ||
+        authData.apiInfo?.storageApi?.accountId ||
+        "";
+
+      const authorizationToken = authData.authorizationToken;
+
+      if (!apiUrl || !authorizationToken) {
+        throw new Error(
+          `b2_authorize_account did not return apiUrl or token: ${JSON.stringify(authData)}`,
+        );
+      }
 
       // Find bucketId by bucketName
       const listBucketsRes = await fetch(
-        `${apiUrl}/b2api/v3/b2_list_buckets`,
+        `${apiUrl}/b2api/v2/b2_list_buckets`,
         {
           method: "POST",
           headers: {
@@ -462,7 +484,7 @@ export class B2StorageAdapter implements StorageAdapter {
 
       // Update bucket with CORS rules
       const updateRes = await fetch(
-        `${apiUrl}/b2api/v3/b2_update_bucket`,
+        `${apiUrl}/b2api/v2/b2_update_bucket`,
         {
           method: "POST",
           headers: {
