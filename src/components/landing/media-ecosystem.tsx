@@ -23,7 +23,7 @@ const TABS = [
     icon: FileText,
     badge: "Built-in",
     title: "Read Resumes & Decks Without Leaving Your Page",
-    desc: "Third-party redirects aur clunky downloads khatam. LinkForge me upload hui PDFs direct mobile modal reader me open hoti hain.",
+    desc: "Eliminate third-party redirects and clunky download prompts. Uploaded PDFs open directly in an interactive mobile modal reader.",
     previewType: "pdf",
   },
   {
@@ -32,16 +32,16 @@ const TABS = [
     icon: Music,
     badge: "Native Playback",
     title: "Spotify, YouTube, Podcasts & Audio Tracks",
-    desc: "Songs, audio snippets ya video links paste karein — followers aapke bio page par hi bina bounce hue stream kar sakte hain.",
+    desc: "Paste audio tracks, podcast snippets, or video links — visitors stream media directly on your profile without navigating away.",
     previewType: "media",
   },
   {
     id: "upi",
-    label: "India UPI & Global Tips",
+    label: "Instant Direct Payments & Tips",
     icon: IndianRupee,
     badge: "0% Commission",
-    title: "GPay, PhonePe, Paytm & Global Payments",
-    desc: "UPI ID ya deep-link dalo — phone par ek tap se Google Pay ya PhonePe khulta hai. No middleman cut, direct paise aapke bank me.",
+    title: "Direct Digital Wallet & Global Payments",
+    desc: "Add payment deep links or UPI IDs — launches payment apps on mobile with a single tap. Zero intermediary fees, 100% direct to you.",
     previewType: "upi",
   },
   {
@@ -50,7 +50,7 @@ const TABS = [
     icon: QrCode,
     badge: "Print Ready",
     title: "Instant QR Code For Business Cards & Flyers",
-    desc: "Har creator ka high-resolution vector QR code built-in hai. Ek tap me PNG download karo aur physical events par share karo.",
+    desc: "Every creator profile includes a crisp, vector QR code. Download high-resolution assets in one tap for business cards and events.",
     previewType: "qr",
   },
 ];
@@ -71,7 +71,7 @@ export function MediaEcosystem() {
           <span className="text-gradient">Beyond Simple Blue Links</span>
         </h2>
         <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-zinc-400 sm:text-base">
-          PDFs, videos, audio tracks, WhatsApp direct buttons aur UPI payments — sab kuch aapke clean bio profile ke andar smoothly chalta hai.
+          PDF documents, video players, audio tracks, WhatsApp direct messaging, and direct payment buttons — all rendered seamlessly within your bio profile.
         </p>
       </Reveal>
 

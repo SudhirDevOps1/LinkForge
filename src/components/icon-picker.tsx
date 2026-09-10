@@ -434,9 +434,9 @@ export function IconPicker({
       {/* Empty State */}
       {filteredIcons.length === 0 && (
         <div className="py-8 text-center">
-          <p className="text-xs text-zinc-400 font-medium">Koi icon nahi mila</p>
+          <p className="text-xs text-zinc-400 font-medium">No icons found</p>
           <p className="mt-1 text-[11px] text-zinc-600">
-            "{query}" ke badle "upi", "paytm", "music", "video", "shop", "swiggy", "code" search karein
+            Try searching for "link", "music", "video", "shop", "code", or "mail" instead of "{query}"
           </p>
         </div>
       )}

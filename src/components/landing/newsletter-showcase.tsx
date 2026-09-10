@@ -91,7 +91,7 @@ export function NewsletterShowcase() {
           Built-in <span className="text-gradient">MX DNS Verified</span> Newsletter
         </h2>
         <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-zinc-400 sm:text-base">
-          Aapke public bio page ke footer me smart newsletter subscribe box hai jo Google aur Cloudflare DNS se live MX records check karta hai.
+          Your public bio page includes an intelligent newsletter subscription form that verifies live MX records via Google and Cloudflare DNS in real time.
         </p>
       </Reveal>
 
@@ -110,7 +110,7 @@ export function NewsletterShowcase() {
                 </div>
               </div>
               <p className="mt-3 text-sm leading-relaxed text-zinc-300">
-                Koi bhi user subscribe karta hai to server pehle DNS resolution karta hai. Agar domain par valid mail exchangers (MX) nahi hain, to fake entry instantly reject ho jaati hai.
+                When a subscriber enters their email, the server performs instant DNS resolution. If the domain lacks active Mail Exchangers (MX), fake submissions are immediately rejected.
               </p>
             </div>
           </Reveal>
@@ -121,7 +121,7 @@ export function NewsletterShowcase() {
                 <ShieldCheck className="h-6 w-6 text-emerald-400" />
                 <h4 className="mt-3 font-display text-base font-bold text-white">300+ Disposable Shield</h4>
                 <p className="mt-1 text-xs leading-relaxed text-zinc-400">
-                  10minutemail, tempmail aur mailinator jaise burner inboxes auto-block hote hain. Pure real fans only.
+                  Burner addresses from disposable providers are automatically blocked, ensuring your audience list contains only genuine subscribers.
                 </p>
               </div>
             </Reveal>
@@ -131,7 +131,7 @@ export function NewsletterShowcase() {
                 <Download className="h-6 w-6 text-fuchsia-400" />
                 <h4 className="mt-3 font-display text-base font-bold text-white">1-Click CSV Export</h4>
                 <p className="mt-1 text-xs leading-relaxed text-zinc-400">
-                  Dashboard se subscribers ko ek click me CSV export karein aur Beehiiv, Mailchimp ya Substack me import karein.
+                  Export your subscriber list into CSV with one click and effortlessly import into your favorite email marketing platforms.
                 </p>
               </div>
             </Reveal>

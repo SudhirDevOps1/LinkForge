@@ -28,7 +28,7 @@ export const POST = handle(async (req: Request) => {
   assertSameOrigin(req);
   await guardRateLimit(req, "media:complete", 20);
   const { profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
 
   const { ticketId } = parseOrThrow(completeSchema, await req.json().catch(() => ({})));
   const [ticket] = await db
@@ -36,11 +36,11 @@ export const POST = handle(async (req: Request) => {
     .from(uploadTickets)
     .where(and(eq(uploadTickets.id, ticketId), eq(uploadTickets.profileId, profile.id)))
     .limit(1);
-  if (!ticket) throw new ApiError(404, "Ticket nahi mili");
+  if (!ticket) throw new ApiError(404, "Upload ticket not found");
   if (ticket.usedAt) throw new ApiError(410, "Ticket already used — naya presign lo");
   if (isTicketExpired(ticket.expiresAt)) {
     await consumeTicket(ticket.id);
-    throw new ApiError(410, "Ticket expire ho gayi — naya presign lo");
+    throw new ApiError(410, "Upload ticket expired — please request a new presigned URL");
   }
 
   const storage = await getStorage();
@@ -51,7 +51,7 @@ export const POST = handle(async (req: Request) => {
     );
   }
   if (!storage.stat || !storage.readPrefix) {
-    throw new ApiError(501, "Provider verify support nahi karta — multipart upload use karein");
+    throw new ApiError(501, "Storage provider does not support verification — please use direct upload");
   }
 
   // 1. Actual size (object exists bhi karta hai ya nahi — yehi PUT ka proof)
@@ -61,7 +61,7 @@ export const POST = handle(async (req: Request) => {
     actualSize = st.sizeBytes;
   } catch {
     await consumeTicket(ticket.id);
-    throw new ApiError(422, "Upload nahi mili — pehle PUT complete karein");
+    throw new ApiError(422, "Upload not found — please complete the upload first");
   }
   if (actualSize !== ticket.expectedSize) {
     try {

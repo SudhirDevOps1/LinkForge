@@ -40,12 +40,12 @@ export const POST = handle(async (req: Request) => {
   if (!contentType || !(ALLOWED_UPLOAD_TYPES as readonly string[]).includes(contentType)) {
     throw new ApiError(
       400,
-      `Invalid content type "${contentType}". Images, docs, audio, video, zip allowed hain.`,
+      `Invalid content type "${contentType}". Images, docs, audio, video, and zip files are allowed.`,
     );
   }
 
   if (!Number.isFinite(sizeBytes) || sizeBytes <= 0) {
-    throw new ApiError(400, "sizeBytes positive number hona chahiye");
+    throw new ApiError(400, "sizeBytes must be a positive number");
   }
 
   if (sizeBytes > MAX_UPLOAD_BYTES) {

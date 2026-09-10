@@ -24,7 +24,7 @@ export const DELETE = handle(async (req: Request) => {
   }
 
   if (!key) {
-    throw new ApiError(400, "storageKey zaroori hai");
+    throw new ApiError(400, "storageKey is required");
   }
 
   const safeKey = sanitizeKey(key);
@@ -60,7 +60,7 @@ export const DELETE = handle(async (req: Request) => {
   }
 
   if (!isUserScoped && !isOwnedInDb) {
-    throw new ApiError(403, "Aap sirf apni files delete kar sakte hain (Permission denied)");
+    throw new ApiError(403, "Permission denied: you can only delete your own files");
   }
 
   const adapter = await getStorageAdapter();

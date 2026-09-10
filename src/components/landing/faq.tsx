@@ -8,28 +8,28 @@ import { useState } from "react";
 
 const FAQS = [
   {
-    q: "Kya LinkForge sach me free hai?",
-    a: "Haan, 100%. MIT license open-source hai — hosting (Vercel/Cloudflare free tier), database (Neon/Turso/D1 free tier) aur storage (B2/R2 free tier) sab free tier par chalta hai. Koi paywall, koi premium badge nahi. Self-host karo to hamesha ₹0.",
+    q: "Is LinkForge really free?",
+    a: "Yes, 100%. LinkForge is open-source under the MIT license. Everything runs seamlessly within standard free tiers for hosting (Vercel/Cloudflare), serverless databases (Neon/Turso/D1), and object storage (Backblaze B2/Cloudflare R2). There are no paywalls, artificial feature gates, or mandatory subscription fees.",
   },
   {
-    q: "Mera data kahan store hota hai?",
-    a: "Jahan aap chaho. DATABASE_PROVIDER aur STORAGE_PROVIDER env vars se aap Neon, Turso, D1, Supabase ya apna Postgres — aur B2, R2, S3, MinIO ya local disk me se koi bhi choose karte ho. Koi third-party tracker nahi, analytics me raw IP kabhi store nahi hota.",
+    q: "Where is my data stored?",
+    a: "Wherever you decide. Through DATABASE_PROVIDER and STORAGE_PROVIDER environment variables, you can connect Neon, Turso, Cloudflare D1, Supabase, self-hosted Postgres, and storage backends like Backblaze B2, Cloudflare R2, AWS S3, MinIO, or local disk. No third-party ad trackers exist, and raw IP addresses are never logged.",
   },
   {
-    q: "Linktree se migrate kar sakta hoon?",
-    a: "Bilkul. Apne links JSON format me taiyaar karo aur Settings → Import se ek click me saara data le aao. Export bhi utna hi aasan hai — vendor lock-in zero, dono direction me.",
+    q: "Can I migrate from other link-in-bio services?",
+    a: "Absolutely. Export your links to JSON or prepare your data, then import it in one click via Settings → Import. You can also export your complete profile and analytics anytime with zero vendor lock-in.",
   },
   {
-    q: "Kaunse databases aur storage supported hain?",
-    a: "Databases: Neon, Turso (libSQL), Cloudflare D1, Supabase, local Postgres (+ Upstash Redis rate-limiting ke liye). Storage: Backblaze B2, Cloudflare R2, AWS S3, MinIO, Vercel Blob, local disk. Deploy: Vercel, Cloudflare Pages, Netlify, Railway, Render, Docker.",
+    q: "Which databases and storage backends are supported?",
+    a: "Databases: Neon Postgres, Turso (libSQL), Cloudflare D1, Supabase, and standard PostgreSQL (with Upstash Redis for rate-limiting). Storage: Backblaze B2, Cloudflare R2, AWS S3, MinIO, Vercel Blob, and local disk. Deployment targets include Vercel, Cloudflare Pages, Netlify, Railway, Render, and Docker.",
   },
   {
-    q: "Custom domain kaise connect karoon?",
-    a: "Apne DNS me ek CNAME record banao (bio → aapka deployment domain), hosting dashboard me domain add karo, aur Settings me domain save karo — bas. Edge middleware automatically sahi bio page serve karta hai.",
+    q: "How do I connect a custom domain?",
+    a: "Add a CNAME record in your DNS provider pointing to your deployment domain (e.g., bio → your-app.vercel.app), register the domain in your hosting dashboard, and save it in LinkForge Settings. Edge middleware handles routing automatically.",
   },
   {
-    q: "Kya coding aani chahiye?",
-    a: "Bilkul nahi. Dashboard UI se links, themes, analytics sab manage hota hai. Developers ke liye REST API, webhooks aur poora documented codebase bonus me milta hai.",
+    q: "Do I need coding experience to use LinkForge?",
+    a: "Not at all. The intuitive dashboard lets you configure links, courses, digital downloads, appearance, and analytics effortlessly. For developers, a clean REST API, signed webhooks, and full source code access are included out of the box.",
   },
 ];
 

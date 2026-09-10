@@ -84,11 +84,11 @@ export function BlogStudio({ profileSlug }: { profileSlug: string }) {
 
   async function publishPost() {
     if (!title.trim()) {
-      toast.error("Blog title likhein");
+      toast.error("Please enter a blog title");
       return;
     }
     if (!content.trim()) {
-      toast.error("Blog content likhein");
+      toast.error("Please enter blog content");
       return;
     }
 
@@ -114,9 +114,9 @@ export function BlogStudio({ profileSlug }: { profileSlug: string }) {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Publish fail ho gaya");
+      if (!res.ok) throw new Error(data.error || "Failed to publish post");
 
-      toast.success(`Post "${data.post.title}" B2 Object Storage me publish ho gayi!`);
+      toast.success(`Post "${data.post.title}" published to Object Storage!`);
       void loadPosts();
       setActiveTab("posts");
     } catch (err: any) {
@@ -127,13 +127,13 @@ export function BlogStudio({ profileSlug }: { profileSlug: string }) {
   }
 
   async function handleDelete(postSlug: string) {
-    if (!confirm("Kya aap is blog post ko B2 storage se delete karna chahte hain?")) return;
+    if (!confirm("Are you sure you want to delete this blog post from Object Storage?")) return;
     try {
       const res = await fetch(`/api/blog?slug=${encodeURIComponent(postSlug)}`, {
         method: "DELETE",
       });
-      if (!res.ok) throw new Error("Delete fail ho gaya");
-      toast.success("Post delete ho gayi");
+      if (!res.ok) throw new Error("Failed to delete post");
+      toast.success("Post deleted successfully");
       setPosts((prev) => prev.filter((p) => p.slug !== postSlug));
     } catch (err: any) {
       toast.error(err.message);
@@ -153,10 +153,10 @@ export function BlogStudio({ profileSlug }: { profileSlug: string }) {
         setTagsInput((data.post.tags || []).join(", "));
         setCoverImage(data.post.coverImage || "");
         setActiveTab("editor");
-        toast.info("Post editor me load ho gayi");
+        toast.info("Post loaded into editor");
       }
     } catch {
-      toast.error("Post fetch nahi ho saki");
+      toast.error("Failed to fetch post");
     }
   }
 
@@ -402,7 +402,7 @@ export function BlogStudio({ profileSlug }: { profileSlug: string }) {
             </div>
           ) : posts.length === 0 ? (
             <div className="rounded-xl border border-dashed border-white/10 py-12 text-center text-xs text-zinc-500">
-              Abhi tak koi daily blog post publish nahi hui. "Write / Edit Daily Post" par click karein.
+              No daily blog posts published yet. Click &quot;Write / Edit Daily Post&quot; to create your first article.
             </div>
           ) : (
             <div className="space-y-2.5">

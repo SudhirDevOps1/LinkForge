@@ -118,10 +118,10 @@ export function CreatorArchetypes() {
           Made For Every Workflow
         </div>
         <h2 className="mt-4 font-display text-3xl font-bold tracking-tight text-white sm:text-5xl">
-          Banaao Apne Andaaz Mein — <span className="text-gradient">Every Creator Vibe</span>
+          Designed for Your Style — <span className="text-gradient">Every Creator Vibe</span>
         </h2>
         <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-zinc-400 sm:text-base">
-          Chahe aap developer ho, content creator, designer ya independent consultant — LinkForge aapke workflow ke according adapt karta hai.
+          Whether you are a software developer, video creator, designer, or independent consultant — LinkForge adapts seamlessly to your workflow.
         </p>
       </Reveal>
 

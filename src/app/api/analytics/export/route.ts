@@ -9,7 +9,7 @@ import { buildCsv } from "@/lib/csv";
 export const GET = handle(async (req: Request) => {
   await guardRateLimit(req, "analytics:export", 10);
   const { profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
   const url = new URL(req.url);
   const daysParam = Number(url.searchParams.get("days") ?? 30);
   const days = [7, 14, 30, 90].includes(daysParam) ? daysParam : 30;

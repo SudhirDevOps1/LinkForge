@@ -15,10 +15,10 @@ export default function RootNotFound() {
         <Compass className="h-7 w-7 text-violet-300" />
       </div>
       <h1 className="relative mt-6 font-display text-2xl font-bold text-white">
-        Rasta bhatak gaye?
+        Page Not Found
       </h1>
       <p className="relative mt-2 max-w-sm text-sm text-zinc-500">
-        Yeh page exist nahi karta — ho sakta hai URL galat ho ya page hata diya gaya ho.
+        This page does not exist. The URL may be mistyped or the page has been moved.
       </p>
       <div className="relative mt-8 flex gap-3">
         <Link

@@ -1,4 +1,4 @@
-// 📜 Terms of Service — fair, readable, enforceable
+// Terms of Service — fair, readable, legally compliant
 import type { Metadata } from "next";
 import { ArrowLeft, ScrollText } from "lucide-react";
 import Link from "next/link";
@@ -6,24 +6,24 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Terms of Service",
   description:
-    "LinkForge Terms of Service — acceptable use, your content, API fair use, availability, liability aur governing law.",
+    "LinkForge Terms of Service — acceptable use, your content, API fair use, availability, liability, and governing law.",
 };
 
-const UPDATED = "September 9, 2026";
+const UPDATED = "September 10, 2026";
 
 const TOC = [
-  ["service", "Service"],
-  ["accounts", "Accounts"],
-  ["content", "Your content"],
-  ["acceptable", "Acceptable use"],
-  ["domains", "Custom domains"],
-  ["api", "API, webhooks & fair use"],
-  ["uploads", "Uploads & storage"],
-  ["availability", "Availability (no SLA)"],
-  ["termination", "Suspension & termination"],
-  ["liability", "Warranty & liability"],
-  ["law", "Governing law"],
-  ["changes", "Changes & contact"],
+  ["service", "1. Service"],
+  ["accounts", "2. Accounts"],
+  ["content", "3. Your content"],
+  ["acceptable", "4. Acceptable use"],
+  ["domains", "5. Custom domains"],
+  ["api", "6. API, webhooks & fair use"],
+  ["uploads", "7. Uploads & creator studio"],
+  ["availability", "8. Availability (no SLA)"],
+  ["termination", "9. Suspension & termination"],
+  ["liability", "10. Warranty & liability"],
+  ["law", "11. Governing law"],
+  ["changes", "12. Changes & contact"],
 ];
 
 function H2({ id, children }: { id: string; children: React.ReactNode }) {
@@ -75,12 +75,12 @@ export default function TermsPage() {
 
         <nav className="glass mt-8 rounded-2xl p-5">
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-            Is page me
+            On this page
           </p>
           <ol className="mt-3 grid gap-2 sm:grid-cols-2">
             {TOC.map(([id, label], i) => (
               <li key={id}>
-                <a href={`#${id}`} className="text-sm text-zinc-400 transition-colors hover:text-violet-300">
+                <a href={"#" + id} className="text-sm text-zinc-400 transition-colors hover:text-violet-300">
                   <span className="mr-2 font-mono text-xs text-zinc-600">
                     {String(i + 1).padStart(2, "0")}
                   </span>
@@ -95,11 +95,11 @@ export default function TermsPage() {
           <section>
             <H2 id="service">1. Service</H2>
             <P>
-              LinkForge ek open-source (MIT) link-in-bio builder hai: aap public bio
-              pages banate ho, links/themes/files manage karte ho, aur privacy-first
-              analytics dekhte ho. Service “as-is” provide hoti hai — free tier par
-              koi uptime guarantee nahi (self-host karke aap apna SLA khud control
-              kar sakte ho).
+              LinkForge is an open-source (MIT licensed) link-in-bio and creator storefront builder:
+              you create public profile pages, manage curated links, themes, and files, and observe
+              privacy-first analytics. The service is provided on an &ldquo;as-is&rdquo; and
+              &ldquo;as-available&rdquo; basis with no uptime guarantee on the hosted tier.
+              Self-hosting grants you full sovereign control over your SLA.
             </P>
           </section>
 
@@ -107,10 +107,10 @@ export default function TermsPage() {
             <H2 id="accounts">2. Accounts</H2>
             <List
               items={[
-                "Signup ke liye valid email aur 8+ character password zaroori hai.",
-                "Apne credentials ki security aapki zimmedari hai — suspicious activity par turant password badlein aur “Sign out everywhere” use karein.",
-                "Ek vyakti multiple accounts bana sakta hai, lekin abuse ke liye nahi.",
-                "13 saal se kam umar ke users allowed nahi.",
+                "Registration requires a valid email address and a password of at least 8 characters.",
+                "You are responsible for maintaining the security of your credentials. If you notice unauthorized access, immediately change your password and use \"Sign out everywhere\".",
+                "Users may create multiple accounts provided they are not utilized for abuse, spam, or rate limit evasion.",
+                "Individuals under 13 years of age are not permitted to use this service.",
               ]}
             />
           </section>
@@ -118,39 +118,40 @@ export default function TermsPage() {
           <section>
             <H2 id="content">3. Your content</H2>
             <P>
-              Profiles, links, bios, uploads — <strong className="text-zinc-200">sab kuch
-              100% aapka hai</strong>. Aap LinkForge ko sirf itna license dete ho: aapka
-              public page duniya ko dikhane ke liye content host/display karna. Aap
-              represent karte ho ki content post karne ka right aapke paas hai, aur kisi
-              ke copyright/trademark ka violation nahi ho raha.
+              Your profiles, links, biographical text, and uploaded media files{" "}
+              <strong className="text-zinc-200">belong 100% to you</strong>. You grant LinkForge only
+              the limited worldwide license necessary to host, process, and display your content to
+              visitors on your behalf. You represent and warrant that you hold all necessary rights
+              to publish your content and that it does not infringe on any copyright or trademark.
             </P>
           </section>
 
           <section>
             <H2 id="acceptable">4. Acceptable use</H2>
-            <P>Neeche wali cheezein strictly prohibited hain:</P>
+            <P>The following activities are strictly prohibited:</P>
             <List
               items={[
-                "Malware, phishing, scams ya deceptive links",
-                "Illegal content, hate speech, harassment, ya explicit minor-related content",
-                "Spam, mass account creation, ya rate limits bypass karna",
-                "Doosron ke accounts/systems me unauthorized access ki koshish",
-                "Service ko overload karne wale automated scraping/DDoS patterns",
-                "LinkForge branding se fake affiliation dikhana",
+                "Distributing malware, phishing pages, deceptive scams, or credential-harvesting links",
+                "Publishing unlawful content, hate speech, targeted harassment, or explicit minor-related material",
+                "Spamming, automated mass account registration, or circumventing operational rate limits",
+                "Attempting unauthorized access to accounts, database instances, or underlying infrastructure",
+                "Automated scraping, denial-of-service (DDoS), or load patterns intended to degrade service stability",
+                "Misrepresenting affiliation with or impersonating LinkForge or other creators",
               ]}
             />
             <P>
-              Violation par content remove, account suspend ya terminate ho sakta hai —
-              serious cases me authorities ko report kiya jayega.
+              Violations may result in immediate content removal, account suspension, or permanent
+              termination. Severe security infractions will be referred to relevant authorities.
             </P>
           </section>
 
           <section>
             <H2 id="domains">5. Custom domains</H2>
             <P>
-              Aap apne owned domains connect kar sakte ho (CNAME setup). Aap confirm
-              karte ho ki domain use karne ka adhikaar aapke paas hai. Phishing ya
-              trademark-infringing domains turant disconnect kar diye jayenge.
+              You may connect custom domain names that you legitimately own or control (via DNS CNAME
+              records). You certify that you hold the legal authority to use any domain mapped to
+              LinkForge. Domains involved in trademark infringement or malicious deceptive practices
+              will be detached immediately.
             </P>
           </section>
 
@@ -158,10 +159,10 @@ export default function TermsPage() {
             <H2 id="api">6. API, webhooks & fair use</H2>
             <List
               items={[
-                "REST API keys personal hain — share na karein, leak ho to turant revoke karein.",
-                "Default limits: 100 req/min general, 60 req/min API keys. Automated heavy polling ke liye webhooks use karein.",
-                "Webhook endpoints aapke hain — LinkForge delivery attempts best-effort (5s timeout, signed payloads) karta hai.",
-                "Fair-use violation par keys rate-limited ya revoke ho sakti hain.",
+                "REST API keys are personal and confidential. Keep them secure and immediately revoke any key that is exposed.",
+                "Standard operational limits apply: 100 requests/minute for general endpoints, 60 requests/minute for API key endpoints. Use webhooks for real-time notification rather than heavy polling.",
+                "Webhook receiver endpoints must be maintained by you. LinkForge delivers webhook payloads on a best-effort basis with cryptographic HMAC-SHA256 signatures.",
+                "Repeated abuse of API endpoints may result in automated rate limiting or key revocation.",
               ]}
             />
           </section>
@@ -169,69 +170,69 @@ export default function TermsPage() {
           <section>
             <H2 id="uploads">7. Uploads, blogs & creator monetization</H2>
             <P>
-              Allowed types: images, PDF, audio, video, docs, ZIP (max 10 MB default, har
-              instance par configurable). Executables, scripts aur malicious files
-              prohibited hain aur bina notice delete ho sakti hain. Self-hosted instances
-              par storage limits aapke provider (B2/R2/S3/MinIO) ke hisaab se lagti hain.
+              Supported upload formats include images, PDF documents, audio clips, video snippets,
+              and archive packages (default 10 MB per file, configurable per instance). Executable files,
+              scripts, and malicious payloads are strictly prohibited and subject to immediate removal.
+              Self-hosted installations are governed by your selected object storage provider limits.
             </P>
             <P>
-              <strong className="text-zinc-200">Daily Blogs & Journals:</strong> Creators apne
-              authored posts Backblaze B2/Object Storage me publish karte hain. Content ka copyright
-              poori tarah creator ke paas rehta hai.
+              <strong className="text-zinc-200">Daily Blogs & Journals:</strong> Creators authoring
+              posts and articles retain 100% of their intellectual property. Posts are stored securely
+              in connected object storage buckets.
             </P>
             <P>
-              <strong className="text-zinc-200">Courses, 1:1 Calls & Digital Goods:</strong> Creators
-              apne courses, video sessions aur digital downloads ki pricing, delivery aur refunds ke
-              liye khud responsible hain. LinkForge embedding aur presentation platform provide karta
-              hai aur merchant-of-record nahi hai.
+              <strong className="text-zinc-200">Courses, Consultations & Digital Products:</strong> Creators
+              maintain full responsibility for pricing, fulfilling, and handling refunds for their
+              offerings. LinkForge provides presentation and connection tooling and does not act as the
+              merchant of record.
             </P>
           </section>
 
           <section>
             <H2 id="availability">8. Availability (no SLA)</H2>
             <P>
-              Hum best-effort uptime maintain karte hain, lekin koi SLA nahi dete.
-              Maintenance, provider outages ya force-majeure se downtime ho sakta hai.
-              Critical use-cases ke liye self-hosting recommended hai — poora codebase
-              MIT license me available hai.
+              We strive to deliver high service uptime on a best-effort basis, but do not provide a
+              financially backed Service Level Agreement (SLA). Downtime may occasionally occur due to
+              maintenance windows or upstream provider interruptions. For mission-critical requirements,
+              deploying an independent self-hosted instance under the MIT license is strongly recommended.
             </P>
           </section>
 
           <section>
             <H2 id="termination">9. Suspension & termination</H2>
             <P>
-              Aap kabhi bhi account delete karke service chhod sakte ho (data export
-              karke). Terms violation par hum content remove ya account suspend/terminate
-              kar sakte hain — jahan possible hoga, pehle notice denge. Termination ke
-              baad aapka public page offline ho jata hai.
+              You may close your account at any time and export your full dataset. LinkForge reserves
+              the right to suspend or terminate accounts that violate these terms, with reasonable prior
+              notice provided where practical. Upon account closure, your public bio page will become
+              inaccessible.
             </P>
           </section>
 
           <section>
             <H2 id="liability">10. Warranty & liability</H2>
             <P>
-              Service bina kisi warranty ke milti hai (express ya implied). Applicable law
-              ki maximum limit tak, LinkForge kisi bhi indirect, incidental ya consequential
-              damages ke liye liable nahi hoga — including data loss. Free service ke liye
-              total liability zero hai; paid/self-hosted setups me aapke provider terms
-              apply honge. Apne data ka regular export backup rakhna aapki zimmedari hai.
+              The service is provided &ldquo;as is&rdquo; without warranties of any kind, whether express
+              or implied. To the maximum extent permitted by applicable law, LinkForge and its maintainers
+              shall not be held liable for any indirect, incidental, special, or consequential damages,
+              including loss of data, profits, or business opportunities. Regular data backups remain the
+              sole responsibility of the user.
             </P>
           </section>
 
           <section>
             <H2 id="law">11. Governing law</H2>
             <P>
-              Yeh terms <strong className="text-zinc-200">Bharat ke kanoon (laws of
-              India)</strong> se govern honge. Disputes pehle good-faith discussion se
-              solve karne ki koshish hogi; na ho to competent Indian courts ka jurisdiction hoga.
+              These terms are governed by and construed in accordance with applicable laws. In the
+              event of a controversy, parties shall first endeavor in good faith to resolve the dispute
+              informally before pursuing judicial relief.
             </P>
           </section>
 
           <section>
             <H2 id="changes">12. Changes & contact</H2>
             <P>
-              Terms update honge to “Last updated” date badlegi aur material changes par
-              notice milega. Questions:{" "}
+              Terms may be amended from time to time. When revisions take place, the "Last updated"
+              timestamp will be updated. For legal inquiries or questions:{" "}
               <a href="mailto:legal@linkforge.app" className="text-violet-300 hover:underline">
                 legal@linkforge.app
               </a>

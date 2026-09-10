@@ -12,7 +12,7 @@ export const POST = handle(async (req: Request) => {
   assertSameOrigin(req);
   await guardRateLimit(req, "profile:import", 10);
   const { profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
 
   const payload = parseOrThrow(importSchema, await req.json().catch(() => ({})));
   const mode = new URL(req.url).searchParams.get("mode") === "replace" ? "replace" : "merge";

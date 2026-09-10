@@ -16,7 +16,7 @@ export default function DocsPage() {
     <div className="mx-auto w-full max-w-2xl px-5 py-14">
       <h1 className="text-2xl font-bold">Documentation</h1>
       <p className="mt-2 text-sm text-zinc-500">
-        Setup guides repo me <code>docs/</code> folder me hain — neeche index. Video-demo:{" "}
+        Setup guides are available in the <code>docs/</code> directory of the repository — index below. Video demo:{" "}
         <Link href="/demo" className="underline hover:text-white">
           /demo
         </Link>{" "}
@@ -35,7 +35,7 @@ export default function DocsPage() {
         ))}
       </ul>
       <p className="mt-6 text-xs text-zinc-600">
-        Full guides GitHub par:{" "}
+        Complete documentation on GitHub:{" "}
         <a
           href="https://github.com/SudhirDevOps1/LinkForge/tree/main/docs"
           target="_blank"

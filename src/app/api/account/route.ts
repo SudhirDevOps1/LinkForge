@@ -36,7 +36,7 @@ export const PATCH = handle(async (req: Request) => {
   if (input.newPassword) {
     if (user.passwordHash) {
       if (!input.currentPassword) {
-        throw new ApiError(400, "Current password daalna zaroori hai");
+        throw new ApiError(400, "Current password is required");
       }
       const matches = await verifyPassword(input.currentPassword, user.passwordHash);
       if (!matches) {
@@ -50,7 +50,7 @@ export const PATCH = handle(async (req: Request) => {
     await db.update(users).set(updates).where(eq(users.id, user.id));
   }
 
-  return json({ ok: true, message: "Account update ho gaya" });
+  return json({ ok: true, message: "Account updated successfully" });
 });
 
 export const DELETE = handle(async (req: Request) => {
@@ -93,6 +93,6 @@ export const DELETE = handle(async (req: Request) => {
 
   return json({
     ok: true,
-    message: "Aapka account aur sabhi data permanently delete ho gaya.",
+    message: "Your account and all associated data have been permanently deleted.",
   });
 });

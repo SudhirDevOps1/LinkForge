@@ -1189,7 +1189,7 @@ export function BioRenderer({
           })}
           {active.length === 0 ? (
             <p className="text-center text-sm" style={{ color: v.muted }}>
-              Abhi koi link publish nahi hua.
+              No links published yet.
             </p>
           ) : null}
         </div>
@@ -1252,7 +1252,7 @@ export function BioRenderer({
                   type="button"
                   onClick={() => setActiveModal(null)}
                   className="rounded-lg bg-white/5 p-1.5 text-zinc-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-                  title="Close (Band karein)"
+                  title="Close"
                 >
                   <X className="h-4 w-4" />
                 </button>

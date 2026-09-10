@@ -117,7 +117,7 @@ export async function verifyEmailMx(rawEmail: string): Promise<EmailVerification
     return {
       valid: false,
       email,
-      reason: "Invalid email format. Sahi email address enter karein.",
+      reason: "Invalid email format. Please enter a valid email address.",
     };
   }
 
@@ -137,7 +137,7 @@ export async function verifyEmailMx(rawEmail: string): Promise<EmailVerification
       valid: false,
       email,
       domain,
-      reason: "Temporary / Disposable emails allowed nahi hain. Kripya apna real email use karein.",
+      reason: "Disposable or temporary email providers are not permitted. Please use your genuine email address.",
     };
   }
 
@@ -156,7 +156,7 @@ export async function verifyEmailMx(rawEmail: string): Promise<EmailVerification
         valid: false,
         email,
         domain,
-        reason: `Domain "${domain}" par koi active mail server (MX) nahi mila.`,
+        reason: `Domain "${domain}" has no active mail exchange (MX) servers configured.`,
       };
     }
 
@@ -178,7 +178,7 @@ export async function verifyEmailMx(rawEmail: string): Promise<EmailVerification
       valid: false,
       email,
       domain,
-      reason: `Email domain "${domain}" exist nahi karta ya is par mail receive nahi hoti.`,
+      reason: `Email domain "${domain}" does not exist or is unable to accept mail.`,
     };
   }
 }

@@ -139,7 +139,7 @@ export function MediaManager({
       setFiles((prev) =>
         prev.map((f) => (f.id === file.id ? { ...f, fileName: trimmed } : f)),
       );
-      toast.success("File rename ho gayi");
+      toast.success("File renamed successfully");
       setEditingFile(null);
     } catch (err) {
       toast.error((err as Error).message);
@@ -165,9 +165,9 @@ export function MediaManager({
       : `${window.location.origin}${file.url}`;
     try {
       await navigator.clipboard.writeText(absolute);
-      toast.success("File URL copy ho gaya");
+      toast.success("File URL copied to clipboard");
     } catch {
-      toast.error("Copy failed — URL manually select karein");
+      toast.error("Failed to copy URL — please select and copy manually");
     }
   }
 
@@ -220,8 +220,8 @@ export function MediaManager({
         }),
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) throw new Error(data.error ?? "Link banane me error");
-      toast.success(`"${cleanTitle}" ka ${detectedType.toUpperCase()} link ban gaya`);
+      if (!res.ok) throw new Error(data.error ?? "Failed to create link");
+      toast.success(`Created ${detectedType.toUpperCase()} link for "${cleanTitle}"`);
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
@@ -244,7 +244,7 @@ export function MediaManager({
         const data = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(data.error ?? "Delete failed");
       }
-      toast.success("File delete ho gayi");
+      toast.success("File deleted successfully");
     } catch (err) {
       setFiles(prev);
       toast.error((err as Error).message);
@@ -268,7 +268,7 @@ export function MediaManager({
       if (data.success) {
         toast.success("B2 CORS auto-applied! Ab direct uploads chalenge.");
       } else {
-        toast.error(data.message ?? "B2 CORS update failed — Backblaze Console me Option 4 select karein");
+        toast.error(data.message ?? "B2 CORS update failed — please select Option 4 in the Backblaze Console");
       }
     } catch (err) {
       toast.error((err as Error).message);
@@ -330,10 +330,10 @@ export function MediaManager({
         <div className="rounded-3xl border border-dashed border-white/10 p-12 text-center">
           <ImageIcon className="mx-auto h-10 w-10 text-zinc-600" />
           <p className="mt-4 text-sm font-medium text-zinc-300">
-            {files.length === 0 ? "Abhi koi file nahi" : "Koi file match nahi hui"}
+            {files.length === 0 ? "No files uploaded yet" : "No matching files found"}
           </p>
           <p className="mt-1 text-xs text-zinc-500">
-            Upar dropzone me PDF, images, audio ya koi bhi supported file daalein
+            Drag and drop PDFs, images, audio, or supported files into the dropzone above
           </p>
         </div>
       ) : (

@@ -39,10 +39,10 @@ export async function GET(req: Request, ctx: Ctx) {
   // Rate limit: 120 clicks/min per IP (abuse protection)
   const rl = await rateLimit(`track:${clientIp(req)}`, 120);
   if (!rl.success) {
-    return NextResponse.redirect(target, 302); // user ko block mat karo, sirf tracking skip
+    return NextResponse.redirect(target, 302); // do not block user navigation, only skip tracking
   }
 
-  // Non-blocking analytics + webhooks (response pehle, kaam baad me)
+  // Non-blocking analytics + webhooks (response immediately, log asynchronously)
   const headers = new Headers(req.headers);
   after(async () => {
     await trackEvent({

@@ -15,8 +15,7 @@ export default async function BlogPage() {
       <div>
         <h1 className="font-display text-2xl font-bold text-white">Daily Micro-Blog & Journal Studio</h1>
         <p className="mt-1 text-sm text-zinc-400">
-          Daily articles, developer logs aur updates write karein. Sabhi posts Backblaze B2 / Object Storage
-          me .md, .txt ya .html me save hoti hain — Neon database me zero storage bloat!
+          Publish daily articles, changelogs, and updates. All posts are streamed directly to Backblaze B2 or Object Storage (.md, .txt, .html) — maintaining zero storage bloat in your relational database!
         </p>
       </div>
       <BlogStudio profileSlug={ctx.profile.slug} />

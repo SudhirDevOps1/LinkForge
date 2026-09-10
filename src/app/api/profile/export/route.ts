@@ -8,7 +8,7 @@ import { requireUser } from "@/lib/auth";
 export const GET = handle(async (req: Request) => {
   await guardRateLimit(req, "profile:export", 10);
   const { profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
 
   const profileLinks = await db
     .select()

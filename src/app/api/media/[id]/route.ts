@@ -22,7 +22,7 @@ export const PATCH = handle(async (req: Request, ctx: Ctx) => {
   assertSameOrigin(req);
   await guardRateLimit(req, "media:update", 30);
   const { profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
   const { id } = await ctx.params;
   const input = parseOrThrow(mediaFileUpdateSchema, await req.json().catch(() => ({})));
 
@@ -31,7 +31,7 @@ export const PATCH = handle(async (req: Request, ctx: Ctx) => {
     .from(mediaFiles)
     .where(and(eq(mediaFiles.id, id), eq(mediaFiles.profileId, profile.id)))
     .limit(1);
-  if (!row) throw new ApiError(404, "File nahi mili");
+  if (!row) throw new ApiError(404, "File not found");
 
   const [updated] = await db
     .update(mediaFiles)
@@ -46,7 +46,7 @@ export const DELETE = handle(async (req: Request, ctx: Ctx) => {
   assertSameOrigin(req);
   await guardRateLimit(req, "media:delete", 30);
   const { profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
   const { id } = await ctx.params;
 
   const [row] = await db
@@ -54,14 +54,14 @@ export const DELETE = handle(async (req: Request, ctx: Ctx) => {
     .from(mediaFiles)
     .where(and(eq(mediaFiles.id, id), eq(mediaFiles.profileId, profile.id)))
     .limit(1);
-  if (!row) throw new ApiError(404, "File nahi mili");
+  if (!row) throw new ApiError(404, "File not found");
 
   // Guard 1: provider mismatch — galat backend par delete se orphan banta hai
   const storage = await getStorage();
   if (row.storageProvider !== storage.provider) {
     throw new ApiError(
       400,
-      `Provider mismatch (file: ${row.storageProvider}, current: ${storage.provider}) — STORAGE_PROVIDER wapas karke delete karein`,
+      `Storage provider mismatch (file: ${row.storageProvider}, current: ${storage.provider})`,
     );
   }
 
@@ -74,7 +74,7 @@ export const DELETE = handle(async (req: Request, ctx: Ctx) => {
   if (refs.length > 0) {
     return json(
       {
-        error: "File active links me use ho rahi hai — pehle unlink karein",
+        error: "File is currently in use by active links — please unlink first",
         referencedBy: refs,
       },
       { status: 409 },

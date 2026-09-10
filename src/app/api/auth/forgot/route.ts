@@ -20,14 +20,14 @@ export const POST = handle(async (req: Request) => {
     await db.insert(mailOutbox).values({
       toEmail: email.toLowerCase().trim(),
       subject: "LinkForge — Password reset",
-      body: `Reset your password: ${baseUrl}/reset-password?token=${token}\n\nYeh link 1 ghante me expire ho jayega.`,
+      body: `Reset your password: ${baseUrl}/reset-password?token=${token}\n\nThis link will expire in 1 hour.`,
     });
   }
 
   // User-enumeration se bachne ke liye hamesha same response
   return json({
     ok: true,
-    message: "Agar account exists karta hai to reset link bhej diya gaya hai",
+    message: "If an account exists for this email, a reset link has been sent.",
   });
 });
 

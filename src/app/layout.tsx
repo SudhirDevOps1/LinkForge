@@ -37,10 +37,11 @@ export const metadata: Metadata = {
     template: "%s · LinkForge",
   },
   description:
-    "Production-grade link-in-bio builder — kisi bhi database (Neon, Turso, D1, Supabase), kisi bhi cloud (Vercel, Cloudflare, Netlify), kisi bhi storage (B2, R2, S3) par. Free & self-hostable.",
+    "Production-grade link-in-bio builder — deployable on any database (Neon, Turso, D1, Supabase), any cloud (Vercel, Cloudflare, Netlify), and any storage (B2, R2, S3). Free, privacy-first, and fully self-hostable.",
   keywords: [
     "link in bio",
-    "linktree alternative",
+    "creator storefront",
+    "bio link builder",
     "open source",
     "self-hosted",
     "multi-cloud",

@@ -55,37 +55,37 @@ const FEATURES = [
   {
     icon: Database,
     title: "Any database",
-    body: "Neon, Turso, Cloudflare D1, Supabase ya local Postgres — ek env var se switch. Drizzle ORM ki unified API sab par chalti hai.",
+    body: "Neon, Turso, Cloudflare D1, Supabase, or local Postgres — switch with a single env variable. Drizzle ORM's unified API works across all.",
     span: "sm:col-span-2",
   },
   {
     icon: Cloud,
     title: "Deploy anywhere",
-    body: "Vercel, Cloudflare Pages, Netlify, Railway, Render ya Docker — same codebase, zero config change.",
+    body: "Vercel, Cloudflare Pages, Netlify, Railway, Render, or Docker — same codebase, zero configuration changes.",
     span: "",
   },
   {
     icon: HardDrive,
     title: "Any storage",
-    body: "Backblaze B2, R2, S3, MinIO, Vercel Blob ya local disk. Presigned uploads built-in.",
+    body: "Backblaze B2, Cloudflare R2, AWS S3, MinIO, Vercel Blob, or local storage. Presigned uploads built-in.",
     span: "",
   },
   {
     icon: BarChart3,
     title: "Privacy-first analytics",
-    body: "Clicks, unique visitors, devices, geo, referrers — bina cookies, bina raw IP storage ke.",
+    body: "Clicks, unique visitors, devices, geo-locations, and referrers — zero cookies, zero raw IP storage.",
     span: "sm:col-span-2",
   },
   {
     icon: Palette,
     title: "12 themes + bento grid",
-    body: "Midnight se Cyber Neon tak — har pixel customizable. List ya bento layout, ek click me.",
+    body: "From Midnight to Cyber Neon — every pixel customizable. Switch between list and bento layouts in one click.",
     span: "",
   },
   {
     icon: Webhook,
     title: "Webhooks + REST API",
-    body: "Click events par signed webhooks. Third-party apps ke liye API keys ke saath REST API.",
+    body: "HMAC-signed webhooks on click events. Complete REST API with personal API keys for third-party integrations.",
     span: "sm:col-span-2",
   },
 ];
@@ -168,8 +168,8 @@ export default function LandingPage() {
         </Reveal>
         <Reveal delay={200}>
           <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-zinc-400 sm:text-lg">
-            Advanced link-in-bio builder jo kisi bhi database, kisi bhi cloud aur
-            kisi bhi storage par chalta hai — poori tarah free, poori tarah aapka.
+            Advanced link-in-bio builder that runs on any database, any cloud, and
+            any storage — 100% free, 100% open-source, and sovereign to you.
           </p>
         </Reveal>
         <Reveal delay={300}>
@@ -249,9 +249,9 @@ export default function LandingPage() {
         </div>
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
           {[
-            { icon: Lock, title: "Security hardened", body: "Rate limiting, CSRF, Zod validation, hashed IPs." },
-            { icon: Globe, title: "Custom domains", body: "bio.aapka-domain.com — apna brand, apna domain." },
-            { icon: KeyRound, title: "Export / Import", body: "Aapka data aapka hai — JSON me kabhi bhi nikaalein." },
+            { icon: Lock, title: "Security hardened", body: "Rate limiting, CSRF protection, strict Zod validation, and hashed IPs." },
+            { icon: Globe, title: "Custom domains", body: "bio.yourbrand.com — your own domain with seamless CNAME setup." },
+            { icon: KeyRound, title: "Export / Import", body: "Your data belongs to you — export full JSON backups anytime." },
           ].map((f, i) => (
             <Reveal key={f.title} delay={i * 100}>
               <div className="glass h-full rounded-3xl p-5 transition-all duration-300 hover:border-violet-400/25">
@@ -279,11 +279,11 @@ export default function LandingPage() {
             Interactive demo
           </p>
           <h2 className="mt-3 font-display text-3xl font-bold tracking-tight sm:text-4xl">
-            Pehle try karo, phir signup karo
+            Try First, Sign Up Later
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm text-zinc-400">
-            Neeche saare themes aur layouts live switch karke dekho — yehi
-            real renderer hai jo tumhare page par chalega.
+            Switch between all themes and layouts live below — this is the
+            exact real-time renderer that powers your bio page.
           </p>
         </Reveal>
         <Reveal delay={150}>
@@ -297,11 +297,11 @@ export default function LandingPage() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-300">12 themes</p>
             <h2 className="mt-3 font-display text-3xl font-bold tracking-tight sm:text-4xl">
-              Har vibe ke liye ek theme
+              A Theme for Every Aesthetic
             </h2>
           </div>
           <Link href="/signup" className="group inline-flex items-center gap-1.5 text-sm font-medium text-violet-300 hover:text-violet-200">
-            Sab try karein <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            Explore all themes <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Link>
         </Reveal>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
@@ -349,19 +349,19 @@ export default function LandingPage() {
         <div className="mx-auto max-w-4xl px-5 py-24 text-center">
           <Reveal>
             <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-500/10 px-4 py-1.5 text-xs font-medium text-emerald-300">
-              <Zap className="h-3.5 w-3.5" /> Free tier stack — ₹0/month
+              <Zap className="h-3.5 w-3.5" /> Generous Free Stack — $0/month
             </div>
           </Reveal>
           <Reveal delay={100}>
             <h2 className="mt-6 font-display text-4xl font-bold tracking-tight sm:text-6xl">
-              <span className="text-gradient">$0</span> se shuru karein
+              Start with <span className="text-gradient">$0</span> Forever
             </h2>
           </Reveal>
           <Reveal delay={200}>
             <p className="mx-auto mt-5 max-w-xl text-zinc-400">
               Neon (0.5 GB) + Turso (1 GB) + D1 (5 GB) + B2 (10 GB) + Vercel/Cloudflare
-              free tier — production app bina ek rupee kharch kiye. Scale karna ho to
-              self-host karein, koi lock-in nahi.
+              free tiers — run your full production application with zero ongoing costs.
+              Scale freely or self-host anytime with zero vendor lock-in.
             </p>
           </Reveal>
           <div className="mx-auto mt-10 grid gap-3 text-left sm:grid-cols-3">
@@ -401,7 +401,7 @@ export default function LandingPage() {
         <Reveal className="mb-10 text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-300">FAQ</p>
           <h2 className="mt-3 font-display text-3xl font-bold tracking-tight sm:text-4xl">
-            Sawal? Jawab ready hai
+            Frequently Asked Questions
           </h2>
         </Reveal>
         <Reveal delay={100}>

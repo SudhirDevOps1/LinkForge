@@ -76,10 +76,10 @@ export function DeployEcosystem() {
           Zero Lock-In · Self-Host Anywhere
         </div>
         <h2 className="mt-4 font-display text-3xl font-bold tracking-tight text-white sm:text-5xl">
-          Deploy in 60 Seconds — <span className="text-gradient">Aapka Server, Aapke Rules</span>
+          Deploy in 60 Seconds — <span className="text-gradient">Your Server, Your Rules</span>
         </h2>
         <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-zinc-400 sm:text-base">
-          Vercel, Railway, Docker ya apna personal VPS — standard Next.js + Drizzle architecture kisi bhi environment par bina hassle chalta hai.
+          Vercel, Railway, Docker, or your personal VPS — standard Next.js + Drizzle architecture runs effortlessly in any environment without hassle.
         </p>
       </Reveal>
 

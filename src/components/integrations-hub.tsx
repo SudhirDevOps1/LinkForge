@@ -105,7 +105,7 @@ export function IntegrationsHub({ defaultGithubUser = "SudhirDevOps1" }: { defau
     try {
       const res = await fetch(`/api/integrations/feed?type=youtube&url=${encodeURIComponent(ytUrl.trim())}`);
       const data = await res.json();
-      if (!res.ok || !data.title) throw new Error(data.error || "YouTube video verify nahi ho saka");
+      if (!res.ok || !data.title) throw new Error(data.error || "Could not verify YouTube video");
       setYtPreview({
         title: data.title,
         author: data.author,
@@ -142,8 +142,8 @@ export function IntegrationsHub({ defaultGithubUser = "SudhirDevOps1" }: { defau
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Import fail ho gaya");
-      toast.success(`"${ytPreview.title}" bio me add ho gaya!`);
+      if (!res.ok) throw new Error(data.error || "Import failed");
+      toast.success(`"${ytPreview.title}" added to bio!`);
       setYtPreview(null);
       setYtUrl("");
     } catch (err: any) {
@@ -156,12 +156,12 @@ export function IntegrationsHub({ defaultGithubUser = "SudhirDevOps1" }: { defau
   // 3. Import Course / Curriculum Playlist
   async function importCoursePlaylist() {
     if (!courseTitle.trim()) {
-      toast.error("Course ya Playlist ka title likhein");
+      toast.error("Please enter a course or playlist title");
       return;
     }
     const validLessons = lessons.filter((l) => l.title.trim() && l.url.trim());
     if (validLessons.length === 0) {
-      toast.error("Kam se kam 1 valid lesson URL add karein");
+      toast.error("Please add at least 1 valid lesson URL");
       return;
     }
 
@@ -182,8 +182,8 @@ export function IntegrationsHub({ defaultGithubUser = "SudhirDevOps1" }: { defau
         body: JSON.stringify({ links: payloadLinks }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Course import fail ho gaya");
-      toast.success(`${data.importedCount ?? validLessons.length} course lessons add ho gaye! (${data.skippedCount ?? 0} skipped)`);
+      if (!res.ok) throw new Error(data.error || "Failed to import course lessons");
+      toast.success(`${data.importedCount ?? validLessons.length} course lessons imported! (${data.skippedCount ?? 0} skipped)`);
       setCourseTitle("");
     } catch (err: any) {
       toast.error(err.message);
@@ -199,7 +199,7 @@ export function IntegrationsHub({ defaultGithubUser = "SudhirDevOps1" }: { defau
     try {
       const res = await fetch(`/api/integrations/feed?type=spotify&url=${encodeURIComponent(spotifyUrl.trim())}`);
       const data = await res.json();
-      if (!res.ok || !data.title) throw new Error(data.error || "Spotify track verify nahi ho saka");
+      if (!res.ok || !data.title) throw new Error(data.error || "Could not verify Spotify track");
       setSpotifyPreview({
         title: data.title,
         thumbnailUrl: data.thumbnailUrl,
@@ -235,8 +235,8 @@ export function IntegrationsHub({ defaultGithubUser = "SudhirDevOps1" }: { defau
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Import fail ho gaya");
-      toast.success(`Spotify player bio me add ho gaya!`);
+      if (!res.ok) throw new Error(data.error || "Import failed");
+      toast.success("Spotify player added to bio!");
       setSpotifyPreview(null);
       setSpotifyUrl("");
     } catch (err: any) {
@@ -254,11 +254,11 @@ export function IntegrationsHub({ defaultGithubUser = "SudhirDevOps1" }: { defau
       const res = await fetch(`/api/integrations/feed?type=rss&url=${encodeURIComponent(feedUrl.trim())}`);
       const data = await res.json();
       if (!res.ok || !data.items || data.items.length === 0) {
-        throw new Error(data.error || "Koi articles ya RSS feed nahi mili. URL check karein.");
+        throw new Error(data.error || "No articles or RSS feed found. Please check the URL.");
       }
       setFeedArticles(data.items);
       setSelectedArticles(new Set(data.items.slice(0, 5).map((a: any) => a.url)));
-      toast.success(`${data.items.length} articles load ho gaye!`);
+      toast.success(`${data.items.length} articles loaded!`);
     } catch (err: any) {
       toast.error(err.message || "Failed to fetch feed");
     } finally {
@@ -269,7 +269,7 @@ export function IntegrationsHub({ defaultGithubUser = "SudhirDevOps1" }: { defau
   // 7. Batch Import Feed Articles
   async function importSelectedArticles() {
     if (selectedArticles.size === 0) {
-      toast.error("Kam se kam ek article select karein");
+      toast.error("Please select at least one article");
       return;
     }
     setIsImportingFeed(true);
@@ -290,8 +290,8 @@ export function IntegrationsHub({ defaultGithubUser = "SudhirDevOps1" }: { defau
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Articles import fail ho gaye");
-      toast.success(`${data.importedCount ?? toImport.length} articles bio me import ho gaye! (${data.skippedCount ?? 0} duplicates skipped)`);
+      if (!res.ok) throw new Error(data.error || "Failed to import articles");
+      toast.success(`${data.importedCount ?? toImport.length} articles imported to bio! (${data.skippedCount ?? 0} duplicates skipped)`);
       setFeedArticles([]);
       setSelectedArticles(new Set());
     } catch (err: any) {
@@ -304,7 +304,7 @@ export function IntegrationsHub({ defaultGithubUser = "SudhirDevOps1" }: { defau
   // 8. Import Digital Product Card
   async function importProduct() {
     if (!prodTitle.trim() || !prodUrl.trim()) {
-      toast.error("Product title aur URL dono zaroori hain");
+      toast.error("Product title and URL are both required");
       return;
     }
     setIsImportingProd(true);
@@ -326,8 +326,8 @@ export function IntegrationsHub({ defaultGithubUser = "SudhirDevOps1" }: { defau
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Product add nahi ho saka");
-      toast.success(`Product card "${prodTitle}" bio me add ho gaya!`);
+      if (!res.ok) throw new Error(data.error || "Failed to add product card");
+      toast.success(`Product card "${prodTitle}" added to bio!`);
       setProdTitle("");
       setProdUrl("");
       setProdDesc("");
@@ -341,7 +341,7 @@ export function IntegrationsHub({ defaultGithubUser = "SudhirDevOps1" }: { defau
   // 9. Import Calendly / Booking Card
   async function importBooking() {
     if (!bookingTitle.trim() || !bookingUrl.trim()) {
-      toast.error("Booking title aur URL zaroori hain");
+      toast.error("Booking title and URL are required");
       return;
     }
     setIsImportingBooking(true);
@@ -363,8 +363,8 @@ export function IntegrationsHub({ defaultGithubUser = "SudhirDevOps1" }: { defau
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Booking card add nahi ho saka");
-      toast.success(`Booking card "${bookingTitle}" bio me add ho gaya!`);
+      if (!res.ok) throw new Error(data.error || "Failed to add booking card");
+      toast.success(`Booking card "${bookingTitle}" added to bio!`);
       setBookingUrl("");
     } catch (err: any) {
       toast.error(err.message);
@@ -376,7 +376,7 @@ export function IntegrationsHub({ defaultGithubUser = "SudhirDevOps1" }: { defau
   // 10. Import Community Card
   async function importCommunity() {
     if (!commTitle.trim() || !commUrl.trim()) {
-      toast.error("Community title aur URL dono zaroori hain");
+      toast.error("Community title and URL are both required");
       return;
     }
     setIsImportingComm(true);
@@ -398,8 +398,8 @@ export function IntegrationsHub({ defaultGithubUser = "SudhirDevOps1" }: { defau
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Community card add nahi ho saka");
-      toast.success(`Community card "${commTitle}" bio me add ho gaya!`);
+      if (!res.ok) throw new Error(data.error || "Failed to add community card");
+      toast.success(`Community card "${commTitle}" added to bio!`);
       setCommUrl("");
     } catch (err: any) {
       toast.error(err.message);
@@ -526,7 +526,7 @@ export function IntegrationsHub({ defaultGithubUser = "SudhirDevOps1" }: { defau
               </span>
             </div>
             <p className="text-xs text-zinc-400 mb-4">
-              Koi bhi YouTube video URL daalein — automatic title aur HD thumbnail detect karke public bio me embedded video card create karega.
+              Enter any YouTube video URL — automatically detects the title and HD thumbnail to create an interactive embedded video card on your public bio.
             </p>
 
             <div className="flex flex-col gap-2.5 sm:flex-row">
@@ -581,18 +581,12 @@ export function IntegrationsHub({ defaultGithubUser = "SudhirDevOps1" }: { defau
           {/* Full Multi-Lesson Course / Curriculum Playlist Builder */}
           <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
             <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2 text-sm font-semibold text-white">
-                <BookOpen className="h-5 w-5 text-violet-400" />
-                <span>Course & Curriculum Playlist Builder</span>
-              </div>
-              <span className="rounded-full bg-violet-500/10 px-2.5 py-0.5 text-[10px] font-bold text-violet-400 border border-violet-500/20">
-                MULTI-CHAPTER
-              </span>
+            <div>
+              <h3 className="text-base font-bold text-white">Course & Curriculum Playlist Builder</h3>
+              <p className="text-xs text-zinc-400">
+                Create your complete course, tutorial playlist, or video curriculum in one place. Each lesson is added as a structured chapter card to your bio links.
+              </p>
             </div>
-            <p className="text-xs text-zinc-400 mb-5">
-              Apna complete YouTube course, tutorial playlist ya video curriculum ek saath create karein. Har lesson numbered chapter format me bio links me add hoga.
-            </p>
-
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="sm:col-span-2">
@@ -704,6 +698,7 @@ export function IntegrationsHub({ defaultGithubUser = "SudhirDevOps1" }: { defau
             </div>
           </div>
         </div>
+      </div>
       )}
 
       {/* 2. SPOTIFY & AUDIO MUSIC IMPORTER */}
@@ -718,9 +713,12 @@ export function IntegrationsHub({ defaultGithubUser = "SudhirDevOps1" }: { defau
               AUDIO EMBED
             </span>
           </div>
-          <p className="text-xs text-zinc-400">
-            Spotify track, album ya podcast URL paste karein. Bio page par interactive Spotify player embed hoga jisme visitors directly sun sakte hain.
-          </p>
+          <div>
+            <h3 className="text-base font-bold text-white">Embed Spotify Player</h3>
+            <p className="text-xs text-zinc-400">
+              Paste a Spotify track, album, or podcast URL. An interactive audio player will embed directly on your profile so visitors can listen in one tap.
+            </p>
+          </div>
 
           <div className="flex flex-col gap-2.5 sm:flex-row">
             <input
@@ -784,7 +782,7 @@ export function IntegrationsHub({ defaultGithubUser = "SudhirDevOps1" }: { defau
             </span>
           </div>
           <p className="text-xs text-zinc-400">
-            Apna Substack URL (e.g. <code>https://username.substack.com</code>) ya Medium handle daalein — latest published posts auto-fetch ho jaayengi.
+            Enter your Substack URL (e.g. <code>https://username.substack.com</code>) or Medium handle to automatically discover and link your latest published posts.
           </p>
 
           <div className="flex flex-col gap-2.5 sm:flex-row">
@@ -892,7 +890,7 @@ export function IntegrationsHub({ defaultGithubUser = "SudhirDevOps1" }: { defau
             </span>
           </div>
           <p className="text-xs text-zinc-400">
-            Gumroad, LemonSqueezy, Payhip ya BuyMeACoffee product link add karein. Price tag aur purchase call-to-action button ke saath card display hoga.
+            Add a digital product link from your storefront. Displays with clear pricing, format badge, and direct purchase call-to-action.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -978,7 +976,7 @@ export function IntegrationsHub({ defaultGithubUser = "SudhirDevOps1" }: { defau
             </span>
           </div>
           <p className="text-xs text-zinc-400">
-            1-on-1 mentorship call, client consultation ya discovery session schedule karne ke liye booking card add karein.
+            Schedule 1-on-1 mentorship calls, client consultations, or discovery sessions with a direct booking card.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -1037,7 +1035,7 @@ export function IntegrationsHub({ defaultGithubUser = "SudhirDevOps1" }: { defau
             </span>
           </div>
           <p className="text-xs text-zinc-400">
-            Apne Discord server, Telegram channel ya Twitch stream ke liye customized community cards add karein.
+            Add customized community access cards for your Discord server, Telegram channel, or live stream.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -1110,7 +1108,7 @@ export function IntegrationsHub({ defaultGithubUser = "SudhirDevOps1" }: { defau
             </span>
           </div>
           <p className="text-xs text-zinc-400">
-            Username se live public repos preview karke star count ke saath batch import karein. Existing manual links bilkul safe rehte hain.
+            Preview live public repositories with star counts and batch import them in one click. Existing links remain completely safe.
           </p>
 
           <GithubIntegration defaultUsername={defaultGithubUser} />

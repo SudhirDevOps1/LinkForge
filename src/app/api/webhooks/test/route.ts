@@ -10,9 +10,9 @@ export const POST = handle(async (req: Request) => {
   assertSameOrigin(req);
   await guardRateLimit(req, "webhooks:test", 10);
   const { profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
   const { id } = parseOrThrow(bodySchema, await req.json().catch(() => ({})));
   const ok = await sendTestWebhook(id, profile.id);
-  if (!ok) throw new ApiError(404, "Webhook nahi mila");
+  if (!ok) throw new ApiError(404, "Webhook not found");
   return json({ ok: true });
 });

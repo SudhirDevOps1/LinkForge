@@ -39,7 +39,7 @@ export const POST = handle(async (req: Request) => {
     .limit(1);
 
   if (!profile || !profile.isPublished) {
-    throw new ApiError(404, "Profile nahi mili ya abhi unpublished hai");
+    throw new ApiError(404, "Profile not found or currently unpublished");
   }
 
   // 2. Comprehensive MX DNS & Disposable Verification
@@ -82,7 +82,7 @@ export const POST = handle(async (req: Request) => {
     return json({
       success: true,
       alreadySubscribed: true,
-      message: `${verification.email} pehle se ${profile.displayName} ke newsletter me subscribed hai! 🎉`,
+      message: `${verification.email} is already subscribed to ${profile.displayName}'s newsletter! 🎉`,
     });
   }
 
@@ -99,7 +99,7 @@ export const POST = handle(async (req: Request) => {
     {
       success: true,
       alreadySubscribed: false,
-      message: `Shukriya! ${profile.displayName} ke updates ke liye successfully subscribe ho gaye! 🎉`,
+      message: `Thank you! You have successfully subscribed to updates from ${profile.displayName}! 🎉`,
     },
     { status: 201 }
   );

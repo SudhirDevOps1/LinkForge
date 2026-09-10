@@ -18,7 +18,7 @@ import { designPrefsSchema } from "@/lib/validations";
 
 export const GET = handle(async () => {
   const { profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
   return json({ design: parseDesign(profile.design) });
 });
 
@@ -26,7 +26,7 @@ export const PATCH = handle(async (req: Request) => {
   assertSameOrigin(req);
   await guardRateLimit(req, "design:save", 30);
   const { profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
   const prefs = parseOrThrow(designPrefsSchema, await req.json().catch(() => ({})));
   // Merge (existing keys preserve) + server-side clamp — client bypass safe
   const merged = clampDesign({ ...(parseDesign(profile.design) ?? {}), ...prefs });

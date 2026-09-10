@@ -108,7 +108,7 @@ export function FileDropzone({
           ? resolve()
           : reject(new Error(`Storage upload failed (${xhr.status})`));
       xhr.onerror = () => reject(new Error("Storage upload failed (CORS check)"));
-      xhr.onabort = () => reject(new Error("Upload cancel kiya gaya"));
+      xhr.onabort = () => reject(new Error("Upload cancelled"));
       xhr.send(finalBlob);
     });
 
@@ -280,11 +280,11 @@ export function FileDropzone({
               <FileUp className={cn("text-zinc-500", compact ? "h-5 w-5" : "h-8 w-8")} />
             )}
             <span className={cn("font-medium text-zinc-200", compact ? "text-xs" : "text-sm")}>
-              {dragOver ? "Chhod do — upload shuru!" : "Drag & drop files here"}
+              {dragOver ? "Drop files to upload" : "Drag & drop files here"}
             </span>
             {!compact || !dragOver ? (
               <span className="text-xs text-zinc-500">
-                ya click karke choose karein · PDF, images, audio, video, docs, zip · max{" "}
+                or click to browse · PDF, images, audio, video, docs, zip · max{" "}
                 {maxLabel}
               </span>
             ) : null}

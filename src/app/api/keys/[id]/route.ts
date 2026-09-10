@@ -17,6 +17,6 @@ export const DELETE = handle(async (req: Request, ctx: Ctx) => {
     .set({ revokedAt: new Date() })
     .where(and(eq(apiKeys.id, id), eq(apiKeys.userId, user.id)))
     .returning({ id: apiKeys.id });
-  if (!revoked) throw new ApiError(404, "API key nahi mili");
+  if (!revoked) throw new ApiError(404, "API key not found");
   return json({ ok: true });
 });

@@ -53,7 +53,7 @@ export const POST = handle(async (req: Request) => {
         prefix: created.prefix,
         createdAt: created.createdAt,
       },
-      rawKey, // ⚠️ sirf ek baar visible — copy karke safe jagah store karein
+      rawKey, // ⚠️ only visible once — copy and store in a secure location
     },
     { status: 201 },
   );

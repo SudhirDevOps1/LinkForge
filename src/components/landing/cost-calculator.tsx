@@ -9,15 +9,15 @@ export function CostCalculator() {
   const [traffic, setTraffic] = useState(25000);
 
   // Approximate pricing tiers
-  // Linktree Pro: ₹499/mo to ₹1,999/mo based on features
-  const linktreeCost = traffic > 100000 ? 1999 : traffic > 25000 ? 999 : 499;
-  // Newsletter service (Mailchimp/ConvertKit): ₹1,500 to ₹4,500/mo based on subscribers (~2% of traffic)
+  // Proprietary Link-in-Bio Tool: ₹499/mo to ₹1,999/mo based on features
+  const proprietaryToolCost = traffic > 100000 ? 1999 : traffic > 25000 ? 999 : 499;
+  // Newsletter service: ₹1,500 to ₹4,500/mo based on subscribers (~2.5% of traffic)
   const subscribersEstimate = Math.round(traffic * 0.025);
   const newsletterCost = subscribersEstimate > 5000 ? 4200 : subscribersEstimate > 1000 ? 2200 : 1200;
-  // Storage & CDN egress: ₹500 to ₹1,800/mo
+  // Storage & CDN egress: ₹350 to ₹1,500/mo
   const storageCost = traffic > 100000 ? 1500 : traffic > 25000 ? 800 : 350;
 
-  const monthlyOtherTotal = linktreeCost + newsletterCost + storageCost;
+  const monthlyOtherTotal = proprietaryToolCost + newsletterCost + storageCost;
   const annualSavings = monthlyOtherTotal * 12;
 
   return (
@@ -28,10 +28,10 @@ export function CostCalculator() {
           Interactive ROI Calculator
         </div>
         <h2 className="mt-4 font-display text-3xl font-bold tracking-tight text-white sm:text-5xl">
-          Kitna bachega <span className="text-gradient">LinkForge ke sath?</span>
+          How much will you save <span className="text-gradient">with LinkForge?</span>
         </h2>
         <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-zinc-400 sm:text-base">
-          Linktree Pro aur third-party newsletter widgets ka monthly bill compare karein. LinkForge par wahi sab 100% free hai.
+          Compare your monthly expenses with proprietary link-in-bio services and third-party newsletter widgets. LinkForge provides all of this 100% free and open-source.
         </p>
       </Reveal>
 
@@ -41,7 +41,7 @@ export function CostCalculator() {
           <div>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <label htmlFor="traffic-slider" className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
-                Aapke Monthly Profile Visitors:
+                Your Monthly Profile Visitors:
               </label>
               <span className="font-display text-2xl font-bold text-violet-300">
                 {traffic.toLocaleString("en-IN")} <span className="text-xs font-normal text-zinc-500">views/month</span>
@@ -82,8 +82,8 @@ export function CostCalculator() {
 
               <div className="mt-6 space-y-3 text-xs text-zinc-300">
                 <div className="flex justify-between border-b border-white/5 pb-2">
-                  <span>Linktree Pro (Analytics, Bento)</span>
-                  <span className="font-mono text-zinc-400">₹{linktreeCost}/mo</span>
+                  <span>Standard Link-in-Bio (Analytics, Bento)</span>
+                  <span className="font-mono text-zinc-400">₹{proprietaryToolCost}/mo</span>
                 </div>
                 <div className="flex justify-between border-b border-white/5 pb-2">
                   <span>Newsletter Widget (~{subscribersEstimate} subs)</span>
@@ -143,10 +143,10 @@ export function CostCalculator() {
           <div className="mt-8 flex flex-col items-center justify-between gap-4 rounded-2xl border border-white/10 bg-ink-950/60 p-4 sm:flex-row sm:px-6">
             <div>
               <p className="text-xs font-bold text-white sm:text-sm">
-                Aap har saal lagbhag <span className="text-emerald-400">₹{annualSavings.toLocaleString("en-IN")}</span> bacha rahe hain.
+                You save approximately <span className="text-emerald-400">₹{annualSavings.toLocaleString("en-IN")}</span> every single year.
               </p>
               <p className="text-[11px] text-zinc-400">
-                Aapka data aapka hai — zero monthly SaaS tax, 100% open source.
+                Your data belongs to you — zero monthly SaaS tax, 100% open source.
               </p>
             </div>
             <Link

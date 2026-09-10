@@ -13,17 +13,17 @@ export const POST = handle(async (req: Request) => {
   assertSameOrigin(req);
   await guardRateLimit(req, "avatar:upload", 20);
   const { user, profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
 
   const form = await req.formData().catch(() => null);
   const file = form?.get("file");
-  if (!(file instanceof File)) throw new ApiError(400, "file field zaroori hai");
+  if (!(file instanceof File)) throw new ApiError(400, "file field is required");
 
   if (!(ALLOWED_IMAGE_TYPES as readonly string[]).includes(file.type)) {
-    throw new ApiError(400, "Sirf JPG/PNG/WebP/GIF images allowed hain");
+    throw new ApiError(400, "Only JPG, PNG, WebP, and GIF images are allowed");
   }
   if (file.size > MAX_AVATAR_BYTES) {
-    throw new ApiError(400, "Avatar 2 MB se chhota hona chahiye");
+    throw new ApiError(400, "Avatar image must be smaller than 2 MB");
   }
 
   const ext = file.type.split("/")[1] ?? "bin";

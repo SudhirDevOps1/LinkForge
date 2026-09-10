@@ -8,7 +8,7 @@ import { linkCreateSchema } from "@/lib/validations";
 
 export const GET = handle(async () => {
   const { profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
   const rows = await db
     .select()
     .from(links)
@@ -21,7 +21,7 @@ export const POST = handle(async (req: Request) => {
   assertSameOrigin(req);
   await guardRateLimit(req, "links:create", 60);
   const { profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
   const input = parseOrThrow(linkCreateSchema, await req.json().catch(() => ({})));
 
   // Naya link sabse neeche (max position + 1)

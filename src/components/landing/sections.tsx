@@ -47,20 +47,20 @@ const STEPS = [
   {
     n: "01",
     icon: UserPlus,
-    title: "Account banayein",
-    body: "30 seconds me free signup — koi credit card nahi, koi trial countdown nahi.",
+    title: "Create your account",
+    body: "Sign up in 30 seconds for free — no credit card required, no trial expiration countdowns.",
   },
   {
     n: "02",
     icon: Palette,
-    title: "Links + theme set karein",
-    body: "Drag-and-drop se links jodein, PDF/media upload karein, 12 themes me se vibe choose karein.",
+    title: "Customize links & style",
+    body: "Add your links via drag-and-drop, upload media kits, and pick your vibe from 12 curated themes.",
   },
   {
     n: "03",
     icon: Rocket,
-    title: "Share & track karein",
-    body: "Apna link bio me daalo — clicks, views aur audience privacy-first analytics me dekho.",
+    title: "Share & track growth",
+    body: "Drop your custom link in your social bios and track views and clicks with privacy-first analytics.",
   },
 ];
 
@@ -105,18 +105,18 @@ export function HowItWorks() {
 const COMPARE_ROWS: Array<{
   feature: string;
   forge: string | boolean;
-  linktree: string | boolean;
+  standardSaaS: string | boolean;
   diy: string | boolean;
 }> = [
-  { feature: "Price", forge: "Free forever", linktree: "₹499/mo pro", diy: "Hosting + time" },
-  { feature: "Self-hostable (your infra)", forge: true, linktree: false, diy: true },
-  { feature: "Choose your own database", forge: true, linktree: false, diy: false },
-  { feature: "Choose your own storage (B2/R2/S3)", forge: true, linktree: false, diy: false },
-  { feature: "Privacy-first analytics (no trackers)", forge: true, linktree: false, diy: false },
-  { feature: "Webhooks + REST API", forge: true, linktree: "Limited", diy: "Build yourself" },
-  { feature: "File uploads (PDF, media)", forge: true, linktree: "Limited", diy: "Build yourself" },
-  { feature: "Custom domain", forge: "Free", linktree: "Paid plan", diy: "Manual setup" },
-  { feature: "Export your data anytime", forge: true, linktree: false, diy: true },
+  { feature: "Price", forge: "Free forever ($0)", standardSaaS: "$10–$25/month", diy: "Hosting + maintenance" },
+  { feature: "Self-hostable (your own infra)", forge: true, standardSaaS: false, diy: true },
+  { feature: "Choose your own database (Neon, Turso)", forge: true, standardSaaS: false, diy: false },
+  { feature: "Choose your own storage (B2, R2, S3)", forge: true, standardSaaS: false, diy: false },
+  { feature: "Privacy-first analytics (no ad trackers)", forge: true, standardSaaS: false, diy: false },
+  { feature: "Webhooks + REST API", forge: true, standardSaaS: "Enterprise only", diy: "Build yourself" },
+  { feature: "File & media uploads (PDF, audio, video)", forge: true, standardSaaS: "Limited", diy: "Build yourself" },
+  { feature: "Custom domain with free SSL", forge: "Free", standardSaaS: "Paid tier only", diy: "Manual setup" },
+  { feature: "Export your complete data anytime", forge: true, standardSaaS: false, diy: true },
 ];
 
 function CompareCell({ value, highlight }: { value: string | boolean; highlight?: boolean }) {
@@ -162,7 +162,7 @@ export function Comparison() {
                   LinkForge
                 </th>
                 <th className="px-5 py-4 text-center text-sm font-semibold text-zinc-400">
-                  Linktree Pro
+                  Standard Link SaaS
                 </th>
                 <th className="px-5 py-4 text-center text-sm font-semibold text-zinc-400">
                   DIY website
@@ -179,7 +179,7 @@ export function Comparison() {
                     <CompareCell value={row.forge} highlight />
                   </td>
                   <td className="px-5 py-3.5 text-center">
-                    <CompareCell value={row.linktree} />
+                    <CompareCell value={row.standardSaaS} />
                   </td>
                   <td className="px-5 py-3.5 text-center">
                     <CompareCell value={row.diy} />
@@ -198,7 +198,7 @@ export function Comparison() {
 const QUOTES = [
   {
     quote:
-      "Apna data apne Neon DB me hai — yeh feeling hi alag hai. Analytics bhi clean, bina kisi creepy tracker ke.",
+      "Having my data live in my own database gives me total peace of mind. The analytics are clean, privacy-focused, and lightning fast.",
     name: "Priya Nair",
     role: "Food creator · 120k followers",
     initial: "P",
@@ -206,7 +206,7 @@ const QUOTES = [
   },
   {
     quote:
-      "Bento layout + custom domain free me? Meri poori creator toolkit LinkForge par shift ho gayi — media kit PDF tak.",
+      "Bento layout with custom domain support for free? My entire creator stack shifted to LinkForge — from media kit PDFs to course curriculums.",
     name: "Rohan Mehta",
     role: "Indie hacker & YouTuber",
     initial: "R",
@@ -214,7 +214,7 @@ const QUOTES = [
   },
   {
     quote:
-      "Client booking links, workout PDFs, transformation reels — sab ek page par. Webhooks se har click ka alert milta hai.",
+      "Client booking links, workout PDFs, transformation videos — all in one profile. Webhooks trigger instant notifications whenever a client signs up.",
     name: "Sneha Kulkarni",
     role: "Fitness coach",
     initial: "S",
@@ -279,8 +279,8 @@ export function FinalCta() {
             Your audience is one link away
           </h2>
           <p className="relative mx-auto mt-4 max-w-lg text-sm text-zinc-400 sm:text-base">
-            Free forever. Aapka data, aapka database, aapke rules.
-            2 minute me page live karo.
+            Free forever. Your data, your database, your rules.
+            Ship your custom page in under 2 minutes.
           </p>
           <div className="relative mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link

@@ -9,7 +9,7 @@ import { webhookSchema } from "@/lib/validations";
 
 export const GET = handle(async () => {
   const { profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
   const rows = await db
     .select()
     .from(webhooks)
@@ -31,7 +31,7 @@ export const POST = handle(async (req: Request) => {
   assertSameOrigin(req);
   await guardRateLimit(req, "webhooks:write", 30);
   const { profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
   const input = parseOrThrow(webhookSchema, await req.json().catch(() => ({})));
 
   const [created] = await db
@@ -41,9 +41,9 @@ export const POST = handle(async (req: Request) => {
       profileId: profile.id,
       url: input.url,
       events: input.events.join(","),
-      secret: randomToken(16), // HMAC signing secret (ek baar full dikhta hai)
+      secret: randomToken(16), // HMAC signing secret (only shown in full once)
       isActive: input.isActive,
     })
     .returning();
-  return json({ webhook: created }, { status: 201 }); // full secret sirf is response me
+  return json({ webhook: created }, { status: 201 }); // full secret only returned in this response
 });

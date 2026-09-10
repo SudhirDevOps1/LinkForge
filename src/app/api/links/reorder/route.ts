@@ -10,7 +10,7 @@ export const POST = handle(async (req: Request) => {
   assertSameOrigin(req);
   await guardRateLimit(req, "links:reorder", 120);
   const { profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
   const { ids } = parseOrThrow(reorderSchema, await req.json().catch(() => ({})));
 
   // Sirf apne profile ke links hi reorder ho sakte hain (ownership enforced)

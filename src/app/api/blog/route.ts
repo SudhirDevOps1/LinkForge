@@ -39,7 +39,7 @@ export const GET = handle(async (req: Request) => {
   }
 
   if (!targetProfileId) {
-    throw new ApiError(400, "profileId ya slug parameter zaroori hai");
+    throw new ApiError(400, "profileId or slug parameter is required");
   }
 
   const manifest = await getBlogManifest(targetProfileId);
@@ -51,7 +51,7 @@ export const POST = handle(async (req: Request) => {
   assertSameOrigin(req);
   await guardRateLimit(req, "blog:post", 20);
   const { profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
 
   const body = parseOrThrow(postSchema, await req.json().catch(() => ({})));
 
@@ -73,11 +73,11 @@ export const DELETE = handle(async (req: Request) => {
   assertSameOrigin(req);
   await guardRateLimit(req, "blog:delete", 20);
   const { profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
 
   const url = new URL(req.url);
   const slug = url.searchParams.get("slug");
-  if (!slug) throw new ApiError(400, "slug parameter zaroori hai");
+  if (!slug) throw new ApiError(400, "slug parameter is required");
 
   const ok = await deleteBlogPost(profile.id, slug);
   return json({ ok });

@@ -52,7 +52,7 @@ export default function SubscribersPage() {
   }, []);
 
   async function deleteSubscriber(id: string, email: string) {
-    if (!confirm(`Kya aap "${email}" ko subscribers list se delete karna chahte hain?`)) return;
+    if (!confirm(`Are you sure you want to remove "${email}" from your subscriber list?`)) return;
     try {
       const res = await fetch(`/api/subscribers?id=${id}`, { method: "DELETE" });
       if (res.ok) {
@@ -86,7 +86,7 @@ export default function SubscribersPage() {
             <Mail className="h-6 w-6 text-violet-400" /> Newsletter Subscribers
           </h1>
           <p className="text-sm text-zinc-400 mt-1">
-            Aapke public bio page se subscribe karne wale real, MX-verified subscribers.
+            Real, MX-verified subscribers gathered directly from your public bio page.
           </p>
         </div>
 
@@ -149,7 +149,7 @@ export default function SubscribersPage() {
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Subscribers search karein (email)..."
+          placeholder="Search subscribers by email..."
           className="w-full rounded-xl border border-white/10 bg-black/40 pl-10 pr-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-violet-400 transition-all"
         />
       </div>
@@ -159,7 +159,7 @@ export default function SubscribersPage() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3 text-zinc-400 text-sm">
             <Loader2 className="h-6 w-6 animate-spin text-violet-400" />
-            <span>Subscribers load ho rahe hain…</span>
+            <span>Loading subscribers…</span>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
@@ -167,12 +167,12 @@ export default function SubscribersPage() {
               <Mail className="h-6 w-6" />
             </div>
             <h3 className="text-sm font-semibold text-zinc-200">
-              {searchTerm ? "Koi subscriber match nahi hua" : "Abhi tak koi subscriber nahi hai"}
+              {searchTerm ? "No matching subscribers found" : "No subscribers yet"}
             </h3>
             <p className="text-xs text-zinc-500 max-w-sm mt-1">
               {searchTerm
-                ? "Search query change karke dobara try karein."
-                : "Aapke public bio page ke footer me Newsletter Subscribe box live ho chuka hai. Jab visitors email enter karenge, unki list yahan aayegi."}
+                ? "Try modifying your search term."
+                : "The newsletter subscription box is active on your public profile footer. When visitors subscribe, they will automatically be verified and listed here."}
             </p>
           </div>
         ) : (

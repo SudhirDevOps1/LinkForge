@@ -38,7 +38,7 @@ export function ProfilePasswordGate({ slug, displayName, avatarUrl }: ProfilePas
       // Reload page so server sees the unlock cookie
       window.location.reload();
     } catch {
-      setError("Kuch gadbad ho gayi. Dobara try karein.");
+      setError("Something went wrong. Please try again.");
       setLoading(false);
     }
   }
@@ -58,7 +58,7 @@ export function ProfilePasswordGate({ slug, displayName, avatarUrl }: ProfilePas
           </div>
         )}
         <h1 className="font-display text-xl font-bold text-white">{displayName}</h1>
-        <p className="mt-1 text-sm text-zinc-400">Yeh profile password se protected hai</p>
+        <p className="mt-1 text-sm text-zinc-400">This profile is password protected</p>
 
         <div className="mt-6 space-y-4 text-left">
           <Field label="Password" error={error ?? undefined}>
@@ -67,7 +67,7 @@ export function ProfilePasswordGate({ slug, displayName, avatarUrl }: ProfilePas
                 type={showPw ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password daalein"
+                placeholder="Enter password"
                 onKeyDown={(e) => e.key === "Enter" && unlock()}
                 className="pr-10"
               />
@@ -82,7 +82,7 @@ export function ProfilePasswordGate({ slug, displayName, avatarUrl }: ProfilePas
           </Field>
           <Button onClick={unlock} loading={loading} className="w-full">
             <Lock className="mr-2 h-4 w-4" />
-            Unlock karein
+            Unlock Profile
           </Button>
         </div>
       </div>

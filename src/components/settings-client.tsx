@@ -134,7 +134,7 @@ function GeneralTab({ profile }: { profile: ProfileShape }) {
     setSaving(true);
     try {
       await api("/api/profile", { method: "PATCH", body: JSON.stringify(form) });
-      toast.success("Profile save ho gayi");
+      toast.success("Profile saved successfully");
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
@@ -154,7 +154,7 @@ function GeneralTab({ profile }: { profile: ProfileShape }) {
               onChange={(e) => setForm({ ...form, displayName: e.target.value })}
             />
           </Field>
-          <Field label="Slug" hint="Aapka public URL: /your-slug">
+          <Field label="Slug" hint="Your public URL: /your-slug">
             <Input
               maxLength={39}
               value={form.slug}
@@ -198,7 +198,7 @@ function GeneralTab({ profile }: { profile: ProfileShape }) {
         </h2>
         <Field
           label="Your domain"
-          hint="Apne DNS me CNAME record banao: bio → aapka LinkForge deployment domain. Fir yahan domain save karo."
+          hint="Add a CNAME record in your DNS: bio → your LinkForge deployment domain, then save the domain here."
         >
           <Input
             placeholder="bio.example.com"
@@ -210,7 +210,7 @@ function GeneralTab({ profile }: { profile: ProfileShape }) {
           <p className="text-zinc-300"># DNS setup</p>
           <p>TYPE&nbsp;&nbsp;NAME&nbsp;&nbsp;VALUE</p>
           <p>CNAME&nbsp;&nbsp;bio&nbsp;&nbsp;&nbsp;your-app.vercel.app</p>
-          <p className="mt-2 text-zinc-500"># Vercel/Netlify dashboard me bhi domain add karna hoga</p>
+          <p className="mt-2 text-zinc-500"># Remember to also add the custom domain in your hosting dashboard (Vercel/Cloudflare)</p>
         </div>
         <Button onClick={save} loading={saving} variant="secondary">
           Save domain
@@ -220,7 +220,7 @@ function GeneralTab({ profile }: { profile: ProfileShape }) {
       <Card className="space-y-5">
         <h2 className="font-display text-lg font-semibold">SEO</h2>
         <div className="grid gap-5 sm:grid-cols-2">
-          <Field label="Meta title" hint="Blank = display name use hoga">
+          <Field label="Meta title" hint="Leave blank to use display name">
             <Input
               maxLength={120}
               value={form.seoTitle}
@@ -288,7 +288,7 @@ function PrivacyTab({ profile }: { profile: ProfileShape }) {
           ...(newPassword ? { profilePassword: newPassword } : {}),
         }),
       });
-      toast.success("Privacy settings save ho gayi");
+      toast.success("Privacy settings saved successfully");
       setNewPassword("");
     } catch (err) {
       toast.error((err as Error).message);
@@ -301,7 +301,7 @@ function PrivacyTab({ profile }: { profile: ProfileShape }) {
     setSaving(true);
     try {
       await api("/api/profile", { method: "PATCH", body: JSON.stringify({ profilePassword: "" }) });
-      toast.success("Password hata diya gaya");
+      toast.success("Password removed successfully");
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
@@ -325,7 +325,7 @@ function PrivacyTab({ profile }: { profile: ProfileShape }) {
             : null,
         }),
       });
-      toast.success("Announcement save ho gaya");
+      toast.success("Announcement saved successfully");
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
@@ -342,13 +342,13 @@ function PrivacyTab({ profile }: { profile: ProfileShape }) {
             <Shield className="h-5 w-5 text-violet-300" /> Profile Password
           </h2>
           <p className="mt-1 text-sm text-zinc-400">
-            Visitors ko apna profile dekhne se pehle password daalna hoga.
+            Visitors must enter this password before viewing your profile.
           </p>
         </div>
         {profile.hasPassword && (
           <div className="flex items-center gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3">
             <Shield className="h-4 w-4 text-emerald-400 shrink-0" />
-            <p className="text-sm text-emerald-300">Password abhi set hai. Visitors ko unlock karna hoga.</p>
+            <p className="text-sm text-emerald-300">Password protection is active. Visitors must unlock your profile.</p>
             <Button variant="ghost" onClick={removePassword} loading={saving} className="ml-auto shrink-0">
               Remove
             </Button>
@@ -360,7 +360,7 @@ function PrivacyTab({ profile }: { profile: ProfileShape }) {
               type={showPass ? "text" : "password"}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Naya password daalein"
+              placeholder="Enter new password"
               className="pr-10"
             />
             <button
@@ -388,8 +388,8 @@ function PrivacyTab({ profile }: { profile: ProfileShape }) {
               aria-label="noindex"
             />
             <div>
-              <span className="font-medium">Search engines se chhupao</span>
-              <p className="text-xs text-zinc-500">Google/Bing ko profile index nahi karne dega (noindex)</p>
+              <span className="font-medium">Hide from search engines</span>
+              <p className="text-xs text-zinc-500">Prevents search engines from indexing your profile (noindex)</p>
             </div>
           </label>
           <label className="flex items-center gap-3 text-sm text-zinc-300 cursor-pointer">
@@ -399,8 +399,8 @@ function PrivacyTab({ profile }: { profile: ProfileShape }) {
               aria-label="hidePublicStats"
             />
             <div>
-              <span className="font-medium">View count public page par chhupao</span>
-              <p className="text-xs text-zinc-500">Visitors ko views/clicks nahi dikhengi</p>
+              <span className="font-medium">Hide view counters on public page</span>
+              <p className="text-xs text-zinc-500">Hides view and click statistics from public visitors</p>
             </div>
           </label>
         </div>
@@ -415,7 +415,7 @@ function PrivacyTab({ profile }: { profile: ProfileShape }) {
           <Megaphone className="h-5 w-5 text-violet-300" /> Announcement Banner
         </h2>
         <p className="text-sm text-zinc-400">
-          Profile ke top par ek highlighted message dikhaein (sale, event, news).
+          Display a highlighted notification banner at the top of your profile (announcements, launches, events).
         </p>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Emoji (optional)">
@@ -442,7 +442,7 @@ function PrivacyTab({ profile }: { profile: ProfileShape }) {
             onChange={(e) => setAnn({ ...ann, text: e.target.value })}
           />
         </Field>
-        <Field label="Expires at (optional)" hint="Is date ke baad banner auto-hide ho jayega">
+        <Field label="Expires at (optional)" hint="The announcement banner will automatically disappear after this date and time">
           <Input
             type="datetime-local"
             value={ann.expiresAt ?? ""}
@@ -477,7 +477,7 @@ function SecurityCard() {
 
   async function updatePassword() {
     if (!newPassword || newPassword.length < 8) {
-      toast.error("Naya password kam se kam 8 characters ka hona chahiye");
+      toast.error("New password must be at least 8 characters");
       return;
     }
     setSaving(true);
@@ -486,7 +486,7 @@ function SecurityCard() {
         method: "PATCH",
         body: JSON.stringify({ currentPassword, newPassword }),
       });
-      toast.success("Password kamyabi se badal gaya");
+      toast.success("Password changed successfully");
       setCurrentPassword("");
       setNewPassword("");
     } catch (err) {
@@ -547,7 +547,7 @@ function DangerZone() {
 
   async function deleteAccount() {
     if (deleteConfirmText.trim() !== "DELETE") {
-      toast.error("Confirm karne ke liye DELETE type karein");
+      toast.error("Please type DELETE to confirm");
       return;
     }
     setDeleting(true);
@@ -556,7 +556,7 @@ function DangerZone() {
         method: "DELETE",
         body: JSON.stringify({ confirmText: "DELETE" }),
       });
-      toast.success("Aapka account aur sabhi data permanently delete ho gaya.");
+      toast.success("Your account and all associated data have been permanently deleted.");
       window.location.href = "/signup";
     } catch (err) {
       toast.error((err as Error).message);
@@ -569,7 +569,7 @@ function DangerZone() {
       <Card className="border-amber-500/20">
         <h2 className="font-display text-lg font-semibold text-amber-300">Sessions</h2>
         <p className="mt-1.5 text-sm text-zinc-500">
-          Saare devices aur browsers se active sessions turant terminate karein.
+          Immediately terminate active sessions across all devices and browsers.
         </p>
         <Button variant="secondary" className="mt-4" onClick={signOutEverywhere} loading={busy}>
           <LogOut className="h-4 w-4" /> Sign out everywhere
@@ -586,9 +586,7 @@ function DangerZone() {
               Permanently Delete Account
             </h2>
             <p className="mt-1 text-sm text-zinc-400">
-              Aapka account, username/slug, sabhi links, analytics data aur Backblaze B2 / local
-              storage me uploaded sabhi documents/files permanently delete ho jayenge. Yeh action
-              irreversible hai.
+              Your account, profile handle, links, analytics data, and all uploaded media files will be permanently deleted. This action is irreversible.
             </p>
 
             {!deleteConfirmOpen ? (
@@ -602,8 +600,7 @@ function DangerZone() {
             ) : (
               <div className="mt-4 space-y-3 rounded-2xl border border-red-500/30 bg-black/40 p-4">
                 <p className="text-xs font-medium text-red-300">
-                  Confirm karne ke liye neeche box me{" "}
-                  <span className="font-mono font-bold text-white">DELETE</span> type karein:
+                  Type <span className="font-mono font-bold text-white">DELETE</span> below to confirm:
                 </p>
                 <div className="flex flex-wrap items-center gap-2">
                   <Input
@@ -656,7 +653,7 @@ function AvatarTab({ profile }: { profile: ProfileShape }) {
       const res = await fetch("/api/profile/avatar", { method: "POST", body: fd });
       const data = (await res.json().catch(() => ({}))) as { error?: string; provider?: string };
       if (!res.ok) throw new Error(data.error ?? "Upload failed");
-      toast.success(`Avatar upload ho gaya (storage: ${data.provider})`);
+      toast.success(`Avatar uploaded successfully (${data.provider})`);
       window.location.reload();
     } catch (err) {
       toast.error((err as Error).message);
@@ -669,7 +666,7 @@ function AvatarTab({ profile }: { profile: ProfileShape }) {
     setBusy(true);
     try {
       await api("/api/profile", { method: "PATCH", body: JSON.stringify({ avatarUrl: url }) });
-      toast.success("Avatar save ho gaya");
+      toast.success("Avatar saved successfully");
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
@@ -723,8 +720,7 @@ function AvatarTab({ profile }: { profile: ProfileShape }) {
         </div>
       ) : null}
       <p className="text-xs text-zinc-600">
-        Storage provider: <code className="rounded bg-white/5 px-1.5 py-0.5">STORAGE_PROVIDER</code> env se decide
-        hota hai (local / B2 / R2 / S3 / MinIO / Vercel Blob)
+        Storage provider configured via <code className="rounded bg-white/5 px-1.5 py-0.5">STORAGE_PROVIDER</code> env (local / B2 / R2 / S3 / MinIO / Vercel Blob)
       </p>
     </Card>
   );
@@ -744,7 +740,7 @@ function DataTab() {
         method: "POST",
         body: JSON.stringify(payload),
       });
-      toast.success(`${data.linksImported} links import ho gaye`);
+      toast.success(`${data.linksImported} links imported successfully`);
       setTimeout(() => window.location.reload(), 800);
     } catch (err) {
       toast.error(`Import failed: ${(err as Error).message}`);
@@ -757,9 +753,7 @@ function DataTab() {
     <Card className="space-y-6">
       <h2 className="font-display text-lg font-semibold">Export / Import</h2>
       <p className="text-sm leading-relaxed text-zinc-500">
-        Aapka data aapka hai — profile aur saare links JSON me download karein ya
-        restore karein. Kisi bhi LinkForge instance (ya LinkTree migration) ke
-        liye portable format.
+        Your data belongs to you — export or restore your profile and all links in portable JSON format. Compatible with backups and migrations.
       </p>
       <div className="flex flex-wrap gap-2.5">
         <a href="/api/profile/export" download>
@@ -782,8 +776,7 @@ function DataTab() {
         </Button>
       </div>
       <p className="rounded-xl border border-amber-500/25 bg-amber-500/10 p-3.5 text-xs text-amber-200">
-        Import karne par existing links replace ho jate hain — pehle export karke
-        backup le lena recommended hai.
+        Importing will replace your existing links — exporting a backup beforehand is strongly recommended.
       </p>
     </Card>
   );
@@ -817,7 +810,7 @@ function WebhooksTab({ initialHooks }: { initialHooks: WebhookRow[] }) {
       ]);
       setNewSecret(data.webhook.secret);
       setUrl("");
-      toast.success("Webhook add ho gaya");
+      toast.success("Webhook added successfully");
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
@@ -838,7 +831,7 @@ function WebhooksTab({ initialHooks }: { initialHooks: WebhookRow[] }) {
     setHooks((prev) => prev.filter((h) => h.id !== id));
     try {
       await api(`/api/webhooks/${id}`, { method: "DELETE" });
-      toast.success("Webhook delete ho gaya");
+      toast.success("Webhook deleted successfully");
     } catch (err) {
       toast.error((err as Error).message);
     }
@@ -847,7 +840,7 @@ function WebhooksTab({ initialHooks }: { initialHooks: WebhookRow[] }) {
   async function test(id: string) {
     try {
       await api("/api/webhooks/test", { method: "POST", body: JSON.stringify({ id }) });
-      toast.success("Test event bhej diya — receiver logs check karein");
+      toast.success("Test event dispatched — check receiver logs");
     } catch (err) {
       toast.error((err as Error).message);
     }
@@ -858,7 +851,7 @@ function WebhooksTab({ initialHooks }: { initialHooks: WebhookRow[] }) {
       <Card className="space-y-4">
         <h2 className="font-display text-lg font-semibold">Add webhook</h2>
         <p className="text-sm text-zinc-500">
-          Link click ya page view hone par signed POST request aapke endpoint par jayega.
+          A signed POST request will be sent to your endpoint on link clicks or profile views.
           Signature header: <code className="rounded bg-white/5 px-1.5 py-0.5 text-xs">X-LinkForge-Signature</code> (HMAC-SHA256).
         </p>
         <div className="flex flex-col gap-2.5 sm:flex-row">
@@ -874,7 +867,7 @@ function WebhooksTab({ initialHooks }: { initialHooks: WebhookRow[] }) {
         {newSecret ? (
           <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 p-4">
             <p className="text-xs font-semibold uppercase tracking-wider text-emerald-300">
-              Signing secret — sirf ab dikhega, copy kar lein
+              Signing secret — copy this now, it will not be shown again
             </p>
             <div className="mt-2 flex items-center gap-2">
               <code className="flex-1 truncate rounded-lg bg-black/40 px-3 py-2 font-mono text-xs text-emerald-100">
@@ -885,7 +878,7 @@ function WebhooksTab({ initialHooks }: { initialHooks: WebhookRow[] }) {
                 size="sm"
                 onClick={() => {
                   void navigator.clipboard.writeText(newSecret);
-                  toast.success("Secret copy ho gaya");
+                  toast.success("Secret copied to clipboard");
                 }}
               >
                 <Copy className="h-3.5 w-3.5" />
@@ -918,7 +911,7 @@ function WebhooksTab({ initialHooks }: { initialHooks: WebhookRow[] }) {
         ))}
         {hooks.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-white/10 p-8 text-center text-sm text-zinc-600">
-            Koi webhook nahi — pehla webhook upar add karein
+            No webhooks configured yet — add your first webhook above
           </p>
         ) : null}
       </div>
@@ -943,7 +936,7 @@ function ApiKeysTab({ initialKeys }: { initialKeys: ApiKeyRow[] }) {
       setKeys((prev) => [{ ...data.key, lastUsedAt: null, revoked: false }, ...prev]);
       setNewKey(data.rawKey);
       setName("");
-      toast.success("API key ban gayi");
+      toast.success("API key created successfully");
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
@@ -955,7 +948,7 @@ function ApiKeysTab({ initialKeys }: { initialKeys: ApiKeyRow[] }) {
     setKeys((prev) => prev.map((k) => (k.id === id ? { ...k, revoked: true } : k)));
     try {
       await api(`/api/keys/${id}`, { method: "DELETE" });
-      toast.success("Key revoke ho gayi");
+      toast.success("API key revoked");
     } catch (err) {
       toast.error((err as Error).message);
     }
@@ -966,7 +959,7 @@ function ApiKeysTab({ initialKeys }: { initialKeys: ApiKeyRow[] }) {
       <Card className="space-y-4">
         <h2 className="font-display text-lg font-semibold">Create API key</h2>
         <p className="text-sm text-zinc-500">
-          Third-party apps ke liye REST API: <code className="rounded bg-white/5 px-1.5 py-0.5 text-xs">GET /api/v1/profile</code>,{" "}
+          REST API for third-party integrations and headless access: <code className="rounded bg-white/5 px-1.5 py-0.5 text-xs">GET /api/v1/profile</code>,{" "}
           <code className="rounded bg-white/5 px-1.5 py-0.5 text-xs">GET/POST /api/v1/links</code> —{" "}
           header: <code className="rounded bg-white/5 px-1.5 py-0.5 text-xs">Authorization: Bearer lfk_...</code>
         </p>
@@ -979,7 +972,7 @@ function ApiKeysTab({ initialKeys }: { initialKeys: ApiKeyRow[] }) {
         {newKey ? (
           <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 p-4">
             <p className="text-xs font-semibold uppercase tracking-wider text-emerald-300">
-              API key — sirf ab dikhegi, turant copy karein
+              API Key — copy this now, it will not be shown again
             </p>
             <div className="mt-2 flex items-center gap-2">
               <code className="flex-1 truncate rounded-lg bg-black/40 px-3 py-2 font-mono text-xs text-emerald-100">
@@ -990,7 +983,7 @@ function ApiKeysTab({ initialKeys }: { initialKeys: ApiKeyRow[] }) {
                 size="sm"
                 onClick={() => {
                   void navigator.clipboard.writeText(newKey);
-                  toast.success("Key copy ho gayi");
+                  toast.success("API key copied to clipboard");
                 }}
               >
                 <Copy className="h-3.5 w-3.5" />
@@ -1022,12 +1015,12 @@ function ApiKeysTab({ initialKeys }: { initialKeys: ApiKeyRow[] }) {
         ))}
         {keys.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-white/10 p-8 text-center text-sm text-zinc-600">
-            Koi API key nahi — pehli key banayein
+            No API keys yet — generate your first key above
           </p>
         ) : null}
       </div>
       <p className="flex items-center gap-2 text-xs text-zinc-600">
-        <Loader2 className="h-3 w-3" /> Keys SHA-256 hashed store hoti hain — raw key kabhi recover nahi ho sakti.
+        <Loader2 className="h-3 w-3" /> API keys are stored as salted SHA-256 hashes — raw keys cannot be recovered.
       </p>
     </div>
   );

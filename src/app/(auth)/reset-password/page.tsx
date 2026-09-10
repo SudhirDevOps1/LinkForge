@@ -29,7 +29,7 @@ function ResetForm() {
         toast.error(data.error ?? "Reset failed");
         return;
       }
-      toast.success("Password update ho gaya — ab sign in karein");
+      toast.success("Password updated successfully — please sign in");
       router.push("/login");
     } finally {
       setLoading(false);
@@ -39,10 +39,10 @@ function ResetForm() {
   return (
     <form onSubmit={onSubmit} className="glass noise relative rounded-3xl p-8 shadow-2xl">
       <h1 className="font-display text-2xl font-bold">New password</h1>
-      <p className="mt-1.5 text-sm text-zinc-400">Apna naya password set karein</p>
+      <p className="mt-1.5 text-sm text-zinc-400">Set your new account password</p>
       {!token ? (
         <p className="mt-6 rounded-xl border border-red-500/30 bg-red-500/10 p-3.5 text-sm text-red-300">
-          Reset token missing hai — email wala link dobara kholen.
+          Reset token is missing — please open the link from your email again.
         </p>
       ) : (
         <div className="mt-7 space-y-5">

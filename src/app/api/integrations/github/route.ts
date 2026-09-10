@@ -31,7 +31,7 @@ const importBodySchema = z.object({
 export const GET = handle(async (req: Request) => {
   await guardRateLimit(req, "github:preview", 20);
   const { profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
   const url = new URL(req.url);
   const { username, limit } = parseOrThrow(previewSchema, {
     username: url.searchParams.get("username") ?? "",
@@ -48,7 +48,7 @@ export const POST = handle(async (req: Request) => {
   assertSameOrigin(req);
   await guardRateLimit(req, "github:import", 10);
   const { profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
   const { username, repos } = parseOrThrow(importBodySchema, await req.json().catch(() => ({})));
 
   const all = await fetchGithubRepos(username, 50);

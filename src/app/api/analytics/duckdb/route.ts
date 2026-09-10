@@ -12,7 +12,7 @@ import { syncDailyRollups } from "@/lib/analytics/rollups";
 export const GET = handle(async (req: Request) => {
   await guardRateLimit(req, "analytics:duckdb", 20);
   const { profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
 
   const url = new URL(req.url);
   const daysParam = Number(url.searchParams.get("days") ?? 30);
@@ -26,7 +26,7 @@ export const POST = handle(async (req: Request) => {
   // Sync daily rollups on demand (compacts raw events into space-saving rollups)
   await guardRateLimit(req, "analytics:duckdb:sync", 10);
   const { profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
 
   const count = await syncDailyRollups(profile.id, 30);
   return json({

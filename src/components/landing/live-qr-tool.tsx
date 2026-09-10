@@ -61,7 +61,7 @@ export function LiveQrTool() {
           Live Vector QR Code Studio — <span className="text-gradient">Ready to Print</span>
         </h2>
         <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-zinc-400 sm:text-base">
-          Apna bio link dalo, color palette pick karo, aur print-ready high resolution vector QR code turant generate aur download karo.
+          Enter your bio link, select your color palette, and instantly generate and download a crisp, print-ready vector QR code.
         </p>
       </Reveal>
 

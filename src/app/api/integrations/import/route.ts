@@ -29,7 +29,7 @@ export const POST = handle(async (req: Request) => {
   assertSameOrigin(req);
   await guardRateLimit(req, "integrations:import", 20);
   const { profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
 
   const body = parseOrThrow(batchImportSchema, await req.json().catch(() => ({})));
 

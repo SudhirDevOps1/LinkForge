@@ -43,7 +43,7 @@ export function QRCodeButton({ url, displayName }: QRCodeButtonProps) {
     <>
       <button
         onClick={() => setOpen(true)}
-        title="QR Code download karein"
+        title="Download QR Code"
         className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-zinc-400 transition-colors hover:bg-white/10 hover:text-zinc-200"
       >
         <QrCode className="h-4 w-4" />
@@ -70,7 +70,7 @@ export function QRCodeButton({ url, displayName }: QRCodeButtonProps) {
             <p className="mt-3 truncate text-xs text-zinc-500">{url}</p>
             <Button onClick={downloadQR} className="mt-4 w-full" variant="secondary">
               <Download className="mr-2 h-4 w-4" />
-              PNG Download karein
+              Download PNG
             </Button>
           </div>
         </div>

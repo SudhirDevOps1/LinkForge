@@ -87,10 +87,10 @@ export function SecurityShowcase() {
           Zero-Knowledge & Privacy Architecture
         </div>
         <h2 className="mt-4 font-display text-3xl font-bold tracking-tight text-white sm:text-5xl">
-          Aapka data, aapki files — <span className="text-gradient">100% Encrypted</span>
+          Your Data, Your Files — <span className="text-gradient">100% Encrypted</span>
         </h2>
         <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-zinc-400 sm:text-base">
-          Backblaze B2 me encrypted ciphertext store hota hai, database me zero IP tracking hai, aur Vercel Global Edge CDN decrypt karke instant deliver karta hai.
+          Encrypted ciphertext is securely preserved in Backblaze B2, databases operate with zero IP tracking, and global Edge CDNs deliver assets with instant streaming decryption.
         </p>
       </Reveal>
 
@@ -112,15 +112,15 @@ export function SecurityShowcase() {
               </div>
 
               <p className="mt-4 text-sm leading-relaxed text-zinc-300">
-                Jab aap PDF, resume ya images upload karte hain, server unhe <code className="rounded bg-white/10 px-1.5 py-0.5 text-xs text-emerald-300">LENC\x01</code> magic header, 96-bit unique IV aur 128-bit authentication tag ke sath encrypt karta hai.
+                When you upload PDFs, resumes, or imagery, the server encrypts them using an authenticated <code className="rounded bg-white/10 px-1.5 py-0.5 text-xs text-emerald-300">LENC\x01</code> binary envelope with 96-bit unique IV and 128-bit authentication tag.
               </p>
 
               {/* Step Pipeline */}
               <div className="mt-6 space-y-3">
                 {[
                   { title: "Binary Stream Encryption", desc: "AES-256-GCM payload cipher with unique IV per file" },
-                  { title: "Zero-Knowledge Private B2 Bucket", desc: "Agar bucket leak bhi ho jaye, files completely unreadable hain" },
-                  { title: "Edge Decryption Proxy + 1-Year CDN Cache", desc: "Vercel Edge CDN cache (s-maxage=31536000) se B2 download cost ₹0!" },
+                  { title: "Zero-Knowledge Private B2 Bucket", desc: "Even in the event of an unauthorized bucket dump, files remain mathematically unreadable" },
+                  { title: "Edge Decryption Proxy + 1-Year CDN Cache", desc: "Vercel Edge CDN caching (s-maxage=31536000) eliminates repeated egress bandwidth fees" },
                 ].map((item, idx) => (
                   <div key={idx} className="flex items-start gap-3 rounded-xl border border-white/5 bg-white/[0.02] p-3">
                     <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
@@ -158,13 +158,13 @@ export function SecurityShowcase() {
               </div>
 
               <p className="mt-4 text-sm leading-relaxed text-zinc-300">
-                Aapka database Neon PostgreSQL ya Turso SQLite ho — zero creepy tracking policy follow hoti hai. Raw IP addresses kabhi disk par nahi likhe jaate.
+                Whether deploying on Neon PostgreSQL or Turso SQLite, LinkForge enforces a zero creepy tracking policy. Raw IP addresses are never written to disk or logs.
               </p>
 
               {/* Step Pipeline */}
               <div className="mt-6 space-y-3">
                 {[
-                  { title: "Salted Cryptographic IP Hashing", desc: "Visits anonymously count hote hain, identity safe rehti hai" },
+                  { title: "Salted Cryptographic IP Hashing", desc: "Visits are recorded anonymously with user identity preserved" },
                   { title: "Argon2 / BCrypt Credentials Hashing", desc: "Modern salted password hashing for complete credential safety" },
                   { title: "Cookie-less Analytics", desc: "No GDPR banners needed, no third-party tracking pixels" },
                 ].map((item, idx) => (
@@ -202,7 +202,7 @@ export function SecurityShowcase() {
                 Live AES-256-GCM Browser Test
               </h4>
               <p className="text-xs text-zinc-400">
-                Type karo aur dekho kaise real-time hardware Web Crypto API ciphertext generate karti hai.
+                Type below to see the Web Crypto API generate authenticated ciphertext in real time.
               </p>
             </div>
 

@@ -28,10 +28,10 @@ export default function RouteError({
         <TriangleAlert className="h-7 w-7 text-red-300" />
       </div>
       <h1 className="relative mt-6 font-display text-2xl font-bold text-white">
-        Kuch gadbad ho gayi
+        Something went wrong
       </h1>
       <p className="relative mt-2 max-w-sm text-sm text-zinc-500">
-        Page load nahi ho paya. Thodi der baad dobara try karein — aapka data safe hai.
+        Failed to load page. Please try again in a few moments — your data is safe.
       </p>
       {error.digest ? (
         <p className="relative mt-3 font-mono text-[11px] text-zinc-600">

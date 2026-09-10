@@ -53,7 +53,7 @@ export function GithubIntegration({ defaultUsername = "SudhirDevOps1" }: { defau
 
   async function importSelected() {
     if (selected.size === 0) {
-      toast.error("Pehle repos select karo");
+      toast.error("Please select repositories first");
       return;
     }
     setImporting(true);
@@ -185,7 +185,7 @@ export function GithubIntegration({ defaultUsername = "SudhirDevOps1" }: { defau
             className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 text-sm font-semibold text-white hover:bg-emerald-400 disabled:opacity-40"
           >
             {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            Import {selected.size} as links (merge — kuch delete nahi hoga)
+            Import {selected.size} as links (additive merge — existing links safe)
           </button>
         </>
       ) : null}

@@ -12,7 +12,7 @@ export const POST = handle(async (req: Request) => {
   const { slug, password } = body;
 
   if (!slug || !password) {
-    return json({ error: "Slug aur password zaroori hain" }, { status: 400 });
+    return json({ error: "Handle and password are required" }, { status: 400 });
   }
 
   const [profile] = await db
@@ -22,7 +22,7 @@ export const POST = handle(async (req: Request) => {
     .limit(1);
 
   if (!profile || !profile.profilePassword) {
-    return json({ error: "Profile nahi mili ya password set nahi" }, { status: 404 });
+    return json({ error: "Profile not found or password not configured" }, { status: 404 });
   }
 
   const valid = await compare(password, profile.profilePassword);

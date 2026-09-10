@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: Ctx): Promise<Metadata> {
   if (!bio || !bio.profile.isPublished) return {};
   const { profile } = bio;
   const title = profile.seoTitle || `${profile.displayName} | LinkForge`;
-  const description = profile.seoDescription || profile.bio || `${profile.displayName} ke saare links ek jagah.`;
+  const description = profile.seoDescription || profile.bio || `All links and updates from ${profile.displayName} in one place.`;
   return {
     title,
     description,

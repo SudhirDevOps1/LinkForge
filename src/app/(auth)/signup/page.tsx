@@ -29,7 +29,7 @@ export default function SignupPage() {
         toast.error(data.error ?? "Signup failed");
         return;
       }
-      toast.success("Account ban gaya — welcome to LinkForge!");
+      toast.success("Account created successfully — welcome to LinkForge!");
       router.push("/dashboard");
       router.refresh();
     } finally {
@@ -44,7 +44,7 @@ export default function SignupPage() {
     >
       <h1 className="font-display text-2xl font-bold">Create your page</h1>
       <p className="mt-1.5 text-sm text-zinc-400">
-        30 seconds me apna link-in-bio page live karein — free forever
+        Launch your personal link-in-bio page in 30 seconds — free forever
       </p>
 
       <div className="mt-7 space-y-5">
@@ -70,7 +70,7 @@ export default function SignupPage() {
         </Field>
         <Field
           label="Password"
-          hint="Minimum 8 characters, ek letter aur ek number zaroori"
+          hint="Minimum 8 characters, at least one letter and one number required"
         >
           <Input
             type="password"
@@ -89,7 +89,7 @@ export default function SignupPage() {
       </div>
 
       <p className="mt-6 text-center text-sm text-zinc-500">
-        Pehle se account hai?{" "}
+        Already have an account?{" "}
         <Link href="/login" className="font-medium text-violet-300 hover:text-violet-200">
           Sign in
         </Link>

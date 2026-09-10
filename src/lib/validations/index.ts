@@ -1,16 +1,16 @@
 // =============================================================================
-// ✅ Zod Validation Schemas — har user input server-side validate hota hai
+// ✅ Zod Validation Schemas — every user input is validated server-side
 // =============================================================================
 import { z } from "zod";
 
 // ---- Shared primitives ------------------------------------------------------
 export const slugSchema = z
   .string()
-  .min(3, "Slug kam se kam 3 characters ka hona chahiye")
-  .max(39, "Slug 39 characters se lamba nahi ho sakta")
+  .min(3, "Slug must be at least 3 characters long")
+  .max(39, "Slug cannot exceed 39 characters")
   .regex(
     /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/,
-    "Sirf lowercase letters, numbers aur hyphens allowed",
+    "Only lowercase letters, numbers, and hyphens are allowed",
   );
 
 export const urlSchema = z
@@ -26,7 +26,7 @@ export const urlSchema = z
     } catch {
       return false;
     }
-  }, "Valid http(s) / mailto: / tel: / upi: URL chahiye");
+  }, "Please provide a valid http(s), mailto, tel, or upi URL");
 
 export const LINK_TYPES = [
   "link",
@@ -60,7 +60,7 @@ export const LINK_TYPES = [
 
 export const LINK_SIZES = ["standard", "wide", "tall", "feature"] as const;
 
-/** System routes jo user slugs ki tarah capture nahi hone chahiye */
+/** System routes that should never be captured as user profile slugs */
 export const RESERVED_SLUGS = new Set([
   "www", "api", "app", "dashboard", "login", "signup", "admin", "support",
   "help", "about", "blog", "pricing", "docs", "settings", "analytics",
@@ -70,14 +70,14 @@ export const RESERVED_SLUGS = new Set([
 
 // ---- Auth -------------------------------------------------------------------
 export const signupSchema = z.object({
-  name: z.string().trim().min(1, "Naam zaroori hai").max(80),
-  email: z.string().trim().toLowerCase().email("Valid email daalein").max(254),
+  name: z.string().trim().min(1, "Name is required").max(80),
+  email: z.string().trim().toLowerCase().email("Please enter a valid email address").max(254),
   password: z
     .string()
-    .min(8, "Password kam se kam 8 characters ka ho")
+    .min(8, "Password must be at least 8 characters long")
     .max(128)
-    .regex(/[a-zA-Z]/, "Password me ek letter hona chahiye")
-    .regex(/[0-9]/, "Password me ek number hona chahiye"),
+    .regex(/[a-zA-Z]/, "Password must contain at least one letter")
+    .regex(/[0-9]/, "Password must contain at least one number"),
 });
 
 export const loginSchema = z.object({
@@ -119,7 +119,7 @@ export const profileUpdateSchema = z.object({
         .trim()
         .toLowerCase()
         .max(253)
-        .regex(/^(?!-)[a-z0-9.-]+\.[a-z]{2,}$/, "Valid domain daalein (e.g. bio.example.com)"),
+        .regex(/^(?!-)[a-z0-9.-]+\.[a-z]{2,}$/, "Please enter a valid domain (e.g. bio.example.com)"),
       z.literal(""),
     ])
     .optional(),
@@ -137,7 +137,7 @@ export const profileUpdateSchema = z.object({
 
 // ---- Links ------------------------------------------------------------------
 export const linkCreateSchema = z.object({
-  title: z.string().trim().min(1, "Title zaroori hai").max(120),
+  title: z.string().trim().min(1, "Title is required").max(120),
   url: urlSchema,
   description: z.string().trim().max(200).optional().default(""),
   icon: z.string().trim().max(100).optional().default("link"),
@@ -170,7 +170,7 @@ export const webhookSchema = z.object({
       } catch {
         return false;
       }
-    }, "Valid URL chahiye"),
+    }, "Please provide a valid webhook URL"),
   events: z
     .array(z.enum(["click", "view"]))
     .min(1)
@@ -181,7 +181,7 @@ export const webhookSchema = z.object({
 
 // ---- API Keys ---------------------------------------------------------------
 export const apiKeySchema = z.object({
-  name: z.string().trim().min(1, "Key ka naam zaroori hai").max(60),
+  name: z.string().trim().min(1, "API key name is required").max(60),
 });
 
 // ---- Import/Export ----------------------------------------------------------
@@ -250,25 +250,25 @@ export const completeSchema = z.object({
 
 // ---- Media File Rename -----------------------------------------------------
 export const mediaFileUpdateSchema = z.object({
-  fileName: z.string().trim().min(1, "File name zaroori hai").max(120),
+  fileName: z.string().trim().min(1, "File name is required").max(120),
 });
 
 // ---- Account Management (Update & Permanent Deletion) -----------------------
 export const accountDeleteSchema = z.object({
   confirmText: z.literal("DELETE", {
-    message: "Confirm karne ke liye DELETE type karein",
+    message: "Type DELETE to confirm",
   }),
 });
 
 export const accountUpdateSchema = z.object({
-  name: z.string().trim().min(1, "Naam zaroori hai").max(80).optional(),
+  name: z.string().trim().min(1, "Name is required").max(80).optional(),
   currentPassword: z.string().min(1).optional(),
   newPassword: z
     .string()
-    .min(8, "Naya password kam se kam 8 characters ka ho")
+    .min(8, "New password must be at least 8 characters long")
     .max(128)
-    .regex(/[a-zA-Z]/, "Password me ek letter hona chahiye")
-    .regex(/[0-9]/, "Password me ek number hona chahiye")
+    .regex(/[a-zA-Z]/, "Password must contain at least one letter")
+    .regex(/[0-9]/, "Password must contain at least one number")
     .optional(),
 });
 

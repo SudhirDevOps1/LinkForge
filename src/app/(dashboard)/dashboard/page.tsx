@@ -30,8 +30,8 @@ export default async function OverviewPage() {
   if (!profile) {
     return (
       <div className="rounded-2xl border border-white/10 bg-ink-900/50 p-8 text-center">
-        <h2 className="text-lg font-semibold text-white">Profile setup ho raha hai</h2>
-        <p className="mt-1 text-sm text-zinc-400">Kripya page refresh karein.</p>
+        <h2 className="text-lg font-semibold text-white">Setting up your profile</h2>
+        <p className="mt-1 text-sm text-zinc-400">Please refresh the page in a moment.</p>
       </div>
     );
   }
@@ -50,11 +50,11 @@ export default async function OverviewPage() {
   const theme = getTheme(profile.theme);
   const linkCount = linkAgg?.count ?? 0;
   const checklist = [
-    { done: profile.bio.length > 0, label: "Profile bio likhein", href: "/dashboard/settings" },
-    { done: Boolean(profile.avatarUrl), label: "Avatar upload karein", href: "/dashboard/settings" },
-    { done: linkCount > 0, label: "Apna pehla link jodein", href: "/dashboard/links" },
-    { done: profile.theme !== "midnight", label: "Ek theme choose karein", href: "/dashboard/appearance" },
-    { done: Boolean(profile.customDomain), label: "Custom domain connect karein", href: "/dashboard/settings" },
+    { done: profile.bio.length > 0, label: "Write your profile bio", href: "/dashboard/settings" },
+    { done: Boolean(profile.avatarUrl), label: "Upload a profile avatar", href: "/dashboard/settings" },
+    { done: linkCount > 0, label: "Add your first link", href: "/dashboard/links" },
+    { done: profile.theme !== "midnight", label: "Choose a visual theme", href: "/dashboard/appearance" },
+    { done: Boolean(profile.customDomain), label: "Connect a custom domain", href: "/dashboard/settings" },
   ];
   const doneCount = checklist.filter((c) => c.done).length;
 
@@ -95,7 +95,7 @@ export default async function OverviewPage() {
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Views (30d)" value={summary.totals.views} icon={<Eye className="h-5 w-5" />} sub={`${summary.totals.uniqueVisitors} unique visitors`} />
-        <StatCard label="Clicks (30d)" value={summary.totals.clicks} icon={<MousePointerClick className="h-5 w-5" />} sub="har link ke total clicks" />
+        <StatCard label="Clicks (30d)" value={summary.totals.clicks} icon={<MousePointerClick className="h-5 w-5" />} sub="total clicks across all links" />
         <StatCard label="CTR" value={`${summary.totals.ctr}%`} icon={<Percent className="h-5 w-5" />} sub="views → clicks ratio" />
         <StatCard label="Links live" value={linkCount} icon={<Link2 className="h-5 w-5" />} sub={`theme: ${theme.name}`} />
       </div>
@@ -157,9 +157,9 @@ export default async function OverviewPage() {
             ))}
             {recentLinks.length === 0 ? (
               <div className="rounded-xl border border-dashed border-white/10 p-6 text-center text-sm text-zinc-500">
-                Abhi koi link nahi —{" "}
+                No links yet —{" "}
                 <Link href="/dashboard/links" className="text-violet-300 hover:underline">
-                  pehla link jodein
+                  add your first link
                 </Link>
               </div>
             ) : null}

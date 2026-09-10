@@ -55,7 +55,7 @@ export function EdgePerformance() {
           Engineered for <span className="text-gradient">Pure Speed & Zero Egress</span>
         </h2>
         <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-zinc-400 sm:text-base">
-          Heavy monolithic apps aur 15MB bloated tracking scripts ko bye-bye bolo. LinkForge Edge-first architecture par bana hai jo instant load hota hai.
+          Say goodbye to sluggish monolithic stacks and 15 MB bloated tracking scripts. LinkForge is built with an Edge-first architecture for instantaneous page loads worldwide.
         </p>
       </Reveal>
 

@@ -314,13 +314,12 @@ export function HeroPhone3D() {
           style={{ transform: "translateZ(47px)" }}
         />
       </div>
-      {/* Ground shadow — phone ko zameen par tikata hai */}
+      {/* Ground shadow — grounds the phone component */}
       <div
         aria-hidden
         className="absolute -bottom-8 left-1/2 h-10 w-72 -translate-x-1/2 rounded-full bg-violet-600/25 blur-2xl"
       />
-      {/* Provider orbit — scattered chips ki jagah structured 3D ring (lg+).
-          Saare provider names preserved, kuch kata nahi, kuch hata nahi. */}
+      {/* Provider orbit — structured 3D ring on large viewports */}
       <style>{`@keyframes lf-orbit { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }`}</style>
       <div
         aria-hidden
@@ -350,7 +349,7 @@ export function HeroPhone3D() {
           ))}
         </div>
       </div>
-      {/* Mobile / tablet: same providers, tidy wrap row (orbit ke bina) */}
+      {/* Mobile / tablet: compact wrapped row */}
       <div className="mt-10 flex flex-wrap items-center justify-center gap-2 lg:hidden">
         {ORBIT_PILLS.map((p) => (
           <span

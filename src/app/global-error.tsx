@@ -26,10 +26,9 @@ export default function GlobalError({
             textAlign: "center",
           }}
         >
-          <h1 style={{ fontSize: 24, margin: "0 0 8px" }}>LinkForge — kuch gadbad ho gayi</h1>
+          <h1 style={{ fontSize: 24, margin: "0 0 8px" }}>Something went wrong</h1>
           <p style={{ color: "#71717a", fontSize: 14, maxWidth: 380 }}>
-            App crash ho gayi hai. Page refresh karein — problem bani rahe to kuch der
-            baad try karein.
+            An unexpected error occurred. Please refresh the page or try again in a few moments.
           </p>
           <div style={{ display: "flex", gap: 12, marginTop: 24 }}>
             <button

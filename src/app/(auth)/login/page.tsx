@@ -45,7 +45,7 @@ function LoginForm() {
     >
       <h1 className="font-display text-2xl font-bold">Welcome back</h1>
       <p className="mt-1.5 text-sm text-zinc-400">
-        Apne LinkForge account me sign in karein
+        Sign in to your LinkForge creator account
       </p>
 
       <div className="mt-7 space-y-5">
@@ -82,7 +82,7 @@ function LoginForm() {
         </Field>
         <div className="flex justify-end">
           <Link href="/forgot-password" className="text-xs text-violet-300 hover:text-violet-200">
-            Password bhool gaye?
+            Forgot password?
           </Link>
         </div>
         <Button type="submit" className="w-full" size="lg" loading={loading}>
@@ -92,7 +92,7 @@ function LoginForm() {
       </div>
 
       <p className="mt-6 text-center text-sm text-zinc-500">
-        Naya account?{" "}
+        Don't have an account?{" "}
         <Link href="/signup" className="font-medium text-violet-300 hover:text-violet-200">
           Sign up free
         </Link>

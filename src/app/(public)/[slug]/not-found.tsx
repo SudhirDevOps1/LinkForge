@@ -8,15 +8,15 @@ export default function BioNotFound() {
       <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/5">
         <Link2 className="h-7 w-7 text-zinc-500" />
       </div>
-      <h1 className="mt-6 font-display text-2xl font-bold">Yeh page exist nahi karta</h1>
+      <h1 className="mt-6 font-display text-2xl font-bold">Profile Not Found</h1>
       <p className="mt-2 max-w-sm text-sm text-zinc-500">
-        Ho sakta hai link galat ho ya page unpublished ho gaya ho.
+        This handle may be mistyped or the page has been unpublished.
       </p>
       <Link
         href="/"
         className="mt-8 rounded-xl bg-violet-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-violet-400"
       >
-        Apna page banayein — free
+        Create your page — free
       </Link>
     </div>
   );

@@ -16,7 +16,7 @@ export default async function IntegrationsPage() {
         <h1 className="font-display text-2xl font-bold">Integrations & Content Hub</h1>
         <p className="mt-1 text-sm text-zinc-400">
           YouTube playlists, multi-lesson course curriculums, Spotify players, Substack newsletters,
-          Gumroad stores, Calendly bookings aur GitHub repos ko 1-click me preview aur bio me import karein.
+          Import and preview GitHub repositories, digital products, calendar bookings, and rich media in your bio with one click.
         </p>
       </div>
       <IntegrationsHub defaultGithubUser="SudhirDevOps1" />

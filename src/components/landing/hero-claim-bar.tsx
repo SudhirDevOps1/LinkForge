@@ -27,7 +27,7 @@ export function HeroClaimBar() {
 
     if (clean.length < 3) {
       setStatus("invalid");
-      setMessage("Kam se kam 3 characters zaroori hain");
+      setMessage("At least 3 characters required");
       return;
     }
 
@@ -38,10 +38,10 @@ export function HeroClaimBar() {
         const data = await res.json();
         if (data.available) {
           setStatus("available");
-          setMessage("Available! Aapka link 100% free hai");
+          setMessage("Available! Your link is 100% free");
         } else {
           setStatus("taken");
-          setMessage(data.reason || "Yeh username already booked hai");
+          setMessage(data.reason || "This handle is already taken");
         }
       } catch {
         setStatus("available");

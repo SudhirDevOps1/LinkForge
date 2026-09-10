@@ -14,7 +14,7 @@ export const PATCH = handle(async (req: Request, ctx: Ctx) => {
   assertSameOrigin(req);
   await guardRateLimit(req, "webhooks:write", 30);
   const { profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
   const { id } = await ctx.params;
   const input = parseOrThrow(patchSchema, await req.json().catch(() => ({})));
 
@@ -28,7 +28,7 @@ export const PATCH = handle(async (req: Request, ctx: Ctx) => {
     .set(patch)
     .where(and(eq(webhooks.id, id), eq(webhooks.profileId, profile.id)))
     .returning();
-  if (!updated) throw new ApiError(404, "Webhook nahi mila");
+  if (!updated) throw new ApiError(404, "Webhook not found");
   return json({
     webhook: {
       id: updated.id,
@@ -43,12 +43,12 @@ export const DELETE = handle(async (req: Request, ctx: Ctx) => {
   assertSameOrigin(req);
   await guardRateLimit(req, "webhooks:write", 30);
   const { profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
   const { id } = await ctx.params;
   const [deleted] = await db
     .delete(webhooks)
     .where(and(eq(webhooks.id, id), eq(webhooks.profileId, profile.id)))
     .returning({ id: webhooks.id });
-  if (!deleted) throw new ApiError(404, "Webhook nahi mila");
+  if (!deleted) throw new ApiError(404, "Webhook not found");
   return json({ ok: true });
 });

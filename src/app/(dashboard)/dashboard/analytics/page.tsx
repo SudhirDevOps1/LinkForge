@@ -131,7 +131,7 @@ export default async function AnalyticsPage({
           <h1 className="font-display text-2xl font-bold">Analytics</h1>
           <p className="mt-1 flex items-center gap-1.5 text-xs text-zinc-500">
             <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-            Privacy-first — IPs hashed hain, koi cookies nahi, koi fingerprinting nahi
+            Privacy-first — IPs cryptographically hashed, zero cookies, zero device fingerprinting
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
@@ -243,7 +243,7 @@ export default async function AnalyticsPage({
         </div>
         {feed.length === 0 ? (
           <p className="px-5 py-6 text-center text-sm text-zinc-500">
-            Abhi koi activity nahi — page share karo, events yahan live dikhenge.
+            No activity recorded yet — share your link and analytics will appear here live.
           </p>
         ) : (
           <ul className="divide-y divide-white/5">

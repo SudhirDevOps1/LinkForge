@@ -12,7 +12,7 @@ export const PATCH = handle(async (req: Request, ctx: Ctx) => {
   assertSameOrigin(req);
   await guardRateLimit(req, "links:update", 60);
   const { profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
   const { id } = await ctx.params;
   const input = parseOrThrow(linkUpdateSchema, await req.json().catch(() => ({})));
 
@@ -39,7 +39,7 @@ export const PATCH = handle(async (req: Request, ctx: Ctx) => {
     .set(patch)
     .where(and(eq(links.id, id), eq(links.profileId, profile.id)))
     .returning();
-  if (!updated) throw new ApiError(404, "Link nahi mila");
+  if (!updated) throw new ApiError(404, "Link not found");
   return json({ link: updated });
 });
 
@@ -47,12 +47,12 @@ export const DELETE = handle(async (req: Request, ctx: Ctx) => {
   assertSameOrigin(req);
   await guardRateLimit(req, "links:delete", 60);
   const { profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
   const { id } = await ctx.params;
   const [deleted] = await db
     .delete(links)
     .where(and(eq(links.id, id), eq(links.profileId, profile.id)))
     .returning({ id: links.id });
-  if (!deleted) throw new ApiError(404, "Link nahi mila");
+  if (!deleted) throw new ApiError(404, "Link not found");
   return json({ ok: true });
 });

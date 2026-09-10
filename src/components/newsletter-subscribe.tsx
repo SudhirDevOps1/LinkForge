@@ -50,7 +50,7 @@ export function NewsletterSubscribe({
       if (!res.ok) {
         let errText = data.error ?? "Subscription failed";
         if (errText.includes("Failed query") || errText.includes("relation") || errText.includes("syntax")) {
-          errText = "Database provisioning in progress. Kripya kuchh seconds baad dobara try karein.";
+          errText = "Database provisioning in progress. Please try again in a few seconds.";
         }
         throw new Error(errText);
       }
@@ -82,7 +82,7 @@ export function NewsletterSubscribe({
             Stay in the loop <Sparkles className="h-3 w-3 text-amber-300 opacity-80" />
           </h3>
           <p className="text-xs text-zinc-400">
-            {displayName} ke naye links aur updates email par paane ke liye subscribe karein.
+            Subscribe to get direct email updates when {displayName} shares new links and announcements.
           </p>
         </div>
       </div>
@@ -101,7 +101,7 @@ export function NewsletterSubscribe({
               setEmail(e.target.value);
               if (isError) setIsError(false);
             }}
-            placeholder="apna.email@example.com"
+            placeholder="your.email@example.com"
             required
             disabled={submitting}
             className="flex-1 rounded-xl border border-white/10 bg-black/40 px-3.5 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-violet-400 transition-all disabled:opacity-50"

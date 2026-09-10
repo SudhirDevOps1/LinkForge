@@ -28,12 +28,12 @@ export const GET = handle(async (req: Request, context: { params: Promise<{ post
   }
 
   if (!targetProfileId) {
-    throw new ApiError(400, "profileId ya userSlug parameter zaroori hai");
+    throw new ApiError(400, "profileId or userSlug parameter is required");
   }
 
   const post = await getBlogPost(targetProfileId, postSlug);
   if (!post) {
-    throw new ApiError(404, "Blog post nahi mili");
+    throw new ApiError(404, "Blog post not found");
   }
 
   return json({ ok: true, post });

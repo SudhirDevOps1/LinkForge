@@ -10,7 +10,7 @@ import { RESERVED_SLUGS, profileUpdateSchema } from "@/lib/validations";
 
 export const GET = handle(async () => {
   const { profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
   // Sensitive field return mat karo
   const { profilePassword: _pw, ...safe } = profile;
   return json({ profile: safe });
@@ -20,7 +20,7 @@ export const PATCH = handle(async (req: Request) => {
   assertSameOrigin(req);
   await guardRateLimit(req, "profile:update", 60);
   const { profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
   const input = parseOrThrow(profileUpdateSchema, await req.json().catch(() => ({})));
 
   // Theme valid hai ya nahi
@@ -31,14 +31,14 @@ export const PATCH = handle(async (req: Request) => {
   // Slug uniqueness — apne alawa kisi aur ka slug nahi hona chahiye
   if (input.slug && input.slug !== profile.slug) {
     if (RESERVED_SLUGS.has(input.slug)) {
-      throw new ApiError(409, "Yeh slug reserved hai — koi aur try karein");
+      throw new ApiError(409, "This handle is reserved — please choose another");
     }
     const taken = await db
       .select({ id: profiles.id })
       .from(profiles)
       .where(and(eq(profiles.slug, input.slug), ne(profiles.id, profile.id)))
       .limit(1);
-    if (taken.length > 0) throw new ApiError(409, "Yeh slug pehle se liya ja chuka hai");
+    if (taken.length > 0) throw new ApiError(409, "This handle is already taken — please choose another");
   }
 
   const patch: Record<string, unknown> = { updatedAt: new Date() };

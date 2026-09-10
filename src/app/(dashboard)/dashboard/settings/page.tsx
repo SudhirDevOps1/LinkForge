@@ -15,8 +15,8 @@ export default async function SettingsPage() {
   if (!profile) {
     return (
       <div className="rounded-2xl border border-white/10 bg-ink-900/50 p-8 text-center">
-        <h2 className="text-lg font-semibold text-white">Profile setup ho raha hai</h2>
-        <p className="mt-1 text-sm text-zinc-400">Kripya page refresh karein.</p>
+        <h2 className="text-lg font-semibold text-white">Setting up your profile</h2>
+        <p className="mt-1 text-sm text-zinc-400">Please refresh the page in a moment.</p>
       </div>
     );
   }

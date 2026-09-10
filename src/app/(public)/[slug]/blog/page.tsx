@@ -70,7 +70,7 @@ export default async function PublicBlogFeedPage(props: { params: Promise<{ slug
 
           {posts.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-white/10 py-16 text-center text-sm text-zinc-500">
-              Abhi tak koi blog entry publish nahi hui. Soon new stories will appear here!
+              No articles published yet. New stories and updates will appear here soon!
             </div>
           ) : (
             posts.map((post) => (

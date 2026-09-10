@@ -20,12 +20,12 @@ export const POST = handle(async (req: Request) => {
   if (!isS3Compatible) {
     throw new ApiError(
       501,
-      "Presigned uploads sirf S3-compatible providers (b2/r2/s3/minio) par available hain",
+      "Presigned uploads are only available on S3-compatible providers (B2, R2, S3, MinIO)",
     );
   }
   const { contentType, folder } = parseOrThrow(schema, await req.json().catch(() => ({})));
   const storage = await getStorage();
-  if (!storage.getPresignedUploadUrl) throw new ApiError(501, "Provider presign support nahi karta");
+  if (!storage.getPresignedUploadUrl) throw new ApiError(501, "Storage provider does not support presigned URLs");
   const result = await storage.getPresignedUploadUrl(
     newKey(folder, contentType.split("/")[1] ?? "bin"),
     contentType,

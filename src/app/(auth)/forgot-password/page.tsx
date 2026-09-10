@@ -22,7 +22,7 @@ export default function ForgotPasswordPage() {
         body: JSON.stringify({ email }),
       });
       if (!res.ok) {
-        toast.error("Request failed — thodi der baad try karein");
+        toast.error("Request failed — please try again in a few moments");
         return;
       }
       setSent(true);
@@ -38,8 +38,8 @@ export default function ForgotPasswordPage() {
           <MailCheck className="mx-auto h-10 w-10 text-emerald-300" />
           <h1 className="mt-4 font-display text-2xl font-bold">Check your inbox</h1>
           <p className="mt-2 text-sm text-zinc-400">
-            Agar <span className="text-zinc-200">{email}</span> se account hai to
-            reset link bhej diya gaya hai. Link 1 ghante valid rahega.
+            If an account exists for <span className="text-zinc-200">{email}</span>,
+            a reset link has been sent. The link remains valid for 1 hour.
           </p>
           <Link href="/login" className="mt-6 inline-block text-sm font-medium text-violet-300 hover:text-violet-200">
             ← Back to sign in
@@ -49,7 +49,7 @@ export default function ForgotPasswordPage() {
         <form onSubmit={onSubmit}>
           <h1 className="font-display text-2xl font-bold">Reset password</h1>
           <p className="mt-1.5 text-sm text-zinc-400">
-            Apna email daalein — reset link bhej denge
+            Enter your email address to receive a password reset link
           </p>
           <div className="mt-7 space-y-5">
             <Field label="Email">

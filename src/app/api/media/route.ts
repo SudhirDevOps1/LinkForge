@@ -25,7 +25,7 @@ import { encryptFilePayload } from "@/lib/file-cipher";
 
 export const GET = handle(async () => {
   const { profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
   const rows = await db
     .select()
     .from(mediaFiles)
@@ -51,7 +51,7 @@ export const POST = handle(async (req: Request) => {
   assertSameOrigin(req);
   await guardRateLimit(req, "media:upload", 20);
   const { user, profile } = await requireUser();
-  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  if (!profile) throw new ApiError(404, "Profile not found");
 
   const [agg] = await db
     .select({ count: count() })
@@ -60,21 +60,21 @@ export const POST = handle(async (req: Request) => {
   if ((agg?.count ?? 0) >= MAX_FILES_PER_PROFILE) {
     throw new ApiError(
       400,
-      `Max ${MAX_FILES_PER_PROFILE} files allowed — purani files delete karein`,
+      `Maximum ${MAX_FILES_PER_PROFILE} files allowed — please delete unused files`,
     );
   }
 
   const form = await req.formData().catch(() => null);
   const file = form?.get("file");
-  if (!(file instanceof File)) throw new ApiError(400, "file field zaroori hai");
+  if (!(file instanceof File)) throw new ApiError(400, "file field is required");
 
   if (!(ALLOWED_UPLOAD_TYPES as readonly string[]).includes(file.type)) {
-    throw new ApiError(400, "Yeh file type allowed nahi (images, PDF, audio, video, docs, zip)");
+    throw new ApiError(400, "File type not allowed (allowed: images, PDF, audio, video, docs, zip)");
   }
   if (file.size > MAX_UPLOAD_BYTES) {
-    throw new ApiError(400, `File ${formatBytes(MAX_UPLOAD_BYTES)} se chhoti honi chahiye`);
+    throw new ApiError(400, `File size must be under ${formatBytes(MAX_UPLOAD_BYTES)}`);
   }
-  if (file.size === 0) throw new ApiError(400, "Empty file upload nahi ho sakti");
+  if (file.size === 0) throw new ApiError(400, "Cannot upload empty file");
 
   const safeName = sanitizeFileName(file.name || "file");
   const ext = safeName.includes(".") ? (safeName.split(".").pop() as string) : "bin";
