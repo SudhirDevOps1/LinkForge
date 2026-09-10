@@ -6,6 +6,8 @@ import type { Metadata } from "next";
 import { after } from "next/server";
 import { notFound } from "next/navigation";
 import { headers, cookies } from "next/headers";
+import Link from "next/link";
+import { BookOpen } from "lucide-react";
 import { BioRenderer } from "@/components/bio-renderer";
 import { NewsletterSubscribe } from "@/components/newsletter-subscribe";
 import { ShareButton } from "@/components/share-button";
@@ -17,6 +19,7 @@ import { parseDesign } from "@/lib/design";
 import { getBioBySlug } from "@/lib/queries";
 import { triggerWebhooks } from "@/lib/webhooks";
 import { getTheme } from "@/lib/themes";
+import { getBlogManifest } from "@/lib/blog";
 
 export const dynamic = "force-dynamic";
 
@@ -120,9 +123,17 @@ export default async function PublicBioPage({ params }: Ctx) {
   const ann = profile.announcement as { text: string; emoji?: string; url?: string; expiresAt?: string } | null;
   const showAnnouncement = ann && (!ann.expiresAt || new Date(ann.expiresAt) > now);
 
+  // 📝 Daily Micro-Blog & Journal integration
+  let blogManifest = await getBlogManifest(profile.id);
+  if (!blogManifest.posts || blogManifest.posts.length === 0) {
+    blogManifest = await getBlogManifest(profile.slug);
+  }
+  const publishedBlogPosts = blogManifest.posts || [];
+  const latestBlogPost = publishedBlogPosts[0] || null;
   const profileUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/${profile.slug}`;
 
   return (
+
     <>
       <script
         type="application/ld+json"
@@ -158,6 +169,39 @@ export default async function PublicBioPage({ params }: Ctx) {
         links={visibleLinks}
         footerSlot={
           <div className="w-full flex flex-col gap-4 mt-6">
+            {/* 📰 Featured Daily Micro-Blog Showcase */}
+            {publishedBlogPosts.length > 0 && (
+              <div className="w-full rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md transition hover:border-violet-500/40 hover:bg-white/[0.08]">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-600/20 text-violet-300 border border-violet-500/30 shrink-0">
+                      <BookOpen className="h-5 w-5" />
+                    </span>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-violet-400">
+                          Daily Micro-Blog
+                        </span>
+                        <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-zinc-300">
+                          {publishedBlogPosts.length} {publishedBlogPosts.length === 1 ? "entry" : "entries"}
+                        </span>
+                      </div>
+                      <p className="text-sm font-semibold text-white truncate mt-0.5">
+                        {latestBlogPost?.title}
+                      </p>
+                    </div>
+                  </div>
+                  <Link
+                    href={`/${profile.slug}/blog`}
+                    className="shrink-0 rounded-xl bg-violet-600 px-3.5 py-2 text-xs font-bold text-white transition hover:bg-violet-500 shadow-md shadow-violet-600/20 flex items-center gap-1"
+                  >
+                    <span>Read Blog</span>
+                    <span>→</span>
+                  </Link>
+                </div>
+              </div>
+            )}
+
             <NewsletterSubscribe
               slug={profile.slug}
               displayName={profile.displayName}

@@ -88,8 +88,10 @@ export function BlogStudio({ profileSlug }: { profileSlug: string }) {
   const [isPublishing, setIsPublishing] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
-  async function loadPosts() {
-    setLoadingPosts(true);
+  async function loadPosts(showLoading = false) {
+    if (showLoading || posts.length === 0) {
+      setLoadingPosts(true);
+    }
     try {
       const url = profileSlug
         ? `/api/blog?slug=${encodeURIComponent(profileSlug.toLowerCase().trim())}`
@@ -108,10 +110,10 @@ export function BlogStudio({ profileSlug }: { profileSlug: string }) {
     }
   }
 
-
   useEffect(() => {
-    void loadPosts();
+    void loadPosts(true);
   }, [profileSlug]);
+
 
   // Auto-slugify
   function handleTitleChange(val: string) {
@@ -168,12 +170,19 @@ export function BlogStudio({ profileSlug }: { profileSlug: string }) {
       if (!res.ok) throw new Error(data.error || "Failed to publish post");
 
       toast.success(`Post "${data.post.title}" published to Object Storage successfully!`);
-      // Optimistically update published posts so it renders without delay
+      // Optimistically update published posts so it renders instantly
       if (data.post) {
         setPosts((prev) => [data.post, ...prev.filter((p) => p.slug !== data.post.slug)]);
       }
+      // Reset form
+      setTitle("");
+      setSlug("");
+      setContent("");
+      setExcerpt("");
+      setShowPreview(false);
       setActiveTab("posts");
-      await loadPosts();
+      // Revalidate in background without blocking UI
+      void loadPosts(false);
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -232,7 +241,10 @@ export function BlogStudio({ profileSlug }: { profileSlug: string }) {
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab("posts")}
+            onClick={() => {
+              setActiveTab("posts");
+              void loadPosts(false);
+            }}
             className={cn(
               "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition cursor-pointer",
               activeTab === "posts" ? "bg-violet-600 text-white shadow-sm" : "text-zinc-400 hover:text-white",
@@ -240,6 +252,7 @@ export function BlogStudio({ profileSlug }: { profileSlug: string }) {
           >
             <BookOpen className="h-3.5 w-3.5" /> Published Posts ({posts.length})
           </button>
+
         </div>
 
         {profileSlug && (
@@ -464,11 +477,12 @@ export function BlogStudio({ profileSlug }: { profileSlug: string }) {
             <span className="text-xs text-zinc-400">{posts.length} entries</span>
           </div>
 
-          {loadingPosts ? (
+          {loadingPosts && posts.length === 0 ? (
             <div className="flex items-center justify-center py-12 text-zinc-400">
               <Loader2 className="h-6 w-6 animate-spin text-violet-400" />
             </div>
           ) : posts.length === 0 ? (
+
             <div className="rounded-xl border border-dashed border-white/10 py-12 text-center text-xs text-zinc-500">
               No daily blog posts published yet. Click &quot;Write / Edit Daily Post&quot; to create your first article.
             </div>
