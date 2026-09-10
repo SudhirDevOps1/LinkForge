@@ -50,11 +50,13 @@ export function PhonePreview({
   const [key, setKey] = useState(0);
 
   const profileSlug = slug || profile.slug || profile.displayName.toLowerCase().replace(/[^a-z0-9]/g, "") || "bio";
+  const activeThemeId = previewTheme || profile.theme;
   const activeProfile: BioProfileShape = {
     ...profile,
     theme: activeThemeId,
     slug: profileSlug,
   };
+
 
   const publicUrl = typeof window !== "undefined"
     ? `${window.location.origin}/${profileSlug}`

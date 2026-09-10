@@ -96,7 +96,9 @@ export async function trackEvent(input: TrackInput): Promise<void> {
     browser,
     os,
     ipHash: hashIp(ip),
+    createdAt: new Date(),
   });
+
 
   // Probabilistic retention GC (~1% of writes) — old data auto-purge
   const retentionDays = Number(process.env.ANALYTICS_RETENTION_DAYS ?? 30);
