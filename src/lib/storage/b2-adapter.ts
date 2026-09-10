@@ -351,6 +351,8 @@ export class B2StorageAdapter implements StorageAdapter {
   /**
    * Automatically applies CORS rules directly to Backblaze B2 bucket
    * using configured origins or user-provided list.
+   * Supports both S3 PutBucketCors and B2 Native API fallback when
+   * bucket contains native CORS rules.
    */
   async ensureCorsRules(customOrigins?: string[]): Promise<{
     success: boolean;
@@ -375,12 +377,141 @@ export class B2StorageAdapter implements StorageAdapter {
           },
         }),
       );
-      return { success: true, origins };
+      return { success: true, origins, message: "Backblaze S3 CORS rules applied successfully." };
     } catch (err) {
+      const errMsg = (err as Error).message || "";
       console.warn(
-        `[b2-adapter] Automatic PutBucketCors notice: ${(err as Error).message}`,
+        `[b2-adapter] PutBucketCors notice: ${errMsg}. Attempting B2 Native API sync...`,
       );
-      return { success: false, origins, message: (err as Error).message };
+
+      // Attempt B2 Native API update as fallback
+      const nativeResult = await this.applyB2NativeCorsRules(origins);
+      if (nativeResult.success) {
+        return nativeResult;
+      }
+
+      return {
+        success: false,
+        origins,
+        message: `${errMsg} | Native API: ${nativeResult.message}`,
+      };
+    }
+  }
+
+  private async applyB2NativeCorsRules(origins: string[]): Promise<{
+    success: boolean;
+    origins: string[];
+    message?: string;
+  }> {
+    try {
+      const basicAuth = Buffer.from(
+        `${this.config.keyId}:${this.config.applicationKey}`,
+      ).toString("base64");
+
+      const authRes = await fetch(
+        "https://api.backblazeb2.com/b2api/v3/b2_authorize_account",
+        {
+          headers: {
+            Authorization: `Basic ${basicAuth}`,
+          },
+        },
+      );
+
+      if (!authRes.ok) {
+        const txt = await authRes.text();
+        throw new Error(`b2_authorize_account failed (${authRes.status}): ${txt}`);
+      }
+
+      const authData = (await authRes.json()) as {
+        accountId: string;
+        apiUrl: string;
+        authorizationToken: string;
+      };
+
+      const { accountId, apiUrl, authorizationToken } = authData;
+
+      // Find bucketId by bucketName
+      const listBucketsRes = await fetch(
+        `${apiUrl}/b2api/v3/b2_list_buckets`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: authorizationToken,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            accountId,
+            bucketName: this.config.bucket,
+          }),
+        },
+      );
+
+      if (!listBucketsRes.ok) {
+        const txt = await listBucketsRes.text();
+        throw new Error(`b2_list_buckets failed (${listBucketsRes.status}): ${txt}`);
+      }
+
+      const listData = (await listBucketsRes.json()) as {
+        buckets: Array<{ bucketId: string; bucketName: string }>;
+      };
+
+      const bucket = listData.buckets?.find((b) => b.bucketName === this.config.bucket);
+      if (!bucket) {
+        throw new Error(`Bucket "${this.config.bucket}" not found in B2 account`);
+      }
+
+      // Update bucket with CORS rules
+      const updateRes = await fetch(
+        `${apiUrl}/b2api/v3/b2_update_bucket`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: authorizationToken,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            accountId,
+            bucketId: bucket.bucketId,
+            corsRules: [
+              {
+                corsRuleName: "AllowDirectUpload",
+                allowedOrigins: origins,
+                allowedOperations: [
+                  "b2_download_file_by_id",
+                  "b2_download_file_by_name",
+                  "b2_upload_file",
+                  "b2_upload_part",
+                  "s3_get",
+                  "s3_head",
+                  "s3_put",
+                  "s3_delete",
+                ],
+                allowedHeaders: ["*"],
+                exposeHeaders: ["ETag"],
+                maxAgeSeconds: 3600,
+              },
+            ],
+          }),
+        },
+      );
+
+      if (!updateRes.ok) {
+        const txt = await updateRes.text();
+        throw new Error(`b2_update_bucket failed (${updateRes.status}): ${txt}`);
+      }
+
+      return {
+        success: true,
+        origins,
+        message: "Backblaze B2 Native CORS rules updated successfully with s3_put and browser upload support!",
+      };
+    } catch (nativeErr) {
+      console.error("[b2-adapter] applyB2NativeCorsRules error:", nativeErr);
+      return {
+        success: false,
+        origins,
+        message: (nativeErr as Error).message,
+      };
     }
   }
 
