@@ -59,6 +59,65 @@ export const storageDriver: StorageProvider = storageProvider;
 export const B2_PRESIGN_PUT_EXPIRY_SEC = Number(process.env.B2_PRESIGN_PUT_EXPIRY_SEC ?? 600);
 export const B2_PRESIGN_GET_EXPIRY_SEC = Number(process.env.B2_PRESIGN_GET_EXPIRY_SEC ?? 300);
 
+/**
+ * Returns allowed browser origins for Backblaze B2 direct upload CORS rules.
+ * Automatically combines env configuration (B2_CORS_ALLOWED_ORIGINS / API_CORS_ORIGINS)
+ * with deployment URLs.
+ */
+export function getCorsAllowedOrigins(): string[] {
+  const envOrigins = (
+    process.env.B2_CORS_ALLOWED_ORIGINS ??
+    process.env.CORS_ALLOWED_ORIGINS ??
+    process.env.ALLOWED_ORIGINS ??
+    process.env.API_CORS_ORIGINS ??
+    ""
+  )
+    .split(",")
+    .map((o) => o.trim().replace(/\/+$/, ""))
+    .filter(Boolean);
+
+  const defaults = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+  ];
+
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    defaults.push(process.env.NEXT_PUBLIC_APP_URL.trim().replace(/\/+$/, ""));
+  }
+  if (process.env.APP_DOMAIN) {
+    defaults.push(`https://${process.env.APP_DOMAIN.trim().replace(/\/+$/, "")}`);
+  }
+
+  // Pre-configure domains requested by user
+  defaults.push("https://linkforge-delta.vercel.app");
+  defaults.push("https://inkorge-demo.vercel.app");
+  defaults.push("https://linkforge-demo.vercel.app");
+
+  const combined = Array.from(new Set([...defaults, ...envOrigins]));
+  return combined;
+}
+
+/**
+ * Generates the exact Backblaze B2 Console CORS JSON format for easy copy/paste.
+ */
+export function getB2CorsRulesJson(customOrigins?: string[]): string {
+  const origins = customOrigins ?? getCorsAllowedOrigins();
+  return JSON.stringify(
+    [
+      {
+        corsRuleName: "AllowDirectUpload",
+        allowedOrigins: origins,
+        allowedOperations: ["s3_put", "s3_head", "s3_get", "s3_delete"],
+        allowedHeaders: ["*"],
+        exposeHeaders: ["ETag"],
+        maxAgeSeconds: 3600,
+      },
+    ],
+    null,
+    2,
+  );
+}
+
 /** S3-compatible providers — sab ek hi AWS SDK factory share karte hain */
 export const isS3Compatible = ["b2", "r2", "s3", "minio"].includes(
   storageProvider,

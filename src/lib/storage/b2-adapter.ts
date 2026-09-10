@@ -11,6 +11,7 @@ import {
   DeleteObjectCommand,
   GetObjectCommand,
   ListObjectsV2Command,
+  PutBucketCorsCommand,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
@@ -18,6 +19,8 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import {
   B2_PRESIGN_GET_EXPIRY_SEC,
   B2_PRESIGN_PUT_EXPIRY_SEC,
+  getB2CorsRulesJson,
+  getCorsAllowedOrigins,
 } from "@/config/storage.config";
 import { sanitizeKey } from "./index";
 import type { StorageAdapter } from "./types";
@@ -339,5 +342,48 @@ export class B2StorageAdapter implements StorageAdapter {
       console.warn("[b2-adapter] ping check failed:", (err as Error).message);
       return false;
     }
+  }
+
+  /**
+   * Automatically applies CORS rules directly to Backblaze B2 bucket
+   * using configured origins or user-provided list.
+   */
+  async ensureCorsRules(customOrigins?: string[]): Promise<{
+    success: boolean;
+    origins: string[];
+    message?: string;
+  }> {
+    const origins = customOrigins ?? getCorsAllowedOrigins();
+    try {
+      await this.client.send(
+        new PutBucketCorsCommand({
+          Bucket: this.config.bucket,
+          CORSConfiguration: {
+            CORSRules: [
+              {
+                AllowedOrigins: origins,
+                AllowedMethods: ["PUT", "HEAD", "GET", "POST", "DELETE"],
+                AllowedHeaders: ["*"],
+                ExposeHeaders: ["ETag"],
+                MaxAgeSeconds: 3600,
+              },
+            ],
+          },
+        }),
+      );
+      return { success: true, origins };
+    } catch (err) {
+      console.warn(
+        `[b2-adapter] Automatic PutBucketCors notice: ${(err as Error).message}`,
+      );
+      return { success: false, origins, message: (err as Error).message };
+    }
+  }
+
+  /**
+   * Generates formatted B2 Dashboard JSON for manual configuration.
+   */
+  getCorsRulesJson(customOrigins?: string[]): string {
+    return getB2CorsRulesJson(customOrigins);
   }
 }

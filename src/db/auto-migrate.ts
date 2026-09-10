@@ -189,6 +189,8 @@ const PG_MIGRATIONS = [
   `ALTER TABLE "profiles" ADD COLUMN IF NOT EXISTS "og_image_url" text;`,
   `ALTER TABLE "links" ADD COLUMN IF NOT EXISTS "thumbnail_url" text;`,
   `ALTER TABLE "links" ADD COLUMN IF NOT EXISTS "size" text NOT NULL DEFAULT 'standard';`,
+  `ALTER TABLE "media_files" ADD COLUMN IF NOT EXISTS "storage_provider" text NOT NULL DEFAULT 'local';`,
+  `ALTER TABLE "media_files" ADD COLUMN IF NOT EXISTS "size_bytes" integer NOT NULL DEFAULT 0;`,
 ];
 
 const SQLITE_MIGRATIONS = [
