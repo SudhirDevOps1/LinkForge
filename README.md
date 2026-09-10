@@ -127,7 +127,8 @@ Open [http://localhost:3000](http://localhost:3000) in your browser. Default dem
 
 ## ⚙️ Environment Variables Reference
 
-LinkForge cleanly separates sensitive secrets from plain-text configuration.
+LinkForge cleanly separates sensitive secrets from plain-text configuration.  
+👉 **For step-by-step console setup (Neon, Backblaze B2, Vercel), see the [Complete Environment Setup Guide (ENV_SETUP_GUIDE.md)](ENV_SETUP_GUIDE.md).**
 
 ### 🔒 Sensitive Secrets (Mark as "Secret / Sensitive" in Vercel / Cloud)
 | Variable | Description | Example / Format |
