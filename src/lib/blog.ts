@@ -89,23 +89,46 @@ export async function getBlogManifest(profileIdentifier: string): Promise<BlogMa
     }
   }
 
-  // 1. Check direct path
-  let manifest = await readKey(`blogs/${cleanId}/manifest.json`);
+  // 1. Resolve canonical user slug folder (e.g. 'sudhir-32a7')
+  const pair = await resolveProfileIdentifiers(cleanId);
+  const canonicalFolder = pair?.slug || cleanId;
+
+  let manifest = await readKey(`blogs/${canonicalFolder}/manifest.json`);
   if (manifest && manifest.posts && manifest.posts.length > 0) {
+    manifest.profileId = canonicalFolder;
     return manifest;
   }
 
-  // 2. Check alternative identifier (ID vs Slug) from DB
-  const pair = await resolveProfileIdentifiers(cleanId);
-  if (pair) {
-    const altKey = pair.id === cleanId ? pair.slug : pair.id;
-    const altManifest = await readKey(`blogs/${altKey}/manifest.json`);
-    if (altManifest && altManifest.posts && altManifest.posts.length > 0) {
-      return altManifest;
+  // 2. Fallback & auto-migration: check legacy UUID folder if exists
+  if (pair && pair.id && pair.id !== canonicalFolder) {
+    const legacyManifest = await readKey(`blogs/${pair.id}/manifest.json`);
+    if (legacyManifest && legacyManifest.posts && legacyManifest.posts.length > 0) {
+      try {
+        legacyManifest.profileId = canonicalFolder;
+        // Fix fileKeys to point to canonical slug folder and copy missing files
+        for (const post of legacyManifest.posts) {
+          if (post.fileKey && post.fileKey.startsWith(`blogs/${pair.id}/`)) {
+            const fileName = post.fileKey.replace(`blogs/${pair.id}/`, "");
+            const oldObj = await adapter.getObject(post.fileKey);
+            if (oldObj) {
+              const contentType = post.format === "html" ? "text/html; charset=utf-8" : "text/markdown; charset=utf-8";
+              await adapter.putObject(`blogs/${canonicalFolder}/${fileName}`, oldObj.data, contentType);
+              await adapter.deleteObject(post.fileKey);
+            }
+            post.fileKey = `blogs/${canonicalFolder}/${fileName}`;
+          }
+        }
+        const manifestBuffer = Buffer.from(JSON.stringify(legacyManifest, null, 2), "utf8");
+        await adapter.putObject(`blogs/${canonicalFolder}/manifest.json`, manifestBuffer, "application/json; charset=utf-8");
+        await adapter.deleteObject(`blogs/${pair.id}/manifest.json`);
+      } catch (migrationErr) {
+        console.warn("[blog] Migration from UUID to slug folder notice:", migrationErr);
+      }
+      return legacyManifest;
     }
   }
 
-  return manifest || { profileId: cleanId, updatedAt: new Date().toISOString(), posts: [] };
+  return manifest || { profileId: canonicalFolder, updatedAt: new Date().toISOString(), posts: [] };
 }
 
 export async function saveBlogPost(
@@ -125,13 +148,24 @@ export async function saveBlogPost(
   const slug = sanitizeBlogSlug(input.title, input.slug);
   const format: BlogFormat = input.format || "markdown";
   const ext = format === "html" ? "html" : format === "txt" ? "txt" : "md";
-  const fileKey = `blogs/${profileId}/${slug}.${ext}`;
+
+  // 1. Resolve canonical user slug folder (e.g. 'sudhir-32a7')
+  let canonicalFolder = knownSlug?.trim();
+  if (!canonicalFolder) {
+    const pair = await resolveProfileIdentifiers(profileId);
+    canonicalFolder = pair?.slug;
+  }
+  if (!canonicalFolder) {
+    canonicalFolder = profileId;
+  }
+
+  const fileKey = `blogs/${canonicalFolder}/${slug}.${ext}`;
   const contentType = format === "html" ? "text/html; charset=utf-8" : "text/markdown; charset=utf-8";
 
-  // 1. Upload blog content directly to Object Storage (zero database bloat)
+  // 2. Upload blog content directly to single canonical folder
   await adapter.putObject(fileKey, Buffer.from(input.content, "utf8"), contentType);
 
-  // 2. Generate excerpt and reading time
+  // 3. Generate excerpt and reading time
   const plainText = input.content.replace(/<[^>]+>/g, "").replace(/[#*`_~\[\]]/g, "");
   const excerpt =
     input.excerpt?.trim() ||
@@ -153,8 +187,8 @@ export async function saveBlogPost(
     updatedAt: now,
   };
 
-  // 3. Update manifest
-  const manifest = await getBlogManifest(profileId);
+  // 4. Update manifest in the single canonical folder
+  const manifest = await getBlogManifest(canonicalFolder);
   const existingIdx = manifest.posts.findIndex((p) => p.slug === slug);
   if (existingIdx >= 0) {
     header.date = manifest.posts[existingIdx].date; // preserve original publish date
@@ -163,38 +197,23 @@ export async function saveBlogPost(
     manifest.posts.unshift(header);
   }
   manifest.updatedAt = now;
-  manifest.profileId = profileId;
+  manifest.profileId = canonicalFolder;
 
   const manifestBuffer = Buffer.from(JSON.stringify(manifest, null, 2), "utf8");
 
-  // Save to primary manifest key
   await adapter.putObject(
-    `blogs/${profileId}/manifest.json`,
+    `blogs/${canonicalFolder}/manifest.json`,
     manifestBuffer,
     "application/json; charset=utf-8",
   );
 
-  // 4. Resolve slug and mirror manifest & post content for 100% resilient lookup & B2 console visibility
-  let altSlug = knownSlug;
-  if (!altSlug) {
-    const pair = await resolveProfileIdentifiers(profileId);
-    altSlug = pair?.slug;
-  }
-
-  if (altSlug && altSlug !== profileId) {
+  // 5. Clean up old legacy UUID folder files if any (prevents double folders in B2)
+  if (canonicalFolder !== profileId) {
     try {
-      await adapter.putObject(
-        `blogs/${altSlug}/manifest.json`,
-        manifestBuffer,
-        "application/json; charset=utf-8",
-      );
-      await adapter.putObject(
-        `blogs/${altSlug}/${slug}.${ext}`,
-        Buffer.from(input.content, "utf8"),
-        contentType,
-      );
+      await adapter.deleteObject(`blogs/${profileId}/manifest.json`);
+      await adapter.deleteObject(`blogs/${profileId}/${slug}.${ext}`);
     } catch {
-      // Non-critical mirror
+      // Ignore legacy cleanup errors
     }
   }
 
@@ -220,7 +239,7 @@ export async function getBlogPost(profileIdentifier: string, slug: string): Prom
     console.error(`[blog] Failed to fetch primary content for ${header.fileKey}:`, err);
   }
 
-  // Fallback check if fileKey was keyed by slug instead of ID or vice versa
+  // Fallback check if fileKey was keyed by alternative identifier
   const pair = await resolveProfileIdentifiers(profileIdentifier);
   if (pair) {
     const altTarget = pair.id === profileIdentifier ? pair.slug : pair.id;
@@ -255,31 +274,30 @@ export async function deleteBlogPost(profileIdentifier: string, slug: string): P
     console.warn(`[blog] Failed to delete file ${header.fileKey}:`, err);
   }
 
+  // Determine canonical folder
+  const pair = await resolveProfileIdentifiers(profileIdentifier);
+  const canonicalFolder = pair?.slug || manifest.profileId;
+
+  // Also clean up from legacy UUID path if exists
+  if (pair && pair.id && pair.id !== canonicalFolder) {
+    const ext = header.format === "html" ? "html" : header.format === "txt" ? "txt" : "md";
+    try {
+      await adapter.deleteObject(`blogs/${pair.id}/${slug}.${ext}`);
+    } catch {
+      // ignore
+    }
+  }
+
   manifest.posts = manifest.posts.filter((p) => p.slug !== slug);
   manifest.updatedAt = new Date().toISOString();
 
   const manifestBuffer = Buffer.from(JSON.stringify(manifest, null, 2), "utf8");
 
   await adapter.putObject(
-    `blogs/${manifest.profileId}/manifest.json`,
+    `blogs/${canonicalFolder}/manifest.json`,
     manifestBuffer,
     "application/json; charset=utf-8",
   );
-
-  const pair = await resolveProfileIdentifiers(profileIdentifier);
-  if (pair && pair.slug && pair.slug !== manifest.profileId) {
-    try {
-      await adapter.putObject(
-        `blogs/${pair.slug}/manifest.json`,
-        manifestBuffer,
-        "application/json; charset=utf-8",
-      );
-      const ext = header.format === "html" ? "html" : header.format === "txt" ? "txt" : "md";
-      await adapter.deleteObject(`blogs/${pair.slug}/${slug}.${ext}`);
-    } catch {
-      // ignore
-    }
-  }
 
   return true;
 }
