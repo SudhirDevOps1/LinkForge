@@ -170,6 +170,17 @@ export default function PrivacyPage() {
               Blob) aur hosting (Vercel / Cloudflare / Netlify / Railway / Render). Self-hosted
               instances me data 100% aapke infrastructure par rehta hai.
             </P>
+            <P>
+              <strong className="text-zinc-200">Daily Blog & Micro-Journal Storage:</strong> Creator ke
+              daily blog posts (.md, .txt, .html) directly Backblaze B2 / S3 Object Storage me
+              store hote hain — relational database me zero bloat ke saath.
+            </P>
+            <P>
+              <strong className="text-zinc-200">Creator Monetization & Payments:</strong> Courses,
+              1:1 calls ya digital products ke transactions directly creator ke payment gateway
+              (Razorpay, Stripe, Topmate, Gumroad, UPI) par process hote hain. LinkForge kisi bhi
+              user ka card/banking details hold ya process nahi karta.
+            </P>
           </section>
 
           <section>

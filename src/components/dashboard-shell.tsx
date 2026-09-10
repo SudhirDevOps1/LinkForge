@@ -11,6 +11,7 @@
 import {
   BarChart3,
   Blocks,
+  BookOpen,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
@@ -22,6 +23,7 @@ import {
   Menu,
   Palette,
   Settings,
+  ShoppingBag,
   Mail,
   X,
 } from "lucide-react";
@@ -33,6 +35,8 @@ import { cn } from "@/components/ui";
 const NAV = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/dashboard/links", label: "Links", icon: ListOrdered },
+  { href: "/dashboard/blog", label: "Daily Blog", icon: BookOpen },
+  { href: "/dashboard/store", label: "Monetize", icon: ShoppingBag },
   { href: "/dashboard/media", label: "Media", icon: Files },
   { href: "/dashboard/appearance", label: "Appearance", icon: Palette },
   { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },

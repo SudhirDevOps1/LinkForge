@@ -167,12 +167,23 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <H2 id="uploads">7. Uploads & storage</H2>
+            <H2 id="uploads">7. Uploads, blogs & creator monetization</H2>
             <P>
               Allowed types: images, PDF, audio, video, docs, ZIP (max 10 MB default, har
               instance par configurable). Executables, scripts aur malicious files
               prohibited hain aur bina notice delete ho sakti hain. Self-hosted instances
               par storage limits aapke provider (B2/R2/S3/MinIO) ke hisaab se lagti hain.
+            </P>
+            <P>
+              <strong className="text-zinc-200">Daily Blogs & Journals:</strong> Creators apne
+              authored posts Backblaze B2/Object Storage me publish karte hain. Content ka copyright
+              poori tarah creator ke paas rehta hai.
+            </P>
+            <P>
+              <strong className="text-zinc-200">Courses, 1:1 Calls & Digital Goods:</strong> Creators
+              apne courses, video sessions aur digital downloads ki pricing, delivery aur refunds ke
+              liye khud responsible hain. LinkForge embedding aur presentation platform provide karta
+              hai aur merchant-of-record nahi hai.
             </P>
           </section>
 

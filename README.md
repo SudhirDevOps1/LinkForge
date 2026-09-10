@@ -11,13 +11,23 @@
 [![Tests](https://img.shields.io/badge/Vitest-145%20Passed-success?style=for-the-badge&logo=vitest)](https://vitest.dev/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
-[Live Production App](https://linkforge-demo.vercel.app/) · [Architecture](#-system-architecture) · [Key Features](#-key-features) · [Quickstart](#-quickstart) · [Environment Variables](#-environment-variables-reference) · [API Endpoints](#-api-endpoints)
+[GitHub Repository](https://github.com/SudhirDevOps1/LinkForge) · [Architecture](#-system-architecture) · [Key Features](#-key-features) · [Quickstart](#-quickstart) · [Environment Variables](#-environment-variables-reference) · [API Endpoints](#-api-endpoints)
 
 </div>
 
 ---
 
 ## 🌟 Key Features
+
+### 🛍️ Superprofile Creator Monetization Studio
+- **Masterclasses & Paid Courses**: Multi-chapter curriculum syllabus builder with duration badges and locked vs free sample lesson previews.
+- **Paid 1:1 Mentorship & Video Calls**: Offer paid consulting, architecture audits, and mock interviews with slot duration and rate badges (`₹999 / 45m`). Direct booking triggers for Topmate, Cal.com, and Calendly.
+- **Digital Downloads**: Instant delivery for code boilerplates, Figma templates, presets, and PDF e-books with high-converting "Get Now" CTA cards.
+- **0% Fee India UPI & Global Tipping**: Direct zero-middleman payments via Google Pay, PhonePe, Paytm QR, Stripe, and Buy Me A Coffee.
+
+### 📝 Backblaze B2-Backed Daily Blog & Micro-Journal (Zero DB Bloat)
+- **100% Object Storage Backed**: Write and publish daily blog posts and developer journals in Markdown, HTML, or Plain Text. All article bodies are stored directly in Backblaze B2 / S3 Object Storage — keeping Neon PostgreSQL completely free of text bloat.
+- **Creator Studio & Reader**: Dedicated studio at `/dashboard/blog` with reading time estimation and tags, plus a fast WordPress-grade public feed (`/[slug]/blog`) and single article reader (`/[slug]/blog/[postSlug]`).
 
 ### 🔐 Dual-Layer Zero-Knowledge Encryption
 - **Backblaze B2 Payload Encryption (AES-256-GCM)**:

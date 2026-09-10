@@ -561,6 +561,21 @@ export function BioRenderer({
           </p>
         ) : null}
 
+        {/* ✍️ Daily Blog / Journal Link */}
+        <a
+          href={`/${profile.slug}/blog`}
+          className="mt-3.5 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border transition-all hover:scale-105"
+          style={{
+            borderColor: `${accent}35`,
+            background: `${accent}12`,
+            color: accent,
+          }}
+        >
+          <BookOpen className="h-3.5 w-3.5" />
+          <span>Read Daily Blog</span>
+          <span className="text-[10px] opacity-70">→</span>
+        </a>
+
         {/* Links Container */}
         <div
           className={
@@ -743,17 +758,17 @@ export function BioRenderer({
                           {link.title}
                         </p>
                         <span className="rounded-md bg-violet-500/20 px-1.5 py-0.5 text-[10px] font-bold text-violet-300 border border-violet-500/30">
-                          LESSON
+                          {link.description?.includes("Modules") ? "CURRICULUM" : "LESSON"}
                         </span>
                       </div>
                       {link.description && (
-                        <p className="mt-0.5 truncate text-xs" style={{ color: v.muted }}>
+                        <p className="mt-0.5 line-clamp-2 text-xs" style={{ color: v.muted }}>
                           {link.description}
                         </p>
                       )}
                     </div>
-                    <span className="rounded-full bg-violet-600/30 border border-violet-500/40 px-2.5 py-1 text-xs font-semibold text-violet-200 shrink-0">
-                      Watch
+                    <span className="rounded-full bg-violet-600 px-3 py-1 text-xs font-bold text-white shadow-sm shrink-0">
+                      {link.description?.includes("Modules") ? "Enroll" : "Watch"}
                     </span>
                   </a>
                 ) : link.type === "product" ? (
