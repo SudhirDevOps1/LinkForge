@@ -215,6 +215,32 @@ export function MediaManager({
     }
   }
 
+  const [syncingCors, setSyncingCors] = useState(false);
+
+  async function syncB2Cors() {
+    setSyncingCors(true);
+    try {
+      const res = await fetch("/api/storage/cors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ origins: ["*", window.location.origin] }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        success?: boolean;
+        message?: string;
+      };
+      if (data.success) {
+        toast.success("B2 CORS auto-applied! Ab direct uploads chalenge.");
+      } else {
+        toast.error(data.message ?? "B2 CORS update failed — Backblaze Console me Option 4 select karein");
+      }
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setSyncingCors(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -224,6 +250,19 @@ export function MediaManager({
             {files.length} files · {formatBytes(totalBytes)} · stored on{" "}
             <span className="font-semibold text-violet-300">{providerLabel}</span>
           </p>
+          {providerLabel.toLowerCase().includes("b2") && (
+            <div className="mt-2 flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                loading={syncingCors}
+                onClick={syncB2Cors}
+                className="border-violet-500/30 text-xs text-violet-300 hover:bg-violet-500/10"
+              >
+                ⚡ Auto-Fix B2 CORS (1-Click)
+              </Button>
+            </div>
+          )}
         </div>
         <div className="relative w-full sm:w-64">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
