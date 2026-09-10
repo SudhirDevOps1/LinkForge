@@ -717,6 +717,205 @@ export function BioRenderer({
                       >📋</button>
                     </div>
                   </div>
+                ) : link.type === "course" || link.type === "playlist" ? (
+                  /* 🎓 Course & Playlist Lesson Card */
+                  <a
+                    href={hrefFor(link)}
+                    target={trackClicks ? "_blank" : undefined}
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3.5"
+                  >
+                    <span
+                      className="flex shrink-0 items-center justify-center rounded-xl border"
+                      style={{
+                        width: iconBox,
+                        height: iconBox,
+                        borderColor: "#8b5cf640",
+                        color: "#a78bfa",
+                        background: "#8b5cf615",
+                      }}
+                    >
+                      <Play className="h-4 w-4 fill-current" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="truncate font-semibold text-sm" style={{ color: v.text }}>
+                          {link.title}
+                        </p>
+                        <span className="rounded-md bg-violet-500/20 px-1.5 py-0.5 text-[10px] font-bold text-violet-300 border border-violet-500/30">
+                          LESSON
+                        </span>
+                      </div>
+                      {link.description && (
+                        <p className="mt-0.5 truncate text-xs" style={{ color: v.muted }}>
+                          {link.description}
+                        </p>
+                      )}
+                    </div>
+                    <span className="rounded-full bg-violet-600/30 border border-violet-500/40 px-2.5 py-1 text-xs font-semibold text-violet-200 shrink-0">
+                      Watch
+                    </span>
+                  </a>
+                ) : link.type === "product" ? (
+                  /* 🛍️ Digital Store & Product Card */
+                  <a
+                    href={hrefFor(link)}
+                    target={trackClicks ? "_blank" : undefined}
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3.5"
+                  >
+                    <span
+                      className="flex shrink-0 items-center justify-center rounded-xl border"
+                      style={{
+                        width: iconBox,
+                        height: iconBox,
+                        borderColor: "#d946ef40",
+                        color: "#e879f9",
+                        background: "#d946ef15",
+                      }}
+                    >
+                      <ShoppingBag className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="truncate font-semibold text-sm" style={{ color: v.text }}>
+                          {link.title}
+                        </p>
+                        <span className="rounded-md bg-fuchsia-500/20 px-1.5 py-0.5 text-[10px] font-bold text-fuchsia-300 border border-fuchsia-500/30">
+                          STORE
+                        </span>
+                      </div>
+                      {link.description && (
+                        <p className="mt-0.5 truncate text-xs" style={{ color: v.muted }}>
+                          {link.description}
+                        </p>
+                      )}
+                    </div>
+                    <span className="rounded-full bg-fuchsia-600 px-3 py-1 text-xs font-bold text-white shadow-sm shrink-0">
+                      Get Now
+                    </span>
+                  </a>
+                ) : link.type === "cal" ? (
+                  /* 📅 Calendly / Cal.com Meeting Booking Card */
+                  <a
+                    href={hrefFor(link)}
+                    target={trackClicks ? "_blank" : undefined}
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3.5"
+                  >
+                    <span
+                      className="flex shrink-0 items-center justify-center rounded-xl border"
+                      style={{
+                        width: iconBox,
+                        height: iconBox,
+                        borderColor: "#0284c740",
+                        color: "#38bdf8",
+                        background: "#0284c715",
+                      }}
+                    >
+                      <Calendar className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="truncate font-semibold text-sm" style={{ color: v.text }}>
+                          {link.title}
+                        </p>
+                        <span className="rounded-md bg-sky-500/20 px-1.5 py-0.5 text-[10px] font-bold text-sky-300 border border-sky-500/30">
+                          1:1 CALL
+                        </span>
+                      </div>
+                      {link.description && (
+                        <p className="mt-0.5 truncate text-xs" style={{ color: v.muted }}>
+                          {link.description}
+                        </p>
+                      )}
+                    </div>
+                    <span className="rounded-full bg-sky-600 px-3 py-1 text-xs font-bold text-white shadow-sm shrink-0">
+                      Book
+                    </span>
+                  </a>
+                ) : link.type === "substack" ? (
+                  /* 📰 Substack / Medium Newsletter Card */
+                  <a
+                    href={hrefFor(link)}
+                    target={trackClicks ? "_blank" : undefined}
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3.5"
+                  >
+                    <span
+                      className="flex shrink-0 items-center justify-center rounded-xl border"
+                      style={{
+                        width: iconBox,
+                        height: iconBox,
+                        borderColor: "#ea580c40",
+                        color: "#fb923c",
+                        background: "#ea580c15",
+                      }}
+                    >
+                      <BrandIcon id="substack" className="h-4 w-4 text-[#FF6719]" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="truncate font-semibold text-sm" style={{ color: v.text }}>
+                          {link.title}
+                        </p>
+                        <span className="rounded-md bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-300 border border-amber-500/30">
+                          NEWSLETTER
+                        </span>
+                      </div>
+                      {link.description && (
+                        <p className="mt-0.5 line-clamp-1 text-xs" style={{ color: v.muted }}>
+                          {link.description}
+                        </p>
+                      )}
+                    </div>
+                    <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-zinc-200 border border-white/15 shrink-0">
+                      Read
+                    </span>
+                  </a>
+                ) : link.type === "discord" || link.type === "telegram" || link.type === "twitch" ? (
+                  /* 💬 Community Social Card */
+                  <a
+                    href={hrefFor(link)}
+                    target={trackClicks ? "_blank" : undefined}
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3.5"
+                  >
+                    <span
+                      className="flex shrink-0 items-center justify-center rounded-xl border"
+                      style={{
+                        width: iconBox,
+                        height: iconBox,
+                        borderColor: link.type === "discord" ? "#5865F240" : link.type === "telegram" ? "#26A5E440" : "#9146FF40",
+                        background: link.type === "discord" ? "#5865F215" : link.type === "telegram" ? "#26A5E415" : "#9146FF15",
+                      }}
+                    >
+                      <BrandIcon id={link.type} className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="truncate font-semibold text-sm" style={{ color: v.text }}>
+                          {link.title}
+                        </p>
+                        <span className="rounded-md bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-zinc-300 border border-white/15 uppercase">
+                          {link.type}
+                        </span>
+                      </div>
+                      {link.description && (
+                        <p className="mt-0.5 truncate text-xs" style={{ color: v.muted }}>
+                          {link.description}
+                        </p>
+                      )}
+                    </div>
+                    <span
+                      className="rounded-full px-3 py-1 text-xs font-bold text-white shadow-sm shrink-0"
+                      style={{
+                        background: link.type === "discord" ? "#5865F2" : link.type === "telegram" ? "#26A5E4" : "#9146FF",
+                      }}
+                    >
+                      Join
+                    </span>
+                  </a>
                 ) : (
                 <a
                   href={hrefFor(link)}

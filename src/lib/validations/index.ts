@@ -38,6 +38,14 @@ export const LINK_TYPES = [
   "markdown",
   "youtube",
   "spotify",
+  "course",    // Course playlist / curriculum
+  "playlist",  // Video / audio playlist
+  "product",   // Store / Digital product with price
+  "cal",       // Calendly / Cal.com booking
+  "substack",  // Substack / Medium newsletter article
+  "discord",   // Discord community
+  "telegram",  // Telegram channel
+  "twitch",    // Twitch live stream
   "x",
   "instagram",
   "tiktok",
