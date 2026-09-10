@@ -64,6 +64,17 @@ export const POST = handle(async (req: Request) => {
   if (!storage.getPresignedUploadUrl) {
     throw new ApiError(501, "Provider presign support nahi karta");
   }
+
+  // Best-effort auto-apply Backblaze B2 S3 CORS rules with s3_put for direct browser uploads
+  if (storage.provider === "b2") {
+    import("@/lib/storage").then(({ getStorageAdapter }) => {
+      getStorageAdapter().then((adapter) => {
+        if (typeof (adapter as unknown as { ensureCorsRules?: () => Promise<unknown> }).ensureCorsRules === "function") {
+          void (adapter as unknown as { ensureCorsRules: () => Promise<unknown> }).ensureCorsRules().catch(() => {});
+        }
+      }).catch(() => {});
+    }).catch(() => {});
+  }
   const ext = safeName.split(".").pop() ?? "bin";
   const key = newKey(`files/${user.id}`, ext);
   const [ticket] = await db
