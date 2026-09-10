@@ -207,13 +207,17 @@ export const importSchema = z.object({
 
 // ---- Manual custom design (PATCH /api/design) -------------------------------
 export const designPrefsSchema = z.object({
-  accent: z
-    .string()
-    .regex(/^#[0-9a-fA-F]{6}$/, "Accent #rrggbb hex me do")
-    .optional(),
-  radiusPx: z.number().int().min(0).max(24).optional(),
-  fontScale: z.number().min(0.9).max(1.15).optional(),
-  iconSize: z.number().int().min(16).max(32).optional(),
+  accent: z.string().optional(),
+  background: z.string().optional(),
+  radiusPx: z.number().int().min(0).max(28).optional(),
+  fontScale: z.number().min(0.85).max(1.25).optional(),
+  iconSize: z.number().int().min(16).max(36).optional(),
+  fontFamily: z.string().max(40).optional(),
+  fontStyle: z.string().max(40).optional(),
+  cardStyle: z.string().max(40).optional(),
+  buttonShape: z.string().max(40).optional(),
+  backgroundEffect: z.string().max(40).optional(),
+  hoverEffect: z.string().max(40).optional(),
 });
 
 // ---- Media ticket flow (presign → PUT → complete) ---------------------------

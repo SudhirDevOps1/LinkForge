@@ -296,11 +296,58 @@ export function BioRenderer({
   const isBento = profile.layout === "bento";
 
   // Manual custom design — theme vars ke upar override (NULL = theme defaults)
-  const accent = profile.design?.accent || v.accent;
-  const radius = profile.design?.radiusPx != null ? `${profile.design.radiusPx}px` : v.radius;
-  const fontScale = profile.design?.fontScale ?? 1;
-  const iconSize = profile.design?.iconSize ?? 20;
+  const d = profile.design;
+  const accent = d?.accent || v.accent;
+  const customBg = d?.background;
+
+  // Custom button / card radius
+  let radius = v.radius;
+  if (d?.buttonShape === "sharp") radius = "0px";
+  else if (d?.buttonShape === "soft") radius = "12px";
+  else if (d?.buttonShape === "curved") radius = "18px";
+  else if (d?.buttonShape === "pill") radius = "9999px";
+  else if (d?.radiusPx != null) radius = `${d.radiusPx}px`;
+
+  const fontScale = d?.fontScale ?? 1;
+  const iconSize = d?.iconSize ?? 20;
   const iconBox = iconSize + 20;
+
+  // Custom Font Family mapping
+  const fontFamilies: Record<string, string> = {
+    "space-grotesk": "'Space Grotesk', var(--font-space-grotesk), sans-serif",
+    "inter": "'Inter', var(--font-inter), sans-serif",
+    "outfit": "'Outfit', sans-serif",
+    "jakarta": "'Plus Jakarta Sans', sans-serif",
+    "syne": "'Syne', sans-serif",
+    "playfair": "'Playfair Display', serif",
+    "mono": "'JetBrains Mono', var(--font-jetbrains), monospace",
+    "bricolage": "'Bricolage Grotesque', sans-serif",
+  };
+  const activeFontFamily = d?.fontFamily ? fontFamilies[d.fontFamily] : undefined;
+  const isUppercase = d?.fontStyle === "uppercase";
+  const isWide = d?.fontStyle === "wide";
+
+  // Custom Card Surface Style
+  const effectiveCardStyle = d?.cardStyle || v.cardStyle;
+
+  // Background Atmosphere Effect
+  const bgEffect = d?.backgroundEffect || "glow";
+  let backgroundStyle = `radial-gradient(ellipse 80% 50% at 50% -20%, ${accent}25, transparent), ${customBg || v.bg}`;
+  if (bgEffect === "mesh") {
+    backgroundStyle = `radial-gradient(at 0% 0%, ${accent}30 0px, transparent 50%), radial-gradient(at 100% 100%, #d946ef25 0px, transparent 50%), ${customBg || v.bg}`;
+  } else if (bgEffect === "dots") {
+    backgroundStyle = `radial-gradient(${accent}20 1px, transparent 1px), ${customBg || v.bg}`;
+  } else if (bgEffect === "none") {
+    backgroundStyle = customBg || v.bg;
+  }
+
+  // Card Hover Effect
+  const hoverClass =
+    d?.hoverEffect === "scale"
+      ? "hover:scale-[1.02]"
+      : d?.hoverEffect === "glow"
+        ? "hover:ring-2"
+        : "hover:-translate-y-0.5";
 
   // In-App Modal State
   const [activeModal, setActiveModal] = useState<ActiveMediaModal | null>(null);
@@ -327,15 +374,36 @@ export function BioRenderer({
 
   const hrefFor = (link: Link) => (trackClicks ? `/r/${link.id}` : link.url);
 
-  const cardStyleFor = (hover = false): React.CSSProperties => ({
-    background: hover ? v.surfaceHover : v.surface,
-    borderColor: v.border,
-    borderRadius: radius,
-    backdropFilter: v.cardStyle === "glass" ? "blur(14px)" : undefined,
-    WebkitBackdropFilter: v.cardStyle === "glass" ? "blur(14px)" : undefined,
-    boxShadow:
-      v.cardStyle === "shadow" ? `0 10px 34px -12px ${accent}55` : undefined,
-  });
+  const cardStyleFor = (hover = false): React.CSSProperties => {
+    let surfaceBg = hover ? v.surfaceHover : v.surface;
+    let borderColor = v.border;
+    let shadow = undefined;
+
+    if (effectiveCardStyle === "solid") {
+      surfaceBg = hover ? "#1c1c28" : "#12121c";
+      borderColor = hover ? `${accent}66` : "rgba(255,255,255,0.12)";
+    } else if (effectiveCardStyle === "neon") {
+      surfaceBg = hover ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.4)";
+      borderColor = accent;
+      shadow = `0 0 16px ${accent}40`;
+    } else if (effectiveCardStyle === "neumorphic") {
+      surfaceBg = hover ? "#161622" : "#101018";
+      borderColor = "rgba(255,255,255,0.06)";
+      shadow = `0 14px 28px -6px rgba(0,0,0,0.7)`;
+    } else if (effectiveCardStyle === "minimal") {
+      surfaceBg = hover ? "rgba(255,255,255,0.04)" : "transparent";
+      borderColor = hover ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.08)";
+    }
+
+    return {
+      background: surfaceBg,
+      borderColor,
+      borderRadius: radius,
+      backdropFilter: effectiveCardStyle === "glass" ? "blur(14px)" : undefined,
+      WebkitBackdropFilter: effectiveCardStyle === "glass" ? "blur(14px)" : undefined,
+      boxShadow: shadow ?? (v.cardStyle === "shadow" ? `0 10px 34px -12px ${accent}55` : undefined),
+    };
+  };
 
   const spanClass = (size: string) =>
     !isBento
@@ -350,10 +418,13 @@ export function BioRenderer({
 
   return (
     <div
-      className={`theme-font-${v.font} relative min-h-screen w-full`}
+      className={`theme-font-${v.font} relative min-h-screen w-full transition-colors duration-300`}
       style={{
-        background: `radial-gradient(ellipse 80% 50% at 50% -20%, ${accent}25, transparent), ${v.bg}`,
+        background: backgroundStyle,
+        backgroundSize: bgEffect === "dots" ? "24px 24px" : undefined,
         color: v.text,
+        fontFamily: activeFontFamily,
+        letterSpacing: isWide ? "0.08em" : undefined,
       }}
     >
       <div className="relative z-[1] mx-auto flex min-h-screen w-full max-w-xl flex-col items-center px-5 py-12">
@@ -404,7 +475,7 @@ export function BioRenderer({
             return (
               <div
                 key={link.id}
-                className={`group flex flex-col justify-center border p-4 transition-all duration-200 hover:-translate-y-0.5 ${spanClass(link.size)}`}
+                className={`group flex flex-col justify-center border p-4 transition-all duration-200 ${hoverClass} ${spanClass(link.size)}`}
                 style={cardStyleFor(false)}
                 onMouseEnter={(e) => Object.assign(e.currentTarget.style, cardStyleFor(true))}
                 onMouseLeave={(e) => Object.assign(e.currentTarget.style, cardStyleFor(false))}
