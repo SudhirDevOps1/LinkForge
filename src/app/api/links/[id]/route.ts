@@ -19,8 +19,15 @@ export const PATCH = handle(async (req: Request, ctx: Ctx) => {
   const patch: Record<string, unknown> = { updatedAt: new Date() };
   for (const [key, value] of Object.entries(input)) {
     if (value === undefined) continue;
-    // Null cleanup for nullable date/url fields
-    if (["thumbnailUrl", "scheduledAt", "expiresAt"].includes(key)) {
+    // Null & date cleanup for nullable date/url fields
+    if (["scheduledAt", "expiresAt"].includes(key)) {
+      if (value === "" || value === null) {
+        patch[key] = null;
+      } else {
+        const d = new Date(value as string | number);
+        patch[key] = isNaN(d.getTime()) ? null : d;
+      }
+    } else if (key === "thumbnailUrl") {
       patch[key] = value === "" || value === null ? null : value;
     } else {
       patch[key] = value;

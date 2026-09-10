@@ -210,6 +210,18 @@ export function LinksEditor({
     setDialogOpen(true);
   }
 
+function toDatetimeInputValue(val: unknown): string {
+  if (!val) return "";
+  try {
+    const d = new Date(val as string | number | Date);
+    if (isNaN(d.getTime())) return "";
+    const offset = d.getTimezoneOffset() * 60000;
+    return new Date(d.getTime() - offset).toISOString().slice(0, 16);
+  } catch {
+    return "";
+  }
+}
+
   function openEdit(link: Link) {
     setEditing(link);
     setForm({
@@ -220,8 +232,8 @@ export function LinksEditor({
       type: link.type,
       size: link.size,
       isPinned: link.isPinned ?? false,
-      scheduledAt: link.scheduledAt ? new Date(link.scheduledAt).toISOString().slice(0, 16) : "",
-      expiresAt: link.expiresAt ? new Date(link.expiresAt).toISOString().slice(0, 16) : "",
+      scheduledAt: toDatetimeInputValue(link.scheduledAt),
+      expiresAt: toDatetimeInputValue(link.expiresAt),
     });
     setDialogOpen(true);
   }
@@ -229,17 +241,23 @@ export function LinksEditor({
   async function saveLink() {
     setSaving(true);
     try {
+      const payload = {
+        ...form,
+        scheduledAt: form.scheduledAt.trim() ? form.scheduledAt : null,
+        expiresAt: form.expiresAt.trim() ? form.expiresAt : null,
+      };
+
       if (editing) {
         const { link } = await api(`/api/links/${editing.id}`, {
           method: "PATCH",
-          body: JSON.stringify(form),
+          body: JSON.stringify(payload),
         });
         setLinks((prev) => prev.map((l) => (l.id === editing.id ? (link as Link) : l)));
         toast.success("Link update ho gaya");
       } else {
         const { link } = await api("/api/links", {
           method: "POST",
-          body: JSON.stringify(form),
+          body: JSON.stringify(payload),
         });
         setLinks((prev) => [...prev, link as Link]);
         toast.success("Link add ho gaya");
