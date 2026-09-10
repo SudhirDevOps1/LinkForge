@@ -214,10 +214,19 @@ export const designPrefsSchema = z.object({
   iconSize: z.number().int().min(16).max(36).optional(),
   fontFamily: z.string().max(40).optional(),
   fontStyle: z.string().max(40).optional(),
+  fontWeight: z.string().max(40).optional(),
+  textShadow: z.string().max(40).optional(),
   cardStyle: z.string().max(40).optional(),
   buttonShape: z.string().max(40).optional(),
+  borderWidth: z.number().int().min(0).max(3).optional(),
+  blurStrength: z.string().max(40).optional(),
+  shadowStrength: z.string().max(40).optional(),
   backgroundEffect: z.string().max(40).optional(),
   hoverEffect: z.string().max(40).optional(),
+  entranceAnimation: z.string().max(40).optional(),
+  attentionEffect: z.string().max(40).optional(),
+  avatarShape: z.string().max(40).optional(),
+  avatarRing: z.boolean().optional(),
 });
 
 // ---- Media ticket flow (presign → PUT → complete) ---------------------------

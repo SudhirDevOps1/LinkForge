@@ -312,7 +312,7 @@ export function BioRenderer({
   const iconSize = d?.iconSize ?? 20;
   const iconBox = iconSize + 20;
 
-  // Custom Font Family mapping
+  // Custom Font Family mapping (15+ Google Fonts + System/Next.js)
   const fontFamilies: Record<string, string> = {
     "space-grotesk": "'Space Grotesk', var(--font-space-grotesk), sans-serif",
     "inter": "'Inter', var(--font-inter), sans-serif",
@@ -321,11 +321,59 @@ export function BioRenderer({
     "syne": "'Syne', sans-serif",
     "playfair": "'Playfair Display', serif",
     "mono": "'JetBrains Mono', var(--font-jetbrains), monospace",
+    "jetbrains": "'JetBrains Mono', var(--font-jetbrains), monospace",
     "bricolage": "'Bricolage Grotesque', sans-serif",
+    "poppins": "'Poppins', sans-serif",
+    "sora": "'Sora', sans-serif",
+    "cinzel": "'Cinzel', serif",
+    "caveat": "'Caveat', cursive",
+    "fraunces": "'Fraunces', serif",
+    "urbanist": "'Urbanist', sans-serif",
+    "montserrat": "'Montserrat', sans-serif",
   };
   const activeFontFamily = d?.fontFamily ? fontFamilies[d.fontFamily] : undefined;
-  const isUppercase = d?.fontStyle === "uppercase";
-  const isWide = d?.fontStyle === "wide";
+  
+  // Text Casing, Letter Spacing & Weight
+  const textTransform =
+    d?.fontStyle === "uppercase"
+      ? "uppercase"
+      : d?.fontStyle === "capitalize"
+        ? "capitalize"
+        : d?.fontStyle === "lowercase"
+          ? "lowercase"
+          : undefined;
+
+  const letterSpacing =
+    d?.fontStyle === "wide"
+      ? "0.08em"
+      : d?.fontStyle === "widest"
+        ? "0.15em"
+        : d?.fontStyle === "tight"
+          ? "-0.03em"
+          : undefined;
+
+  const fontWeightClass =
+    d?.fontWeight === "light"
+      ? "font-light"
+      : d?.fontWeight === "normal"
+        ? "font-normal"
+        : d?.fontWeight === "medium"
+          ? "font-medium"
+          : d?.fontWeight === "semibold"
+            ? "font-semibold"
+            : d?.fontWeight === "bold"
+              ? "font-bold"
+              : "font-bold";
+
+  // Title Glow / Shadow
+  let textShadowStyle: string | undefined = undefined;
+  if (d?.textShadow === "subtle") {
+    textShadowStyle = "0 2px 10px rgba(0, 0, 0, 0.75)";
+  } else if (d?.textShadow === "neon") {
+    textShadowStyle = `0 0 20px ${accent}, 0 0 40px ${accent}88`;
+  } else if (d?.textShadow === "outline") {
+    textShadowStyle = "-1px -1px 0 rgba(255,255,255,0.25), 1px 1px 0 rgba(0,0,0,0.85)";
+  }
 
   // Custom Card Surface Style
   const effectiveCardStyle = d?.cardStyle || v.cardStyle;
@@ -337,17 +385,41 @@ export function BioRenderer({
     backgroundStyle = `radial-gradient(at 0% 0%, ${accent}30 0px, transparent 50%), radial-gradient(at 100% 100%, #d946ef25 0px, transparent 50%), ${customBg || v.bg}`;
   } else if (bgEffect === "dots") {
     backgroundStyle = `radial-gradient(${accent}20 1px, transparent 1px), ${customBg || v.bg}`;
+  } else if (bgEffect === "aurora") {
+    backgroundStyle = `radial-gradient(ellipse at 20% 0%, ${accent}35 0%, transparent 60%), radial-gradient(ellipse at 80% 30%, #38bdf830 0%, transparent 60%), radial-gradient(ellipse at 50% 80%, #f43f5e25 0%, transparent 50%), ${customBg || v.bg}`;
   } else if (bgEffect === "none") {
     backgroundStyle = customBg || v.bg;
   }
 
+  // Card Border Width & Blur Filter
+  const cardBorderWidth = d?.borderWidth != null ? `${d.borderWidth}px` : "1px";
+  const blurFilter =
+    d?.blurStrength === "none"
+      ? undefined
+      : d?.blurStrength === "low"
+        ? "blur(8px)"
+        : d?.blurStrength === "high"
+          ? "blur(24px)"
+          : "blur(14px)";
+
   // Card Hover Effect
   const hoverClass =
     d?.hoverEffect === "scale"
-      ? "hover:scale-[1.02]"
+      ? "hover:scale-[1.025]"
       : d?.hoverEffect === "glow"
         ? "hover:ring-2"
-        : "hover:-translate-y-0.5";
+        : d?.hoverEffect === "tilt"
+          ? "hover:-rotate-0.5 hover:scale-[1.015]"
+          : d?.hoverEffect === "none"
+            ? ""
+            : "hover:-translate-y-1";
+
+  // Avatar Framing & Glow Ring
+  let avatarShapeClass = "rounded-full";
+  if (d?.avatarShape === "squircle") avatarShapeClass = "rounded-[28px]";
+  else if (d?.avatarShape === "rounded") avatarShapeClass = "rounded-2xl";
+  else if (d?.avatarShape === "hexagon") avatarShapeClass = "rounded-3xl";
+  const hasAvatarRing = d?.avatarRing ?? false;
 
   // In-App Modal State
   const [activeModal, setActiveModal] = useState<ActiveMediaModal | null>(null);
@@ -377,7 +449,7 @@ export function BioRenderer({
   const cardStyleFor = (hover = false): React.CSSProperties => {
     let surfaceBg = hover ? v.surfaceHover : v.surface;
     let borderColor = v.border;
-    let shadow = undefined;
+    let shadow: string | undefined = undefined;
 
     if (effectiveCardStyle === "solid") {
       surfaceBg = hover ? "#1c1c28" : "#12121c";
@@ -385,7 +457,7 @@ export function BioRenderer({
     } else if (effectiveCardStyle === "neon") {
       surfaceBg = hover ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.4)";
       borderColor = accent;
-      shadow = `0 0 16px ${accent}40`;
+      shadow = `0 0 18px ${accent}45`;
     } else if (effectiveCardStyle === "neumorphic") {
       surfaceBg = hover ? "#161622" : "#101018";
       borderColor = "rgba(255,255,255,0.06)";
@@ -395,12 +467,24 @@ export function BioRenderer({
       borderColor = hover ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.08)";
     }
 
+    if (d?.shadowStrength === "none") {
+      shadow = "none";
+    } else if (d?.shadowStrength === "soft") {
+      shadow = "0 8px 20px -6px rgba(0,0,0,0.35)";
+    } else if (d?.shadowStrength === "floating") {
+      shadow = "0 20px 40px -10px rgba(0,0,0,0.65)";
+    } else if (d?.shadowStrength === "glow") {
+      shadow = `0 0 24px ${accent}45, 0 10px 30px rgba(0,0,0,0.5)`;
+    }
+
     return {
       background: surfaceBg,
       borderColor,
+      borderWidth: cardBorderWidth,
+      borderStyle: "solid",
       borderRadius: radius,
-      backdropFilter: effectiveCardStyle === "glass" ? "blur(14px)" : undefined,
-      WebkitBackdropFilter: effectiveCardStyle === "glass" ? "blur(14px)" : undefined,
+      backdropFilter: effectiveCardStyle === "glass" ? blurFilter : undefined,
+      WebkitBackdropFilter: effectiveCardStyle === "glass" ? blurFilter : undefined,
       boxShadow: shadow ?? (v.cardStyle === "shadow" ? `0 10px 34px -12px ${accent}55` : undefined),
     };
   };
@@ -424,34 +508,50 @@ export function BioRenderer({
         backgroundSize: bgEffect === "dots" ? "24px 24px" : undefined,
         color: v.text,
         fontFamily: activeFontFamily,
-        letterSpacing: isWide ? "0.08em" : undefined,
+        letterSpacing,
       }}
     >
       <div className="relative z-[1] mx-auto flex min-h-screen w-full max-w-xl flex-col items-center px-5 py-12">
-        {/* Avatar + identity */}
-        <div
-          className="relative h-24 w-24 overflow-hidden rounded-full border-2"
-          style={{ borderColor: accent, boxShadow: `0 0 40px ${accent}44` }}
-        >
-          {profile.avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={profile.avatarUrl}
-              alt={profile.displayName}
-              className="h-full w-full object-cover"
-            />
-          ) : (
+        {/* Avatar + identity with optional animated gradient halo ring */}
+        <div className="relative">
+          {hasAvatarRing && (
             <div
-              className="flex h-full w-full items-center justify-center text-3xl font-bold"
-              style={{ background: v.surface, color: accent }}
-            >
-              {profile.displayName.charAt(0).toUpperCase()}
-            </div>
+              className="absolute -inset-1.5 animate-spin-slow opacity-80 blur-[2px]"
+              style={{
+                background: `conic-gradient(from 0deg, ${accent}, #ec4899, #38bdf8, ${accent})`,
+                borderRadius: d?.avatarShape === "squircle" ? "32px" : d?.avatarShape === "rounded" ? "22px" : "9999px",
+              }}
+            />
           )}
+          <div
+            className={`relative h-24 w-24 overflow-hidden border-2 z-10 ${avatarShapeClass}`}
+            style={{ borderColor: accent, boxShadow: `0 0 40px ${accent}44` }}
+          >
+            {profile.avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={profile.avatarUrl}
+                alt={profile.displayName}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div
+                className="flex h-full w-full items-center justify-center text-3xl font-bold"
+                style={{ background: v.surface, color: accent }}
+              >
+                {profile.displayName.charAt(0).toUpperCase()}
+              </div>
+            )}
+          </div>
         </div>
+
         <h1
-          className="mt-5 text-center text-2xl font-bold tracking-tight"
-          style={fontScale !== 1 ? { fontSize: `calc(1.5rem * ${fontScale})` } : undefined}
+          className={`mt-5 text-center text-2xl tracking-tight ${fontWeightClass}`}
+          style={{
+            fontSize: fontScale !== 1 ? `calc(1.5rem * ${fontScale})` : undefined,
+            textTransform: textTransform as React.CSSProperties["textTransform"],
+            textShadow: textShadowStyle,
+          }}
         >
           {profile.displayName}
         </h1>
@@ -469,17 +569,38 @@ export function BioRenderer({
               : "mt-9 flex w-full flex-col gap-3"
           }
         >
-          {active.map((link) => {
+          {active.map((link, idx) => {
             const mediaType = detectMediaType(link);
+            const entranceClass =
+              d?.entranceAnimation === "pop"
+                ? "animate-in zoom-in-95 duration-300"
+                : d?.entranceAnimation === "slide"
+                  ? "animate-in slide-in-from-bottom-2 duration-300"
+                  : d?.entranceAnimation === "fade"
+                    ? "animate-in fade-in duration-300"
+                    : "";
+            const attentionClass =
+              d?.attentionEffect === "pulse"
+                ? "animate-pulse-subtle"
+                : "";
+            const isShimmer = d?.attentionEffect === "shimmer";
 
             return (
               <div
                 key={link.id}
-                className={`group flex flex-col justify-center border p-4 transition-all duration-200 ${hoverClass} ${spanClass(link.size)}`}
-                style={cardStyleFor(false)}
+                className={`group relative overflow-hidden flex flex-col justify-center border p-4 transition-all duration-200 ${hoverClass} ${spanClass(link.size)} ${entranceClass} ${attentionClass}`}
+                style={{
+                  ...cardStyleFor(false),
+                  animationDelay: `${idx * 45}ms`,
+                }}
                 onMouseEnter={(e) => Object.assign(e.currentTarget.style, cardStyleFor(true))}
                 onMouseLeave={(e) => Object.assign(e.currentTarget.style, cardStyleFor(false))}
               >
+                {isShimmer && (
+                  <div
+                    className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_3s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                  />
+                )}
                 {/* 1. Optional Custom Cover / Thumbnail */}
                 {link.thumbnailUrl && mediaType !== "image" && (
                   <div className="mb-3 overflow-hidden rounded-xl border border-white/10 max-h-48 w-full bg-black/30">
