@@ -4,16 +4,23 @@ import { sql } from "drizzle-orm";
 import { authProvider } from "@/config/auth.config";
 import { dbProvider, dbProviderLabel } from "@/config/db.config";
 import { storageProvider } from "@/config/storage.config";
-import { db } from "@/db";
+import { db, initDb } from "@/db";
 import { getStorage } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   let dbOk = false;
+  let schemaOk = false;
   try {
     await db.execute(sql`SELECT 1`);
     dbOk = true;
+    try {
+      await initDb();
+      schemaOk = true;
+    } catch (schemaErr) {
+      console.warn("[health] schema auto-migration notice:", (schemaErr as Error).message);
+    }
   } catch (err) {
     console.warn("[health] db ping failed:", (err as Error).message);
   }
@@ -35,6 +42,7 @@ export async function GET() {
       uptime: Math.round(process.uptime()),
       checks: {
         db: dbOk ? "ok" : "fail",
+        schema: schemaOk ? "ok" : "fail",
         storage: storageOk ? "ok" : "fail",
         storageDetail,
       },

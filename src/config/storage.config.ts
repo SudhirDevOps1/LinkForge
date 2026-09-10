@@ -18,15 +18,38 @@ export type StorageProvider =
   | "minio"
   | "vercel-blob";
 
-const envProvider = (process.env.STORAGE_PROVIDER ?? "local")
-  .trim()
-  .toLowerCase();
+function resolveStorageProvider(): StorageProvider {
+  const envProvider = (process.env.STORAGE_PROVIDER ?? "")
+    .trim()
+    .toLowerCase();
 
-export const storageProvider: StorageProvider = (
-  ["local", "b2", "r2", "s3", "minio", "vercel-blob"].includes(envProvider)
-    ? envProvider
-    : "local"
-) as StorageProvider;
+  if (["local", "b2", "r2", "s3", "minio", "vercel-blob"].includes(envProvider)) {
+    return envProvider as StorageProvider;
+  }
+
+  // Auto-detection based on environment variables for seamless deployment
+  if (
+    process.env.B2_APPLICATION_KEY_ID ||
+    process.env.B2_KEY_ID ||
+    process.env.B2_BUCKET_NAME ||
+    process.env.B2_BUCKET
+  ) {
+    return "b2";
+  }
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    return "vercel-blob";
+  }
+  if (process.env.R2_ACCOUNT_ID || process.env.R2_BUCKET_NAME) {
+    return "r2";
+  }
+  if (process.env.AWS_BUCKET_NAME || process.env.AWS_ACCESS_KEY_ID) {
+    return "s3";
+  }
+
+  return "local";
+}
+
+export const storageProvider: StorageProvider = resolveStorageProvider();
 
 /** S3-compatible providers — sab ek hi AWS SDK factory share karte hain */
 export const isS3Compatible = ["b2", "r2", "s3", "minio"].includes(

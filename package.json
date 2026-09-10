@@ -8,6 +8,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "db:push": "drizzle-kit push",
+    "db:migrate": "tsx scripts/auto-migrate.ts",
     "db:push:turso": "drizzle-kit push --config drizzle.config.turso.ts",
     "db:push:d1": "drizzle-kit push --config drizzle.config.d1.ts",
     "cleanup:uploads": "tsx scripts/cleanup-uploads.ts",

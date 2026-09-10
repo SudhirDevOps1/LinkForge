@@ -32,6 +32,9 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "**/*": ["./node_modules/pg-cloudflare/dist/**/*", "./node_modules/pg-cloudflare/esm/**/*"],
   },
+  outputFileTracingExcludes: {
+    "**/*": ["./uploads/**/*"],
+  },
   // Avatars/logos kisi bhi HTTPS host se aa sakte hain (B2, R2, Supabase, ...)
   images: {
     remotePatterns: [{ protocol: "https", hostname: "**" }],

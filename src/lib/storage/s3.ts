@@ -32,22 +32,57 @@ interface S3Env {
  */
 export const isPrivateB2 =
   storageProvider === "b2" &&
-  (process.env.B2_PRIVATE_BUCKET ?? "").trim().toLowerCase() === "true";
+  ["true", "1", "yes"].includes(
+    (process.env.B2_PRIVATE_BUCKET ?? process.env.B2_IS_PRIVATE ?? "").trim().toLowerCase(),
+  );
 
 function resolveEnv(): S3Env {
   switch (storageProvider) {
-    case "b2":
+    case "b2": {
+      const bucket = process.env.B2_BUCKET_NAME ?? process.env.B2_BUCKET;
+      const keyId =
+        process.env.B2_APPLICATION_KEY_ID ??
+        process.env.B2_KEY_ID ??
+        process.env.B2_ACCESS_KEY_ID;
+      const secretKey =
+        process.env.B2_APPLICATION_KEY ??
+        process.env.B2_APP_KEY ??
+        process.env.B2_SECRET_ACCESS_KEY;
+
+      if (!bucket) {
+        throw new Error("B2_BUCKET_NAME (ya B2_BUCKET) env var required hai (STORAGE_PROVIDER=b2)");
+      }
+      if (!keyId) {
+        throw new Error("B2_APPLICATION_KEY_ID (ya B2_KEY_ID) env var required hai (STORAGE_PROVIDER=b2)");
+      }
+      if (!secretKey) {
+        throw new Error("B2_APPLICATION_KEY (ya B2_APP_KEY) env var required hai (STORAGE_PROVIDER=b2)");
+      }
+
+      const rawEndpoint = process.env.B2_ENDPOINT?.trim();
+      let endpoint: string;
+      if (rawEndpoint) {
+        endpoint = rawEndpoint.startsWith("http://") || rawEndpoint.startsWith("https://")
+          ? rawEndpoint
+          : `https://${rawEndpoint}`;
+      } else {
+        endpoint = `https://s3.${process.env.B2_REGION ?? "us-west-004"}.backblazeb2.com`;
+      }
+
+      // Auto-extract region from endpoint if not explicitly provided
+      const regionMatch = endpoint.match(/s3\.([a-z0-9-]+)\.backblazeb2\.com/i);
+      const region = process.env.B2_REGION ?? regionMatch?.[1] ?? "us-west-004";
+
       return {
-        endpoint:
-          process.env.B2_ENDPOINT ??
-          `https://s3.${process.env.B2_REGION ?? "us-west-004"}.backblazeb2.com`,
-        region: process.env.B2_REGION ?? "us-west-004",
-        bucket: required("B2_BUCKET_NAME"),
-        accessKeyId: required("B2_APPLICATION_KEY_ID"),
-        secretAccessKey: required("B2_APPLICATION_KEY"),
+        endpoint,
+        region,
+        bucket,
+        accessKeyId: keyId,
+        secretAccessKey: secretKey,
         publicBaseUrl: process.env.B2_PUBLIC_URL,
         forcePathStyle: true,
       };
+    }
     case "r2":
       return {
         endpoint: `https://${required("R2_ACCOUNT_ID")}.r2.cloudflarestorage.com`,

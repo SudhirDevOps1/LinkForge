@@ -24,6 +24,12 @@ export type Db = NodePgDatabase<typeof schema>;
 export const sqliteMode = isSqliteProvider;
 
 let cached: Db | undefined;
+let migrationStarted = false;
+
+export async function initDb(): Promise<void> {
+  const { autoMigrate } = await import("./auto-migrate");
+  await autoMigrate();
+}
 
 export function getDb(): Db {
   if (cached) return cached;
@@ -41,6 +47,21 @@ export function getDb(): Db {
       // postgres + supabase dono node-postgres Pool se chalte hain
       cached = createPostgresDb();
   }
+
+  // Auto-migrate tables in background on first db connection in runtime
+  if (
+    !migrationStarted &&
+    typeof window === "undefined" &&
+    process.env.NODE_ENV !== "test"
+  ) {
+    migrationStarted = true;
+    import("./auto-migrate")
+      .then((m) => m.autoMigrate())
+      .catch((e) => {
+        console.warn("[db] auto-migrate background notice:", (e as Error).message);
+      });
+  }
+
   return cached;
 }
 

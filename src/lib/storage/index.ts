@@ -9,8 +9,6 @@
 // }
 // =============================================================================
 import { randomBytes } from "crypto";
-import { mkdir, stat, unlink, writeFile } from "fs/promises";
-import { open } from "fs/promises";
 import path from "path";
 import { isS3Compatible, storageProvider } from "@/config/storage.config";
 
@@ -61,46 +59,32 @@ export function newKey(folder: string, ext: string): string {
   return `${folder}/${Date.now()}-${randomBytes(8).toString("hex")}.${safeExt}`;
 }
 
-// ---- Local disk provider (default) ----------------------------------------------
-const UPLOAD_DIR = process.env.UPLOAD_DIR ?? path.join(process.cwd(), "uploads");
+export const localUploadDir =
+  process.env.UPLOAD_DIR ?? path.join(process.cwd(), "uploads");
 
+// Lazy proxy for backwards compatibility without pulling fs/promises into the main bundle
 export const localStorage: StorageService = {
   provider: "local",
-  async upload(data, key, _contentType) {
-    const safe = sanitizeKey(key);
-    const full = path.join(UPLOAD_DIR, safe);
-    await mkdir(path.dirname(full), { recursive: true });
-    await writeFile(full, data);
-    return { key: safe, url: this.getUrl(safe) };
+  async upload(data, key, contentType) {
+    const { localStorage: local } = await import("./local");
+    return local.upload(data, key, contentType);
   },
   async delete(key) {
-    try {
-      await unlink(path.join(UPLOAD_DIR, sanitizeKey(key)));
-    } catch {
-      /* already gone */
-    }
+    const { localStorage: local } = await import("./local");
+    return local.delete(key);
   },
   getUrl(key) {
-    // /api/files/[...path] route stream karta hai (public caching ke saath)
     return `/api/files/${sanitizeKey(key)}`;
   },
   async stat(key) {
-    const st = await stat(path.join(UPLOAD_DIR, sanitizeKey(key)));
-    return { sizeBytes: st.size };
+    const { localStorage: local } = await import("./local");
+    return local.stat!(key);
   },
   async readPrefix(key, maxBytes) {
-    const fh = await open(path.join(UPLOAD_DIR, sanitizeKey(key)), "r");
-    try {
-      const buf = Buffer.alloc(Math.max(1, Math.min(maxBytes, 64 * 1024)));
-      const { bytesRead } = await fh.read(buf, 0, buf.length, 0);
-      return new Uint8Array(buf.buffer, buf.byteOffset, bytesRead);
-    } finally {
-      await fh.close();
-    }
+    const { localStorage: local } = await import("./local");
+    return local.readPrefix!(key, maxBytes);
   },
 };
-
-export const localUploadDir = UPLOAD_DIR;
 
 // ---- Factory -----------------------------------------------------------------------
 let cachedService: StorageService | undefined;
@@ -144,7 +128,8 @@ export async function getStorage(): Promise<StorageService> {
     };
     return cachedService;
   }
-  cachedService = localStorage;
+  const { localStorage: local } = await import("./local");
+  cachedService = local;
   return cachedService;
 }
 
