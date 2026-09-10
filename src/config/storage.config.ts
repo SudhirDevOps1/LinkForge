@@ -19,7 +19,11 @@ export type StorageProvider =
   | "vercel-blob";
 
 function resolveStorageProvider(): StorageProvider {
-  const envProvider = (process.env.STORAGE_PROVIDER ?? "")
+  const envProvider = (
+    process.env.STORAGE_DRIVER ??
+    process.env.STORAGE_PROVIDER ??
+    ""
+  )
     .trim()
     .toLowerCase();
 
@@ -50,6 +54,10 @@ function resolveStorageProvider(): StorageProvider {
 }
 
 export const storageProvider: StorageProvider = resolveStorageProvider();
+export const storageDriver: StorageProvider = storageProvider;
+
+export const B2_PRESIGN_PUT_EXPIRY_SEC = Number(process.env.B2_PRESIGN_PUT_EXPIRY_SEC ?? 600);
+export const B2_PRESIGN_GET_EXPIRY_SEC = Number(process.env.B2_PRESIGN_GET_EXPIRY_SEC ?? 300);
 
 /** S3-compatible providers — sab ek hi AWS SDK factory share karte hain */
 export const isS3Compatible = ["b2", "r2", "s3", "minio"].includes(

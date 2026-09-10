@@ -11,6 +11,7 @@
 import { randomBytes } from "crypto";
 import path from "path";
 import { isS3Compatible, storageProvider } from "@/config/storage.config";
+import type { StorageAdapter } from "./types";
 
 export interface StorageService {
   readonly provider: string;
@@ -133,4 +134,24 @@ export async function getStorage(): Promise<StorageService> {
   return cachedService;
 }
 
+export * from "./types";
+
+let cachedAdapter: StorageAdapter | undefined;
+
+export async function getStorageAdapter(): Promise<StorageAdapter> {
+  if (cachedAdapter) return cachedAdapter;
+  const driver = (process.env.STORAGE_DRIVER ?? storageProvider).toLowerCase();
+
+  if (driver === "b2") {
+    const { B2StorageAdapter } = await import("./b2-adapter");
+    cachedAdapter = new B2StorageAdapter();
+    return cachedAdapter;
+  }
+
+  const { LocalStorageAdapter } = await import("./local-adapter");
+  cachedAdapter = new LocalStorageAdapter();
+  return cachedAdapter;
+}
+
 export { storageProvider };
+

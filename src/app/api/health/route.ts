@@ -5,7 +5,7 @@ import { authProvider } from "@/config/auth.config";
 import { dbProvider, dbProviderLabel } from "@/config/db.config";
 import { storageProvider } from "@/config/storage.config";
 import { db, initDb } from "@/db";
-import { getStorage } from "@/lib/storage";
+import { getStorage, getStorageAdapter } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
 
@@ -24,16 +24,18 @@ export async function GET() {
   } catch (err) {
     console.warn("[health] db ping failed:", (err as Error).message);
   }
-  let storageOk = false;
-  let storageDetail = "unknown";
+  let storageStatus = "error";
+  let storageDriver = "unknown";
   try {
-    const storage = await getStorage();
-    storageDetail = storage.provider;
-    storageOk = true;
+    const adapter = await getStorageAdapter();
+    storageDriver = adapter.driver;
+    const isAlive = adapter.ping ? await adapter.ping() : true;
+    storageStatus = isAlive ? "connected" : "degraded";
   } catch (err) {
-    storageDetail = (err as Error).message;
+    storageStatus = "error";
+    console.warn("[health] storage ping failed:", (err as Error).message);
   }
-  const ok = dbOk && storageOk;
+  const ok = dbOk && (storageStatus === "connected" || storageStatus === "degraded");
   return Response.json(
     {
       status: ok ? "ok" : "degraded",
@@ -43,13 +45,14 @@ export async function GET() {
       checks: {
         db: dbOk ? "ok" : "fail",
         schema: schemaOk ? "ok" : "fail",
-        storage: storageOk ? "ok" : "fail",
-        storageDetail,
+        storage: storageStatus,
+        driver: storageDriver,
       },
       providers: {
         database: dbProvider,
         databaseLabel: dbProviderLabel[dbProvider],
         storage: storageProvider,
+        driver: storageDriver,
         auth: authProvider,
       },
     },
