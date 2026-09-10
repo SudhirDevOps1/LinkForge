@@ -23,6 +23,7 @@ import {
   getCorsAllowedOrigins,
 } from "@/config/storage.config";
 import { sanitizeKey } from "./index";
+import { encryptFilePayload, isPayloadEncrypted } from "@/lib/file-cipher";
 import type { StorageAdapter } from "./types";
 
 function clean(val: string | undefined): string | undefined {
@@ -187,7 +188,10 @@ export class B2StorageAdapter implements StorageAdapter {
     options?: { contentEncoding?: string },
   ): Promise<void> {
     const safeKey = sanitizeKey(key);
-    const buf = Buffer.isBuffer(body) ? body : Buffer.from(body);
+    let buf = Buffer.isBuffer(body) ? body : Buffer.from(body);
+    if (!isPayloadEncrypted(buf)) {
+      buf = encryptFilePayload(buf);
+    }
     const encoding = options?.contentEncoding || (safeKey.endsWith(".gz") ? "gzip" : undefined);
     try {
       await this.client.send(

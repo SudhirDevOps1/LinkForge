@@ -5,7 +5,8 @@
 // and saves subscriber to Neon DB.
 // =============================================================================
 import { createHash } from "crypto";
-import { and, eq } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
+import { encryptEmail } from "@/lib/db-cipher";
 import { z } from "zod";
 import { db } from "@/db";
 import { autoMigrate } from "@/db/auto-migrate";
@@ -53,12 +54,13 @@ export const POST = handle(async (req: Request) => {
   const userAgent = req.headers.get("user-agent")?.slice(0, 255) || "unknown";
 
   // 4. Check if already subscribed with self-healing retry
+  const encEmail = encryptEmail(verification.email);
   let existing: { id: string } | undefined;
   try {
     const [row] = await db
       .select({ id: subscribers.id })
       .from(subscribers)
-      .where(and(eq(subscribers.profileId, profile.id), eq(subscribers.email, verification.email)))
+      .where(and(eq(subscribers.profileId, profile.id), or(eq(subscribers.email, encEmail), eq(subscribers.email, verification.email))))
       .limit(1);
     existing = row;
   } catch (dbErr: unknown) {
@@ -68,7 +70,7 @@ export const POST = handle(async (req: Request) => {
       const [row] = await db
         .select({ id: subscribers.id })
         .from(subscribers)
-        .where(and(eq(subscribers.profileId, profile.id), eq(subscribers.email, verification.email)))
+        .where(and(eq(subscribers.profileId, profile.id), or(eq(subscribers.email, encEmail), eq(subscribers.email, verification.email))))
         .limit(1);
       existing = row;
     } else {
@@ -87,7 +89,7 @@ export const POST = handle(async (req: Request) => {
   // 5. Insert new subscriber
   await db.insert(subscribers).values({
     profileId: profile.id,
-    email: verification.email,
+    email: encEmail,
     status: "active",
     ipHash,
     userAgent,

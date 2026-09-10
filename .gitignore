@@ -1,38 +1,93 @@
+# =============================================================================
+# 🔒 LinkForge Production .gitignore
+# =============================================================================
+
 # Dependencies
 node_modules/
+.pnp
+.pnp.js
+.pnpm-store/
 
-# Next.js
+# Next.js Build Outputs
 .next/
 out/
-.vercel/output/
+build/
+dist/
+.vercel/
 
-# Env & secrets
+# Environment Variables & Secrets (CRITICAL: Never commit credentials)
 .env
+.env*
 .env.local
-.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
 !.env.example
 
-# Local storage uploads (runtime data)
-uploads/
-!uploads/avatars/demo-avatar.png
+# Private Keys, Certificates & Credentials
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
+*.p12
+credentials.json
+service-account*.json
 
-# Database
+# Local Storage Uploads (Runtime user media & avatars)
+uploads/*
+!uploads/avatars/
+!uploads/avatars/demo-avatar.png
+tmp/
+temp/
+scratch/
+
+# Database Files & SQLite
 *.sqlite
+*.sqlite3
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
 *.db
+*.db-shm
+*.db-wal
+local.db*
 drizzle/
 
-# Logs
+# Debug & Execution Logs
+logs/
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# OS
-.DS_Store
-
-# Build artifacts (regenerated)
-tsconfig.tsbuildinfo
-next-env.d.ts
+# Serverless & Cloud Deployments
 .open-next/
 .wrangler/
 
-# GitHub configuration (workflows / private meta)
-.github/
+# Build & TypeScript Artifacts
+tsconfig.tsbuildinfo
+next-env.d.ts
+coverage/
+.nyc_output/
 
+# Editor & OS Metadata
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+*.swp
+*.swo
+
+# GitHub private config / local workflows
+.github/

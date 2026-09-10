@@ -9,7 +9,8 @@
 // karte hain.
 // =============================================================================
 import bcrypt from "bcryptjs";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
+import { decryptEmail, decryptField, encryptEmail, encryptField } from "@/lib/db-cipher";
 import { cookies } from "next/headers";
 import { SESSION_COOKIE, SESSION_TTL_DAYS, authProvider } from "@/config/auth.config";
 import { db } from "@/db";
@@ -264,7 +265,12 @@ export async function getSessionUser(): Promise<SessionContext | null> {
     }
   }
 
-  return { user: row.user, session: row.session, profile: profile ?? null };
+  const decryptedUser: User = {
+    ...row.user,
+    email: decryptEmail(row.user.email),
+    name: decryptField(row.user.name),
+  };
+  return { user: decryptedUser, session: row.session, profile: profile ?? null };
 }
 
 /** API route guard — unauthenticated → 401 */

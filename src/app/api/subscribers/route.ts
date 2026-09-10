@@ -5,6 +5,7 @@
 // Supports ?export=csv for direct download.
 // =============================================================================
 import { and, desc, eq } from "drizzle-orm";
+import { decryptEmail } from "@/lib/db-cipher";
 import { db } from "@/db";
 import { autoMigrate } from "@/db/auto-migrate";
 import { subscribers } from "@/db/schema";
@@ -30,7 +31,7 @@ export const GET = handle(async (req: Request) => {
     const csvRows = [
       ["Email", "Status", "Subscribed At"],
       ...rows.map((r) => [
-        `"${r.email.replace(/"/g, '""')}"`,
+        `"${decryptEmail(r.email).replace(/"/g, '""')}"`,
         r.status,
         r.createdAt.toISOString(),
       ]),
@@ -49,7 +50,7 @@ export const GET = handle(async (req: Request) => {
   return json({
     subscribers: rows.map((r) => ({
       id: r.id,
-      email: r.email,
+      email: decryptEmail(r.email),
       status: r.status,
       createdAt: r.createdAt.toISOString(),
     })),

@@ -6,6 +6,7 @@ import { db } from "@/db";
 import { profiles } from "@/db/schema";
 import { ApiError, assertSameOrigin, guardRateLimit, handle, json } from "@/lib/api";
 import { requireUser } from "@/lib/auth";
+import { encryptFilePayload } from "@/lib/file-cipher";
 import { getStorage, newKey } from "@/lib/storage";
 
 export const POST = handle(async (req: Request) => {
@@ -27,8 +28,11 @@ export const POST = handle(async (req: Request) => {
 
   const ext = file.type.split("/")[1] ?? "bin";
   const storage = await getStorage();
-  const data = Buffer.from(await file.arrayBuffer());
-  const { url } = await storage.upload(data, newKey(`avatars/${user.id}`, ext), file.type);
+  const rawData = Buffer.from(await file.arrayBuffer());
+  const data = encryptFilePayload(rawData);
+  const key = newKey(`avatars/${user.id}`, ext);
+  await storage.upload(data, key, file.type);
+  const url = `/api/storage/file/${key}`;
 
   const [updated] = await db
     .update(profiles)

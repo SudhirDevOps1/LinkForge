@@ -13,6 +13,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { storageProvider } from "@/config/storage.config";
+import { encryptFilePayload, isPayloadEncrypted } from "@/lib/file-cipher";
 import type { StorageService } from "./index";
 import { sanitizeKey } from "./index";
 
@@ -154,20 +155,16 @@ export function createS3Storage(): StorageService {
     responseChecksumValidation: "WHEN_REQUIRED",
   });
 
-  const publicUrl = (key: string) =>
-    // Private B2 bucket (free tier): public URL 403 dega — isliye app proxy
-    // (/api/file/...) se serve hota hai. Public buckets par seedha B2 URL.
-    isPrivateB2
-      ? `/api/file/${key}`
-      : env.publicBaseUrl
-        ? `${env.publicBaseUrl.replace(/\/$/, "")}/${key}`
-        : `${(env.endpoint ?? `https://s3.${env.region}.amazonaws.com`).replace(/\/$/, "")}/${env.bucket}/${key}`;
+  const publicUrl = (key: string) => `/api/storage/file/${key}`;
 
   return {
     provider: storageProvider,
     async upload(data, key, contentType) {
       const safe = sanitizeKey(key);
-      const buf = Buffer.isBuffer(data) ? data : Buffer.from(data);
+      let buf = Buffer.isBuffer(data) ? data : Buffer.from(data);
+      if (!isPayloadEncrypted(buf)) {
+        buf = encryptFilePayload(buf);
+      }
       try {
         await client.send(
           new PutObjectCommand({

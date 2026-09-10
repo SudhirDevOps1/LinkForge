@@ -28,6 +28,13 @@ import { ThemePlayground } from "@/components/landing/theme-playground";
 import { CursorGlow, HeroPhone3D, ParticleField } from "@/components/landing/hero-3d";
 import { Reveal } from "@/components/landing/anim";
 import { THEMES } from "@/lib/themes";
+import { HeroClaimBar } from "@/components/landing/hero-claim-bar";
+import { SecurityShowcase } from "@/components/landing/security-showcase";
+import { NewsletterShowcase } from "@/components/landing/newsletter-showcase";
+import { MediaEcosystem } from "@/components/landing/media-ecosystem";
+import { CreatorArchetypes } from "@/components/landing/creator-archetypes";
+import { LiveQrTool } from "@/components/landing/live-qr-tool";
+import { EdgePerformance } from "@/components/landing/edge-performance";
 
 function GithubIcon({ className }: { className?: string }) {
   return (
@@ -90,6 +97,8 @@ export default function LandingPage() {
         <div className="absolute top-[42rem] -left-32 h-96 w-96 rounded-full bg-fuchsia-600/12 blur-[120px]" />
         <div className="absolute top-[110rem] -right-32 h-96 w-96 rounded-full bg-indigo-600/14 blur-[120px]" />
         <div className="absolute top-[170rem] -left-32 h-96 w-96 rounded-full bg-violet-600/10 blur-[120px]" />
+        <div className="absolute top-[240rem] -right-32 h-96 w-96 rounded-full bg-emerald-600/10 blur-[140px]" />
+        <div className="absolute top-[310rem] -left-32 h-96 w-96 rounded-full bg-cyan-600/10 blur-[140px]" />
         <div
           className="absolute inset-0 opacity-[0.13]"
           style={{
@@ -109,11 +118,14 @@ export default function LandingPage() {
           </span>
           <span className="font-display text-lg font-bold tracking-tight">LinkForge</span>
         </Link>
-        <nav className="hidden items-center gap-7 text-sm text-zinc-400 md:flex">
+        <nav className="hidden items-center gap-6 text-sm text-zinc-400 md:flex">
+          <a href="#security" className="transition-colors hover:text-white">Security</a>
+          <a href="#newsletter" className="transition-colors hover:text-white">Newsletter</a>
+          <a href="#media" className="transition-colors hover:text-white">Media</a>
           <a href="#features" className="transition-colors hover:text-white">Features</a>
           <a href="#playground" className="transition-colors hover:text-white">Playground</a>
-          <a href="#themes" className="transition-colors hover:text-white">Themes</a>
-          <a href="#faq" className="transition-colors hover:text-white">FAQ</a>
+          <a href="#creators" className="transition-colors hover:text-white">Creators</a>
+          <a href="#qr-tool" className="transition-colors hover:text-white">QR Studio</a>
           <a href="#free" className="transition-colors hover:text-white">Pricing</a>
           <a href="https://github.com/SudhirDevOps1/LinkForge" target="_blank" rel="noreferrer" className="flex items-center gap-1.5 transition-colors hover:text-white">
             <GithubIcon className="h-4 w-4" /> GitHub
@@ -175,6 +187,11 @@ export default function LandingPage() {
           </div>
         </Reveal>
 
+        {/* 🚀 Interactive Real-Time Username Claim Bar */}
+        <Reveal delay={350}>
+          <HeroClaimBar />
+        </Reveal>
+
         {/* Hero phone mock */}
         <div className="relative mx-auto mt-16 max-w-4xl">
           <div aria-hidden className="absolute inset-x-16 top-10 h-72 rounded-full bg-violet-600/25 blur-[110px]" />
@@ -201,6 +218,9 @@ export default function LandingPage() {
 
       {/* How it works */}
       <HowItWorks />
+
+      {/* 🔐 Dual-Layer Zero-Knowledge Security & Privacy Visualizer */}
+      <SecurityShowcase />
 
       {/* Features bento */}
       <section id="features" className="relative z-10 mx-auto max-w-6xl scroll-mt-24 px-5 py-20">
@@ -241,6 +261,12 @@ export default function LandingPage() {
           ))}
         </div>
       </section>
+
+      {/* 💌 Built-in Verified Newsletter Engine */}
+      <NewsletterShowcase />
+
+      {/* 📱 Supercharged Rich Media Ecosystem */}
+      <MediaEcosystem />
 
       {/* Interactive theme playground */}
       <section id="playground" className="relative z-10 mx-auto max-w-6xl scroll-mt-24 px-5 py-20">
@@ -296,8 +322,17 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* 🎭 Creator Archetypes Showcase */}
+      <CreatorArchetypes />
+
+      {/* 📲 Interactive Live Vector QR Studio */}
+      <LiveQrTool />
+
       {/* Comparison */}
       <Comparison />
+
+      {/* ⚡ Blazing Speed & Global Edge Architecture */}
+      <EdgePerformance />
 
       {/* Testimonials */}
       <Testimonials />
@@ -379,7 +414,7 @@ export default function LandingPage() {
             </div>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-zinc-500">
               Open-source link-in-bio builder. Any database. Any cloud. Any
-              storage. Zero lock-in.
+              storage. Zero lock-in. Dual-layer AES-256 encrypted.
             </p>
             <div className="mt-5 flex gap-2.5">
               <a
@@ -402,9 +437,14 @@ export default function LandingPage() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Product</p>
             <ul className="mt-4 space-y-2.5 text-sm">
-              <li><a href="#features" className="text-zinc-400 transition-colors hover:text-white">Features</a></li>
-              <li><a href="#playground" className="text-zinc-400 transition-colors hover:text-white">Playground</a></li>
-              <li><a href="#themes" className="text-zinc-400 transition-colors hover:text-white">Themes</a></li>
+              <li><a href="#security" className="text-zinc-400 transition-colors hover:text-white">Security & Encryption</a></li>
+              <li><a href="#newsletter" className="text-zinc-400 transition-colors hover:text-white">Verified Newsletter</a></li>
+              <li><a href="#media" className="text-zinc-400 transition-colors hover:text-white">Rich Media & UPI</a></li>
+              <li><a href="#features" className="text-zinc-400 transition-colors hover:text-white">Features Bento</a></li>
+              <li><a href="#playground" className="text-zinc-400 transition-colors hover:text-white">Live Playground</a></li>
+              <li><a href="#creators" className="text-zinc-400 transition-colors hover:text-white">Creator Archetypes</a></li>
+              <li><a href="#qr-tool" className="text-zinc-400 transition-colors hover:text-white">Vector QR Studio</a></li>
+              <li><a href="#performance" className="text-zinc-400 transition-colors hover:text-white">Edge Performance</a></li>
               <li><a href="#free" className="text-zinc-400 transition-colors hover:text-white">Pricing</a></li>
             </ul>
           </div>
@@ -418,16 +458,17 @@ export default function LandingPage() {
             </ul>
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Legal</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Legal & Security</p>
             <ul className="mt-4 space-y-2.5 text-sm">
               <li><Link href="/privacy" className="text-zinc-400 transition-colors hover:text-white">Privacy Policy</Link></li>
               <li><Link href="/terms" className="text-zinc-400 transition-colors hover:text-white">Terms of Service</Link></li>
+              <li><a href="#security" className="text-zinc-400 transition-colors hover:text-white">AES-256 Architecture</a></li>
             </ul>
           </div>
         </div>
         <div className="border-t border-white/5">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-6 text-xs text-zinc-600">
-            <p>© {new Date().getFullYear()} LinkForge · Open source (MIT)</p>
+            <p>© {new Date().getFullYear()} LinkForge · Open source (MIT) · Built for Creators</p>
             <p>One link. Every platform. Zero lock-in.</p>
           </div>
         </div>

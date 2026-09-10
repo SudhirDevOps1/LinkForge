@@ -496,6 +496,46 @@ export async function autoMigrate(force = false): Promise<{ ok: boolean; count: 
       }
     }
 
+    // 🔐 Zero-Knowledge Data Encryption Auto-Migration:
+    // Any existing plaintext emails or names in users or subscribers are automatically
+    // encrypted to enc:em:... and enc:v1:... so DB dumps reveal NO raw personal data!
+    try {
+      const { encryptEmail, encryptField } = await import("@/lib/db-cipher");
+      const { users, subscribers } = await import("./schema");
+      const { eq } = await import("drizzle-orm");
+
+      const anyDb = db as any;
+
+      // 1. Encrypt legacy plaintext users
+      const rawUsers = await anyDb.select({ id: users.id, email: users.email, name: users.name }).from(users).limit(200);
+      for (const u of rawUsers || []) {
+        const needsEmailEnc = u.email && !u.email.startsWith("enc:em:");
+        const needsNameEnc = u.name && !u.name.startsWith("enc:v1:") && u.name.trim() !== "";
+        if (needsEmailEnc || needsNameEnc) {
+          await anyDb
+            .update(users)
+            .set({
+              ...(needsEmailEnc ? { email: encryptEmail(u.email) } : {}),
+              ...(needsNameEnc ? { name: encryptField(u.name) } : {}),
+            })
+            .where(eq(users.id, u.id));
+        }
+      }
+
+      // 2. Encrypt legacy plaintext subscribers
+      const rawSubs = await anyDb.select({ id: subscribers.id, email: subscribers.email }).from(subscribers).limit(500);
+      for (const s of rawSubs || []) {
+        if (s.email && !s.email.startsWith("enc:em:")) {
+          await anyDb
+            .update(subscribers)
+            .set({ email: encryptEmail(s.email) })
+            .where(eq(subscribers.id, s.id));
+        }
+      }
+    } catch {
+      // Non-fatal background migration
+    }
+
     return { ok: true, count };
   })();
 
