@@ -2,10 +2,17 @@
 
 // =============================================================================
 // 🧭 Dashboard Shell — sidebar + topbar + responsive mobile nav & drawer
+// Features:
+// - Collapsible desktop sidebar (compact icon-only vs full expanded)
+// - Auto-collapse on medium screens to give maximum room to editors
+// - Persistent collapsed state via localStorage
+// - No overflow-x clipping on wrapper to keep phone preview 100% sticky
 // =============================================================================
 import {
   BarChart3,
   Blocks,
+  ChevronLeft,
+  ChevronRight,
   ExternalLink,
   Files,
   LayoutDashboard,
@@ -20,7 +27,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/components/ui";
 
 const NAV = [
@@ -43,6 +50,28 @@ export function DashboardShell({
 }) {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("linkforge_sidebar_collapsed");
+      if (saved !== null) {
+        setCollapsed(saved === "true");
+      } else if (typeof window !== "undefined" && window.innerWidth < 1280) {
+        setCollapsed(true);
+      }
+    } catch {}
+  }, []);
+
+  function toggleCollapsed() {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("linkforge_sidebar_collapsed", String(next));
+      } catch {}
+      return next;
+    });
+  }
 
   async function signOut() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -61,50 +90,103 @@ export function DashboardShell({
   ];
 
   return (
-    <div className="flex min-h-screen bg-ink-950 text-white antialiased overflow-x-hidden">
-      {/* Sidebar (desktop) */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-white/5 bg-ink-900/80 p-4 backdrop-blur-xl md:flex">
-        <Link href="/" className="mb-8 flex items-center gap-2.5 px-2 pt-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-md shadow-violet-500/20">
-            <Link2 className="h-4 w-4 text-white" />
-          </span>
-          <span className="font-display font-bold tracking-tight text-lg">LinkForge</span>
-        </Link>
-        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto [scrollbar-width:none]">
+    <div className="flex min-h-screen bg-ink-950 text-white antialiased">
+      {/* Sidebar (desktop, collapsible) */}
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-white/5 bg-ink-900/80 p-3 backdrop-blur-xl md:flex transition-all duration-300 ease-in-out",
+          collapsed ? "w-20 items-center" : "w-60",
+        )}
+      >
+        {/* Header: Logo + Collapse/Expand Toggle */}
+        <div
+          className={cn(
+            "mb-6 flex items-center pt-2",
+            collapsed ? "flex-col gap-3 justify-center" : "justify-between px-2",
+          )}
+        >
+          <Link href="/" className="flex items-center gap-2.5 group" title="LinkForge Home">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-md shadow-violet-500/20 group-hover:scale-105 transition-transform shrink-0">
+              <Link2 className="h-4 w-4 text-white" />
+            </span>
+            {!collapsed && (
+              <span className="font-display font-bold tracking-tight text-lg truncate">LinkForge</span>
+            )}
+          </Link>
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10 transition-all shrink-0"
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </button>
+        </div>
+
+        {/* Navigation Items */}
+        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto [scrollbar-width:none] w-full">
           {NAV.map((item) => (
             <Link
               key={item.href}
               href={item.href}
+              title={collapsed ? item.label : undefined}
               className={cn(
-                "flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all",
+                "flex items-center rounded-xl py-2.5 text-sm font-medium transition-all group relative",
+                collapsed ? "justify-center px-0 w-11 h-11 mx-auto" : "gap-3 px-3.5",
                 isActive(item.href)
                   ? "bg-violet-500/15 text-violet-200 shadow-[inset_0_0_0_1px_rgba(139,92,246,.25)]"
                   : "text-zinc-400 hover:bg-white/5 hover:text-white",
               )}
             >
               <item.icon className="h-4.5 w-4.5 shrink-0" />
-              {item.label}
+              {!collapsed && <span className="truncate">{item.label}</span>}
+              {collapsed && (
+                <span className="pointer-events-none absolute left-full ml-3 hidden rounded-lg bg-zinc-900 px-2.5 py-1 text-xs font-semibold text-white shadow-xl border border-white/10 group-hover:block whitespace-nowrap z-50">
+                  {item.label}
+                </span>
+              )}
             </Link>
           ))}
         </nav>
-        <div className="space-y-1 border-t border-white/5 pt-3">
+
+        {/* Footer actions */}
+        <div className={cn("space-y-1 border-t border-white/5 pt-3 w-full", collapsed && "flex flex-col items-center")}>
           {slug ? (
             <a
               href={`/${slug}`}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium text-zinc-400 transition-all hover:bg-white/5 hover:text-white"
+              title={collapsed ? `View live page (/${slug})` : undefined}
+              className={cn(
+                "flex items-center rounded-xl py-2.5 text-sm font-medium text-zinc-400 transition-all hover:bg-white/5 hover:text-white group relative",
+                collapsed ? "justify-center w-11 h-11" : "gap-3 px-3.5",
+              )}
             >
               <ExternalLink className="h-4.5 w-4.5 shrink-0" />
-              View live page
+              {!collapsed && <span className="truncate">View live page</span>}
+              {collapsed && (
+                <span className="pointer-events-none absolute left-full ml-3 hidden rounded-lg bg-zinc-900 px-2.5 py-1 text-xs font-semibold text-white shadow-xl border border-white/10 group-hover:block whitespace-nowrap z-50">
+                  View live page
+                </span>
+              )}
             </a>
           ) : null}
           <button
             onClick={signOut}
-            className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium text-zinc-400 transition-all hover:bg-red-500/10 hover:text-red-300"
+            title={collapsed ? "Sign out" : undefined}
+            className={cn(
+              "flex items-center rounded-xl py-2.5 text-sm font-medium text-zinc-400 transition-all hover:bg-red-500/10 hover:text-red-300 group relative",
+              collapsed ? "justify-center w-11 h-11" : "gap-3 px-3.5 w-full",
+            )}
           >
             <LogOut className="h-4.5 w-4.5 shrink-0" />
-            Sign out
+            {!collapsed && <span className="truncate">Sign out</span>}
+            {collapsed && (
+              <span className="pointer-events-none absolute left-full ml-3 hidden rounded-lg bg-zinc-900 px-2.5 py-1 text-xs font-semibold text-red-300 shadow-xl border border-white/10 group-hover:block whitespace-nowrap z-50">
+                Sign out
+              </span>
+            )}
           </button>
         </div>
       </aside>
@@ -140,7 +222,7 @@ export function DashboardShell({
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation Bar (High Priority items + Drawer trigger) */}
+      {/* Mobile Bottom Navigation Bar */}
       <nav className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-around border-t border-white/8 bg-ink-950/95 px-2 py-2 backdrop-blur-2xl md:hidden shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
         {primaryMobileNav.map((item) => (
           <Link
@@ -214,7 +296,7 @@ export function DashboardShell({
                   className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-white/10"
                 >
                   <ExternalLink className="h-4 w-4" />
-                  View Live Public Page (/{slug})
+                  View Live Public Page (/${slug})
                 </a>
               )}
               <button
@@ -230,7 +312,12 @@ export function DashboardShell({
       )}
 
       {/* Main content area */}
-      <main className="relative flex-1 px-4 pb-28 pt-20 sm:px-6 md:ml-60 md:pb-12 md:pt-8 lg:px-8">
+      <main
+        className={cn(
+          "relative flex-1 px-4 pb-28 pt-20 sm:px-6 md:pb-12 md:pt-8 lg:px-8 transition-all duration-300 ease-in-out",
+          collapsed ? "md:ml-20" : "md:ml-60",
+        )}
+      >
         <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-64 overflow-hidden">
           <div className="absolute -top-24 left-1/3 h-56 w-[480px] -translate-x-1/2 rounded-full bg-violet-600/10 blur-[110px]" />
         </div>

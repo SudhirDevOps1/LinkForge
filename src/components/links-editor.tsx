@@ -799,7 +799,7 @@ export function LinksEditor({
         </div>
 
         {/* Right Column: Sticky Phone Preview Studio */}
-        <div className={cn("w-full min-w-0", viewMode === "editor" && "hidden lg:block")}>
+        <div className={cn("w-full min-w-0 sticky top-6 self-start z-20", viewMode === "editor" && "hidden lg:block")}>
           <PhonePreview profile={profile} links={links} />
         </div>
       </div>

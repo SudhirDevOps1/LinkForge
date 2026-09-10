@@ -1413,7 +1413,7 @@ export function AppearanceEditor({
         {/* Right Column: Live Phone Preview Frame (Sticky on Desktop) */}
         <div
           className={cn(
-            "xl:col-span-5 xl:sticky xl:top-6 flex flex-col items-center",
+            "xl:col-span-5 xl:sticky xl:top-6 self-start flex flex-col items-center z-20",
             viewMode === "editor" ? "hidden xl:flex" : "flex",
           )}
         >
