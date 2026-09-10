@@ -1,5 +1,5 @@
 // =============================================================================
-// 🌐 Edge Middleware — Edge-runtime compatible (koi Node API nahi)
+// 🌐 Edge Proxy (Next.js 16+ convention) — Edge-runtime compatible
 // -----------------------------------------------------------------------------
 // 1. Custom Domains: APP_DOMAIN ke alawa kisi bhi pointed domain par aayi
 //    request ko /_domain par rewrite karta hai (DB lookup page me hota hai).
@@ -29,7 +29,7 @@ function isAppHost(host: string): boolean {
   return false;
 }
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const host = (req.headers.get("host") ?? "").split(":")[0].toLowerCase();
 
   // --- Custom domain routing ------------------------------------------------
@@ -52,6 +52,9 @@ export function middleware(req: NextRequest) {
 
   return NextResponse.next();
 }
+
+// Keep middleware export alias for older bundler compatibility
+export const middleware = proxy;
 
 export const config = {
   // Static assets, files aur infra paths skip
