@@ -7,6 +7,7 @@ import { after } from "next/server";
 import { notFound } from "next/navigation";
 import { headers, cookies } from "next/headers";
 import { BioRenderer } from "@/components/bio-renderer";
+import { NewsletterSubscribe } from "@/components/newsletter-subscribe";
 import { ShareButton } from "@/components/share-button";
 import { ProfilePasswordGate } from "@/components/profile-password-gate";
 import { QRCodeButton } from "@/components/qr-code";
@@ -154,21 +155,25 @@ export default async function PublicBioPage({ params }: Ctx) {
           hidePublicStats: profile.hidePublicStats ?? false,
         }}
         links={visibleLinks}
-      />
-      <div
-        className="mx-auto w-full max-w-xl px-5 pb-14"
-        style={{ background: theme.vars.bg, color: theme.vars.text }}
-      >
-        <div className="flex items-center gap-2">
-          <div className="flex-1">
-            <ShareButton
-              url={profileUrl}
-              title={`${profile.displayName} | LinkForge`}
+        footerSlot={
+          <div className="w-full flex flex-col gap-4 mt-6">
+            <NewsletterSubscribe
+              slug={profile.slug}
+              displayName={profile.displayName}
+              accentColor={theme.vars.accent}
             />
+            <div className="flex items-center gap-2 mt-2">
+              <div className="flex-1">
+                <ShareButton
+                  url={profileUrl}
+                  title={`${profile.displayName} | LinkForge`}
+                />
+              </div>
+              <QRCodeButton url={profileUrl} displayName={profile.displayName} />
+            </div>
           </div>
-          <QRCodeButton url={profileUrl} displayName={profile.displayName} />
-        </div>
-      </div>
+        }
+      />
     </>
   );
 }

@@ -14,6 +14,7 @@ import {
   LogOut,
   Palette,
   Settings,
+  Mail,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -25,6 +26,7 @@ const NAV = [
   { href: "/dashboard/media", label: "Media", icon: Files },
   { href: "/dashboard/appearance", label: "Appearance", icon: Palette },
   { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/dashboard/subscribers", label: "Subscribers", icon: Mail },
   { href: "/dashboard/integrations", label: "Integrations", icon: Blocks },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];

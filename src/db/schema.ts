@@ -367,6 +367,30 @@ export const analyticsRollups = pgTable(
   ],
 );
 
+// ---------------------------------------------------------------------------
+// 📬 Subscribers — newsletter / email updates subscribers from public bio page
+// ---------------------------------------------------------------------------
+export const subscribers = pgTable(
+  "subscribers",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    profileId: uuid("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    email: text("email").notNull(),
+    status: text("status").notNull().default("active"),
+    ipHash: text("ip_hash"),
+    userAgent: text("user_agent"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("subscribers_profile_email_idx").on(t.profileId, t.email),
+    index("subscribers_profile_idx").on(t.profileId),
+  ],
+);
+
 // ---- Inferred types --------------------------------------------------------
 export type User = typeof users.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
@@ -379,4 +403,5 @@ export type TeamMember = typeof teamMembers.$inferSelect;
 export type MediaFile = typeof mediaFiles.$inferSelect;
 export type UploadTicket = typeof uploadTickets.$inferSelect;
 export type AnalyticsRollup = typeof analyticsRollups.$inferSelect;
+export type Subscriber = typeof subscribers.$inferSelect;
 

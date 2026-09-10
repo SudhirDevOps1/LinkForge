@@ -313,3 +313,22 @@ export const analyticsRollups = sqliteTable(
   ],
 );
 
+export const subscribers = sqliteTable(
+  "subscribers",
+  {
+    id: id(),
+    profileId: uuidCol("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    email: text("email").notNull(),
+    status: text("status").notNull().default("active"),
+    ipHash: text("ip_hash"),
+    userAgent: text("user_agent"),
+    createdAt: ts("created_at"),
+  },
+  (t) => [
+    uniqueIndex("subscribers_profile_email_idx").on(t.profileId, t.email),
+    index("subscribers_profile_idx").on(t.profileId),
+  ],
+);
+

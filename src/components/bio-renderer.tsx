@@ -283,10 +283,12 @@ export function BioRenderer({
   profile,
   links,
   trackClicks = true,
+  footerSlot,
 }: {
   profile: BioProfileShape;
   links: Link[];
   trackClicks?: boolean;
+  footerSlot?: React.ReactNode;
 }) {
   const theme = getTheme(profile.theme);
   const v = theme.vars;
@@ -348,10 +350,13 @@ export function BioRenderer({
 
   return (
     <div
-      className={`theme-font-${v.font} relative min-h-screen w-full overflow-hidden`}
-      style={{ background: v.bg, color: v.text }}
+      className={`theme-font-${v.font} relative min-h-screen w-full`}
+      style={{
+        background: `radial-gradient(ellipse 80% 50% at 50% -20%, ${accent}25, transparent), ${v.bg}`,
+        color: v.text,
+      }}
     >
-      <div className="relative z-[1] mx-auto flex min-h-screen w-full max-w-xl flex-col items-center px-5 py-14">
+      <div className="relative z-[1] mx-auto flex min-h-screen w-full max-w-xl flex-col items-center px-5 py-12">
         {/* Avatar + identity */}
         <div
           className="relative h-24 w-24 overflow-hidden rounded-full border-2"
@@ -783,10 +788,13 @@ export function BioRenderer({
           ) : null}
         </div>
 
+        {/* Footer Slot (Newsletter + Share Dock) */}
+        {footerSlot}
+
         {/* Footer badge */}
         <a
           href="/"
-          className="mt-14 inline-flex items-center gap-1.5 text-[11px] font-medium opacity-60 transition-opacity hover:opacity-100"
+          className="mt-8 mb-4 inline-flex items-center gap-1.5 text-[11px] font-medium opacity-60 transition-opacity hover:opacity-100"
           style={{ color: v.muted }}
         >
           <span

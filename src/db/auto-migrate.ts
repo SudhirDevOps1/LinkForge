@@ -208,6 +208,19 @@ const PG_MIGRATIONS = [
   `CREATE UNIQUE INDEX IF NOT EXISTS "rollups_unique_bucket_idx" ON "analytics_rollups" ("profile_id", "date", "link_id", "device", "country");`,
   `CREATE INDEX IF NOT EXISTS "rollups_profile_date_idx" ON "analytics_rollups" ("profile_id", "date");`,
 
+  // 14. Subscribers (PostgreSQL)
+  `CREATE TABLE IF NOT EXISTS "subscribers" (
+    "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    "profile_id" uuid NOT NULL REFERENCES "profiles"("id") ON DELETE CASCADE,
+    "email" text NOT NULL,
+    "status" text NOT NULL DEFAULT 'active',
+    "ip_hash" text,
+    "user_agent" text,
+    "created_at" timestamp with time zone NOT NULL DEFAULT now()
+  );`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "subscribers_profile_email_idx" ON "subscribers" ("profile_id", "email");`,
+  `CREATE INDEX IF NOT EXISTS "subscribers_profile_idx" ON "subscribers" ("profile_id");`,
+
   // Safe non-destructive column sync (in case tables existed previously from older schema)
   `ALTER TABLE "profiles" ADD COLUMN IF NOT EXISTS "design" jsonb;`,
   `ALTER TABLE "profiles" ADD COLUMN IF NOT EXISTS "og_image_url" text;`,
@@ -406,6 +419,19 @@ const SQLITE_MIGRATIONS = [
   );`,
   `CREATE UNIQUE INDEX IF NOT EXISTS "rollups_unique_bucket_idx" ON "analytics_rollups" ("profile_id", "date", "link_id", "device", "country");`,
   `CREATE INDEX IF NOT EXISTS "rollups_profile_date_idx" ON "analytics_rollups" ("profile_id", "date");`,
+
+  // 14. Subscribers (SQLite)
+  `CREATE TABLE IF NOT EXISTS "subscribers" (
+    "id" text PRIMARY KEY NOT NULL,
+    "profile_id" text NOT NULL REFERENCES "profiles"("id") ON DELETE CASCADE,
+    "email" text NOT NULL,
+    "status" text NOT NULL DEFAULT 'active',
+    "ip_hash" text,
+    "user_agent" text,
+    "created_at" integer NOT NULL
+  );`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "subscribers_profile_email_idx" ON "subscribers" ("profile_id", "email");`,
+  `CREATE INDEX IF NOT EXISTS "subscribers_profile_idx" ON "subscribers" ("profile_id");`,
 
   // Safe non-destructive column sync for SQLite (zero data loss — adds missing columns if tables were created earlier)
   `ALTER TABLE "profiles" ADD COLUMN "design" text;`,
