@@ -18,8 +18,10 @@ import {
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AnalyticsChartsLazy } from "@/components/analytics-charts-lazy";
+import { DuckDbAnalyticsView } from "@/components/duckdb-analytics-view";
 import { Card, StatCard } from "@/components/ui";
 import { getAnalyticsSummary, getRecentEvents } from "@/lib/analytics";
+import { computeDuckDbAnalytics } from "@/lib/analytics/duckdb";
 import { getSessionUser } from "@/lib/auth";
 import { cn } from "@/lib/cn";
 
@@ -63,7 +65,7 @@ export default async function AnalyticsPage({
     `/dashboard/analytics?days=${d}${dev ? `&device=${dev}` : ""}`;
 
   const prevEnd = new Date(Date.now() - days * 86_400_000); // eslint-disable-line react-hooks/purity -- server component, per-request single evaluation
-  const [summary, prev, feed] = await Promise.all([
+  const [summary, prev, feed, duckdbData] = await Promise.all([
     getAnalyticsSummary(ctx.profile.id, days, device ? { device } : undefined),
     // Previous equal-length window — period-over-period comparison
     getAnalyticsSummary(ctx.profile.id, days, {
@@ -71,6 +73,7 @@ export default async function AnalyticsPage({
       endDate: prevEnd,
     }),
     getRecentEvents(ctx.profile.id, 15),
+    computeDuckDbAnalytics(ctx.profile.id, days),
   ]);
 
   // ---- Smart insights (server-computed) ----------------------------------------
@@ -178,9 +181,17 @@ export default async function AnalyticsPage({
           </a>
           <a
             href={`/api/analytics/export?days=${days}`}
-            className="inline-flex h-10 items-center gap-2 rounded-xl border border-white/15 px-4 text-sm font-medium text-zinc-200 transition-colors hover:bg-white/5"
+            className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-white/15 px-3.5 text-sm font-medium text-zinc-200 transition-colors hover:bg-white/5"
+            title="Standard CSV"
           >
             <Download className="h-4 w-4" /> CSV
+          </a>
+          <a
+            href={`/api/analytics/export?days=${days}&format=csv.gz`}
+            className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-violet-500/40 bg-violet-500/10 px-3 text-xs font-semibold text-violet-300 transition-colors hover:bg-violet-500/20"
+            title="GZIP Compressed CSV (85% smaller file)"
+          >
+            <Download className="h-3.5 w-3.5" /> .csv.gz (85% smaller)
           </a>
         </div>
       </div>
@@ -219,6 +230,9 @@ export default async function AnalyticsPage({
       </div>
 
       <AnalyticsChartsLazy summary={summary} />
+
+      {/* 🦆 DuckDB OLAP Analytics Engine: 24x7 Heatmap, Funnel, Cohorts & SQL */}
+      <DuckDbAnalyticsView data={duckdbData} profileSlug={ctx.profile.slug} days={days} />
 
       {/* Live activity feed */}
       <Card className="p-0">
