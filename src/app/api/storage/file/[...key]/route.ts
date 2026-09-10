@@ -4,6 +4,7 @@
 // Supports local PUT direct upload during local testing/development.
 // =============================================================================
 import { ApiError, guardRateLimit, handle, json } from "@/lib/api";
+import { decryptFilePayload, encryptFilePayload, isPayloadEncrypted } from "@/lib/file-cipher";
 import { getStorageAdapter, sanitizeKey } from "@/lib/storage";
 
 type RouteCtx = { params: Promise<{ key: string[] }> };
@@ -45,19 +46,31 @@ export const GET = handle(async (req: Request, ctx: RouteCtx) => {
     });
   }
 
-  // 🚀 2. Server In-Memory Cache: ZERO B2 download calls!
+  // 🚀 2. Server In-Memory Cache: ZERO B2 download calls & pre-decrypted!
   let file: { data: Buffer; contentType: string; contentEncoding?: string } | null = null;
   const cached = MEMORY_CACHE.get(safeKey);
   if (cached && cached.expiresAt > Date.now()) {
     file = cached;
   } else {
     const adapter = await getStorageAdapter();
-    file = await adapter.getObject(safeKey);
-    if (file && file.data.length <= MAX_CACHEABLE_FILE_SIZE) {
-      MEMORY_CACHE.set(safeKey, {
-        ...file,
-        expiresAt: Date.now() + CACHE_TTL_MS,
-      });
+    const fetched = await adapter.getObject(safeKey);
+    if (fetched) {
+      // 🔐 Zero-Knowledge Decryption: Decrypt B2 ciphertext if encrypted
+      let data = fetched.data;
+      if (isPayloadEncrypted(data)) {
+        data = decryptFilePayload(data);
+      }
+      file = {
+        data,
+        contentType: fetched.contentType,
+        contentEncoding: fetched.contentEncoding || (safeKey.endsWith(".gz") ? "gzip" : undefined),
+      };
+      if (file.data.length <= MAX_CACHEABLE_FILE_SIZE) {
+        MEMORY_CACHE.set(safeKey, {
+          ...file,
+          expiresAt: Date.now() + CACHE_TTL_MS,
+        });
+      }
     }
   }
 
@@ -65,16 +78,23 @@ export const GET = handle(async (req: Request, ctx: RouteCtx) => {
     return json({ error: "File not found" }, { status: 404 });
   }
 
+  const urlObj = new URL(req.url);
+  const isDownload = urlObj.searchParams.get("download") === "1";
+  const customName = urlObj.searchParams.get("name");
+
   const filename = safeKey.split("/").pop() ?? "file";
-  const cleanFilename = filename.replace(/["\r\n]/g, "");
+  const rawName = customName || filename;
+  const cleanFilename = rawName.replace(/["\r\n]/g, "").replace(/\.gz$/i, "");
+  const disposition = isDownload
+    ? `attachment; filename="${cleanFilename}"`
+    : `inline; filename="${cleanFilename}"`;
 
   // 🚀 3. Vercel Edge CDN Caching (s-maxage=31536000):
-  // Vercel's global CDN caches the response at the edge! Works on *.vercel.app without custom domain!
   const headers: Record<string, string> = {
     "Content-Type": file.contentType || "application/octet-stream",
     "Cache-Control": "public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable",
     "ETag": etag,
-    "Content-Disposition": `inline; filename="${cleanFilename}"`,
+    "Content-Disposition": disposition,
     "Content-Length": String(file.data.length),
     "X-Content-Type-Options": "nosniff",
   };
@@ -96,7 +116,8 @@ export const PUT = handle(async (req: Request, ctx: RouteCtx) => {
   const contentType = req.headers.get("content-type") || "application/octet-stream";
   const contentEncoding = req.headers.get("content-encoding") ?? undefined;
   const arrayBuf = await req.arrayBuffer();
-  const buf = Buffer.from(arrayBuf);
+  const rawBuf = Buffer.from(arrayBuf);
+  const buf: Buffer = isPayloadEncrypted(rawBuf) ? rawBuf : encryptFilePayload(rawBuf);
 
   const adapter = await getStorageAdapter();
   await adapter.putObject(safeKey, buf, contentType, { contentEncoding });

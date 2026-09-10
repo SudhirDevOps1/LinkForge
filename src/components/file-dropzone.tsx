@@ -10,6 +10,7 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/components/ui";
 import { compressFileGzip } from "@/lib/client-compression";
+import { encryptBlobClient } from "@/lib/client-file-cipher";
 
 export interface UploadedFile {
   id: string;
@@ -74,6 +75,7 @@ export function FileDropzone({
     const reqData = (await pre.json().catch(() => ({}))) as {
       uploadUrl?: string;
       rawStorageKey?: string;
+      encryptionKey?: string;
       headers?: Record<string, string>;
       error?: string;
     };
@@ -81,15 +83,23 @@ export function FileDropzone({
       throw new Error(reqData.error ?? "Presign request failed");
     }
 
-    // 2. Direct browser-to-B2 PUT (bypasses Vercel 4.5MB limit)
+    // 2. Client-Side AES-256-GCM Payload Encryption (Zero-Knowledge B2 storage)
+    let finalBlob: Blob = blobToUpload;
+    let isEncrypted = false;
+    if (reqData.encryptionKey) {
+      const enc = await encryptBlobClient(blobToUpload, reqData.encryptionKey);
+      if (enc.isEncrypted) {
+        finalBlob = enc.blob;
+        isEncrypted = true;
+      }
+    }
+
+    // 3. Direct browser-to-B2 PUT (bypasses Vercel 4.5MB limit)
     await new Promise<void>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       abortRef.current = { abort: () => xhr.abort() };
       xhr.open("PUT", reqData.uploadUrl as string);
       xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
-      if (isGzip) {
-        xhr.setRequestHeader("Content-Encoding", "gzip");
-      }
       xhr.upload.onprogress = (e) => {
         if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100));
       };
@@ -99,17 +109,17 @@ export function FileDropzone({
           : reject(new Error(`Storage upload failed (${xhr.status})`));
       xhr.onerror = () => reject(new Error("Storage upload failed (CORS check)"));
       xhr.onabort = () => reject(new Error("Upload cancel kiya gaya"));
-      xhr.send(blobToUpload);
+      xhr.send(finalBlob);
     });
 
-    // 3. Save metadata with Neon DB AES-256-GCM encryption
+    // 4. Save metadata with Neon DB AES-256-GCM encryption
     const done = await fetch("/api/files/save", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         rawFileName: file.name,
         rawStorageKey: reqData.rawStorageKey,
-        fileSize: blobToUpload.size,
+        fileSize: finalBlob.size,
         mimeType: file.type || "application/octet-stream",
         originalSize: file.size,
         isCompressed: isGzip,
@@ -122,7 +132,9 @@ export function FileDropzone({
     };
     if (!done.ok || !data.file) throw new Error(data.error ?? "Failed to save file metadata");
 
-    if (isGzip && compression.savingsPercent > 0) {
+    if (isEncrypted) {
+      toast.success(`"${file.name}" uploaded with B2 AES-256-GCM encryption!`);
+    } else if (isGzip && compression.savingsPercent > 0) {
       toast.success(`"${file.name}" uploaded! GZIP saved ${compression.savingsPercent}% space.`);
     }
 

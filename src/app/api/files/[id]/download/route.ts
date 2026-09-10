@@ -11,7 +11,6 @@ import { mediaFiles } from "@/db/schema";
 import { ApiError, guardRateLimit, handle, json } from "@/lib/api";
 import { requireUser } from "@/lib/auth";
 import { decryptField } from "@/lib/db-cipher";
-import { getStorageAdapter } from "@/lib/storage";
 
 type RouteCtx = { params: Promise<{ id: string }> };
 
@@ -36,23 +35,21 @@ export const GET = handle(async (req: Request, ctx: RouteCtx) => {
   const decryptedKey = decryptField(file.storageKey);
   const decryptedName = decryptField(file.fileName);
 
-  const adapter = await getStorageAdapter();
-  // 5 minutes (300 seconds) presigned GET URL
-  const presigned = await adapter.getPresignedGetUrl(decryptedKey, 300);
+  const downloadUrl = `/api/storage/file/${decryptedKey}?download=1&name=${encodeURIComponent(decryptedName)}`;
 
   const urlObj = new URL(req.url);
   const wantsJson = urlObj.searchParams.get("json") === "true" || req.headers.get("accept")?.includes("application/json");
 
   if (wantsJson) {
     return json({
-      downloadUrl: presigned.url,
-      expiresInSeconds: presigned.expiresInSeconds,
+      downloadUrl,
+      expiresInSeconds: 300,
       fileName: decryptedName,
       mimeType: file.mimeType,
       sizeBytes: file.sizeBytes,
     });
   }
 
-  // Seamless browser redirect to the temporary presigned download URL
-  return Response.redirect(presigned.url, 302);
+  // Seamless browser redirect to the transparent decrypted download URL
+  return Response.redirect(new URL(downloadUrl, req.url).toString(), 302);
 });

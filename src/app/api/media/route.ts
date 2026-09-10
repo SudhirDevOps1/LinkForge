@@ -21,6 +21,7 @@ import { fileCategory, formatBytes, sanitizeFileName } from "@/lib/media";
 import { getStorage, newKey } from "@/lib/storage";
 
 import { decryptField, encryptField } from "@/lib/db-cipher";
+import { encryptFilePayload } from "@/lib/file-cipher";
 
 export const GET = handle(async () => {
   const { profile } = await requireUser();
@@ -79,7 +80,8 @@ export const POST = handle(async (req: Request) => {
   const ext = safeName.includes(".") ? (safeName.split(".").pop() as string) : "bin";
 
   const storage = await getStorage();
-  const data = Buffer.from(await file.arrayBuffer());
+  const rawData = Buffer.from(await file.arrayBuffer());
+  const data = encryptFilePayload(rawData);
   const { key, url } = await storage.upload(data, newKey(`files/${user.id}`, ext), file.type);
 
   const [created] = await db

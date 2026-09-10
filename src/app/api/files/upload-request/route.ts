@@ -12,6 +12,7 @@ import {
 } from "@/config/storage.config";
 import { ApiError, assertSameOrigin, guardRateLimit, handle, json, parseOrThrow } from "@/lib/api";
 import { requireUser } from "@/lib/auth";
+import { getFileEncryptionKey } from "@/lib/file-cipher";
 import { sanitizeFileName } from "@/lib/media";
 import { getStorageAdapter, sanitizeKey } from "@/lib/storage";
 
@@ -46,8 +47,9 @@ export const POST = handle(async (req: Request) => {
     rawStorageKey,
     mimeType,
     600, // 10 minutes expiry
-    isGzip ? { contentEncoding: "gzip" } : undefined,
   );
+
+  const encryptionKey = getFileEncryptionKey().toString("hex");
 
   return json({
     uploadUrl: presigned.url,
@@ -56,5 +58,6 @@ export const POST = handle(async (req: Request) => {
     expiresInSeconds: presigned.expiresInSeconds,
     headers: presigned.headers ?? {},
     storageProvider: storageDriver,
+    encryptionKey,
   });
 });
