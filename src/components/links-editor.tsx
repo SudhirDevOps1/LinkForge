@@ -1,9 +1,16 @@
 "use client";
 
 // =============================================================================
-// 🔗 LinksEditor — Drag-and-drop link manager with responsive live phone preview,
-// media thumbnail cards, smart title formatting, UPI / WhatsApp quick helpers,
-// and advanced filter/search controls.
+// 🔗 LinksEditor — Advanced responsive drag-and-drop link builder
+// Features:
+// - Full-width non-truncated search & categorical filter pills
+// - Visual image thumbnails with instant full-resolution lightbox zoom
+// - 1-Click Link Duplication & 1-Click QR Code generation per link
+// - Real-time click counters on link cards
+// - India UPI 0% Fee Payment Generator & WhatsApp CTA Builder
+// - Custom badge callouts (HOT, NEW, 50% OFF) & card highlight styling
+// - Live interactive card preview inside modal
+// - Responsive segmented control for mobile & tablet live preview
 // =============================================================================
 import {
   DndContext,
@@ -25,6 +32,8 @@ import { CSS } from "@dnd-kit/utilities";
 import {
   Check,
   Copy,
+  CopyPlus,
+  Download,
   ExternalLink,
   Eye,
   EyeOff,
@@ -34,18 +43,23 @@ import {
   IndianRupee,
   Layers,
   ListOrdered,
+  Maximize2,
   MessageCircle,
+  MousePointerClick,
   Pencil,
   Phone,
   Pin,
   Plus,
+  QrCode,
   Search,
   Smartphone,
   Sparkles,
   Trash2,
   X,
+  ZoomIn,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import QRCode from "qrcode";
 import { toast } from "sonner";
 import type { Link } from "@/db/schema";
 import { linkIcon, type BioProfileShape } from "@/components/bio-renderer";
@@ -113,11 +127,9 @@ const emptyForm: LinkFormState = {
 // Clean display title for UUID / storage paths
 function cleanDisplayTitle(title: string, url: string, type: string): string {
   if (!title) return "Untitled link";
-  // If title contains UUID or path slashes
   if (title.includes("/") || /[0-9a-f]{8}-[0-9a-f]{4}/i.test(title)) {
     const parts = title.split("/");
     const last = parts[parts.length - 1];
-    // Strip timestamp or uuid prefixes if any
     const cleaned = last.replace(/^[0-9a-f-]+_?/i, "").replace(/^\d+[-_]/, "");
     if (cleaned && cleaned.length > 2) return cleaned;
     return `${type.toUpperCase()} Asset`;
@@ -125,7 +137,7 @@ function cleanDisplayTitle(title: string, url: string, type: string): string {
   return title;
 }
 
-// Check if link is an image
+// Check if link represents an image
 function isImageResource(link: Pick<Link, "type" | "thumbnailUrl" | "url">): boolean {
   if (link.thumbnailUrl && link.thumbnailUrl.trim()) return true;
   if (link.type === "image") return true;
@@ -139,17 +151,24 @@ function SortableLinkRow({
   onEdit,
   onDelete,
   onToggle,
+  onDuplicate,
+  onShowQr,
+  onZoomImage,
 }: {
-  link: Link;
+  link: Link & { clickCount?: number };
   onEdit: () => void;
   onDelete: () => void;
   onToggle: (active: boolean) => void;
+  onDuplicate: () => void;
+  onShowQr: () => void;
+  onZoomImage: (url: string, title: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: link.id });
 
   const isImg = isImageResource(link);
   const displayTitle = cleanDisplayTitle(link.title, link.url, link.type);
+  const imageUrl = link.thumbnailUrl || link.url;
 
   function copyUrl(e: React.MouseEvent) {
     e.stopPropagation();
@@ -180,17 +199,24 @@ function SortableLinkRow({
 
       {/* Visual Thumbnail or Icon */}
       {isImg ? (
-        <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-white/15 bg-black/50 shadow-inner">
+        <button
+          type="button"
+          onClick={() => onZoomImage(imageUrl, displayTitle)}
+          title="Click to view full image"
+          className="group/img relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-white/15 bg-black/50 shadow-inner transition-transform active:scale-95"
+        >
           <img
-            src={link.thumbnailUrl || link.url}
+            src={imageUrl}
             alt={displayTitle}
-            className="h-full w-full object-cover transition-transform group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform group-hover/img:scale-110"
             onError={(e) => {
-              // fallback if image fails
               (e.target as HTMLElement).style.display = "none";
             }}
           />
-        </div>
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity">
+            <ZoomIn className="h-3.5 w-3.5 text-white" />
+          </div>
+        </button>
       ) : (
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-violet-300 shadow-sm">
           {linkIcon(link, "h-5 w-5")}
@@ -210,7 +236,7 @@ function SortableLinkRow({
           )}
         </div>
         <div className="flex items-center gap-2 mt-0.5">
-          <p className="truncate text-xs text-zinc-400 font-mono max-w-[200px] sm:max-w-[340px]">
+          <p className="truncate text-xs text-zinc-400 font-mono max-w-[180px] sm:max-w-[320px]">
             {link.url}
           </p>
           <span className="shrink-0 rounded-full bg-white/5 px-2 py-0.2 text-[10px] font-medium uppercase tracking-wider text-zinc-400 border border-white/5">
@@ -219,30 +245,54 @@ function SortableLinkRow({
         </div>
       </div>
 
-      {/* Controls & Actions */}
-      <div className="flex items-center gap-1.5 ml-auto shrink-0">
+      {/* Action Toolbar */}
+      <div className="flex items-center gap-1 ml-auto shrink-0">
+        {/* QR Code generator */}
+        <button
+          type="button"
+          onClick={onShowQr}
+          title="Generate QR code for this link"
+          className="rounded-xl p-2 text-zinc-400 transition-colors hover:bg-white/10 hover:text-white focus-ring"
+        >
+          <QrCode className="h-4 w-4" />
+        </button>
+
+        {/* Copy URL */}
         <button
           type="button"
           onClick={copyUrl}
-          title="Copy Link URL"
+          title="Copy destination URL"
           className="rounded-xl p-2 text-zinc-400 transition-colors hover:bg-white/10 hover:text-white focus-ring"
         >
           <Copy className="h-4 w-4" />
         </button>
 
-        <div title={link.isActive ? "Link is Active (Visible)" : "Link is Inactive (Hidden)"}>
+        {/* 1-Click Duplicate */}
+        <button
+          type="button"
+          onClick={onDuplicate}
+          title="Duplicate this link"
+          className="rounded-xl p-2 text-zinc-400 transition-colors hover:bg-white/10 hover:text-white focus-ring"
+        >
+          <CopyPlus className="h-4 w-4" />
+        </button>
+
+        {/* Active Toggle Switch */}
+        <div title={link.isActive ? "Active (Visible on bio)" : "Inactive (Hidden from bio)"}>
           <Switch checked={link.isActive} onCheckedChange={onToggle} aria-label="Toggle active status" />
         </div>
 
+        {/* Edit button */}
         <button
           type="button"
           onClick={onEdit}
-          title="Edit link"
+          title="Edit link details"
           className="rounded-xl p-2 text-zinc-400 transition-colors hover:bg-white/10 hover:text-white focus-ring"
         >
           <Pencil className="h-4 w-4" />
         </button>
 
+        {/* Delete button */}
         <button
           type="button"
           onClick={onDelete}
@@ -256,7 +306,7 @@ function SortableLinkRow({
   );
 }
 
-// ---- Main Links Editor ---------------------------------------------------------
+// ---- Main Links Editor Component -----------------------------------------------
 export function LinksEditor({
   profile,
   initialLinks,
@@ -274,9 +324,16 @@ export function LinksEditor({
   // Responsive View Mode for Mobile/Tablet ("editor" | "preview")
   const [viewMode, setViewMode] = useState<"editor" | "preview">("editor");
 
-  // Filter and Search states
+  // Search & Filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<"all" | "active" | "media" | "upi" | "pinned">("all");
+
+  // Lightbox Modal for Full Image Zoom
+  const [zoomImage, setZoomImage] = useState<{ url: string; title: string } | null>(null);
+
+  // Link QR Code Modal
+  const [qrModalLink, setQrModalLink] = useState<{ url: string; title: string } | null>(null);
+  const qrCanvasRef = useRef<HTMLCanvasElement>(null);
 
   // UPI Helper inputs
   const [upiVpa, setUpiVpa] = useState("");
@@ -303,10 +360,29 @@ export function LinksEditor({
     return data;
   }
 
-  // Filtered links
+  // QR Code canvas rendering
+  useEffect(() => {
+    if (qrModalLink && qrCanvasRef.current) {
+      QRCode.toCanvas(qrCanvasRef.current, qrModalLink.url, {
+        width: 260,
+        margin: 2,
+        color: { dark: "#000000", light: "#ffffff" },
+      });
+    }
+  }, [qrModalLink]);
+
+  function downloadLinkQr() {
+    if (!qrCanvasRef.current || !qrModalLink) return;
+    const a = document.createElement("a");
+    a.download = `${qrModalLink.title.replace(/\s+/g, "-").toLowerCase()}-qr.png`;
+    a.href = qrCanvasRef.current.toDataURL("image/png");
+    a.click();
+    toast.success("QR Code downloaded!");
+  }
+
+  // Filtered links computation
   const filteredLinks = useMemo(() => {
     return links.filter((link) => {
-      // Search match
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchTitle = link.title.toLowerCase().includes(q);
@@ -315,32 +391,37 @@ export function LinksEditor({
         if (!matchTitle && !matchUrl && !matchType) return false;
       }
 
-      // Filter match
       if (activeFilter === "active") return link.isActive;
       if (activeFilter === "pinned") return link.isPinned;
       if (activeFilter === "upi") return link.type === "upi" || link.url.startsWith("upi:");
       if (activeFilter === "media") {
-        return [
-          "image", "video", "audio", "pdf", "file", "markdown", "youtube", "spotify"
-        ].includes(link.type) || isImageResource(link);
+        return (
+          ["image", "video", "audio", "pdf", "file", "markdown", "youtube", "spotify"].includes(
+            link.type
+          ) || isImageResource(link)
+        );
       }
       return true;
     });
   }, [links, searchQuery, activeFilter]);
 
-  // Counts for filter chips
+  // Summary counts
   const activeCount = useMemo(() => links.filter((l) => l.isActive).length, [links]);
-  const mediaCount = useMemo(() => links.filter((l) => isImageResource(l) || ["video", "audio", "pdf", "file"].includes(l.type)).length, [links]);
+  const mediaCount = useMemo(
+    () => links.filter((l) => isImageResource(l) || ["video", "audio", "pdf", "file"].includes(l.type)).length,
+    [links]
+  );
   const upiCount = useMemo(() => links.filter((l) => l.type === "upi" || l.url.startsWith("upi:")).length, [links]);
+  const pinnedCount = useMemo(() => links.filter((l) => l.isPinned).length, [links]);
 
-  // ---- Drag & Drop Reorder -----------------------------------------------------
+  // Drag & drop reorder
   async function onDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
     const oldIndex = links.findIndex((l) => l.id === active.id);
     const newIndex = links.findIndex((l) => l.id === over.id);
     const next = arrayMove(links, oldIndex, newIndex);
-    setLinks(next); // optimistic
+    setLinks(next);
     try {
       await api("/api/links/reorder", {
         method: "POST",
@@ -348,12 +429,34 @@ export function LinksEditor({
       });
       toast.success("Order updated");
     } catch (err) {
-      setLinks(links); // rollback
+      setLinks(links);
       toast.error((err as Error).message);
     }
   }
 
-  // ---- Dialog Helpers ----------------------------------------------------------
+  // Duplicate a link
+  async function duplicateLink(link: Link) {
+    try {
+      const { link: created } = await api("/api/links", {
+        method: "POST",
+        body: JSON.stringify({
+          title: `${link.title} (Copy)`,
+          url: link.url,
+          description: link.description || "",
+          icon: link.icon || "link",
+          type: link.type || "link",
+          size: link.size || "standard",
+          thumbnailUrl: link.thumbnailUrl || null,
+          isPinned: false,
+        }),
+      });
+      setLinks((prev) => [...prev, created as Link]);
+      toast.success("Link duplicated successfully!");
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
+  }
+
   function openCreate(presetType?: string) {
     setEditing(null);
     const base = { ...emptyForm };
@@ -405,7 +508,6 @@ export function LinksEditor({
       expiresAt: toDatetimeInputValue(link.expiresAt),
     });
 
-    // Try parsing UPI params if upi link
     if (link.type === "upi" || link.url.startsWith("upi:")) {
       try {
         const u = new URL(link.url);
@@ -413,14 +515,11 @@ export function LinksEditor({
         setUpiName(u.searchParams.get("pn") || "");
         setUpiAmount(u.searchParams.get("am") || "");
         setUpiNote(u.searchParams.get("tn") || "");
-      } catch {
-        // raw link
-      }
+      } catch {}
     }
     setDialogOpen(true);
   }
 
-  // Update UPI URL when helper fields change
   function updateUpiUrl(vpa: string, name: string, am: string, note: string) {
     setUpiVpa(vpa);
     setUpiName(name);
@@ -433,7 +532,6 @@ export function LinksEditor({
     setForm((prev) => ({ ...prev, url: u, type: "upi", icon: "upi" }));
   }
 
-  // Update WhatsApp URL
   function updateWaUrl(phone: string, msg: string) {
     setWaPhone(phone);
     setWaMessage(msg);
@@ -507,9 +605,9 @@ export function LinksEditor({
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full min-w-0">
       {/* Mobile & Tablet Segmented View Switcher */}
-      <div className="mb-6 flex rounded-2xl border border-white/10 bg-white/[0.03] p-1.5 backdrop-blur-xl lg:hidden">
+      <div className="mb-5 flex rounded-2xl border border-white/10 bg-white/[0.03] p-1.5 backdrop-blur-xl lg:hidden">
         <button
           type="button"
           onClick={() => setViewMode("editor")}
@@ -541,11 +639,11 @@ export function LinksEditor({
         </button>
       </div>
 
-      {/* Main Responsive Layout */}
-      <div className="grid gap-8 lg:grid-cols-[1fr_360px] xl:grid-cols-[1fr_390px] 2xl:grid-cols-[1fr_420px]">
+      {/* Main Grid: minmax(0, 1fr) eliminates any horizontal overflow */}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_370px] 2xl:grid-cols-[minmax(0,1fr)_400px]">
         {/* Left Column: Editor & Controls */}
-        <div className={cn("space-y-6", viewMode === "preview" && "hidden lg:block")}>
-          {/* Header Row with Title, Stats & Add Link Button */}
+        <div className={cn("space-y-5 min-w-0", viewMode === "preview" && "hidden lg:block")}>
+          {/* Header Row */}
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-white flex items-center gap-2.5">
@@ -558,14 +656,12 @@ export function LinksEditor({
                 Drag cards to reorder · Supports rich media, documents, and 0% fee UPI payments
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <Button onClick={() => openCreate()}>
-                <Plus className="h-4 w-4" /> Add Link
-              </Button>
-            </div>
+            <Button onClick={() => openCreate()}>
+              <Plus className="h-4 w-4" /> Add Link
+            </Button>
           </div>
 
-          {/* Quick Category Templates Bar */}
+          {/* Quick Category Presets Bar */}
           <div className="rounded-2xl border border-white/8 bg-white/[0.02] p-3 backdrop-blur-md">
             <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
               Quick Add Templates
@@ -593,55 +689,61 @@ export function LinksEditor({
             </div>
           </div>
 
-          {/* Search & Filter Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/8 bg-white/[0.02] p-2 sm:p-3">
-            <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+          {/* Search & Filter Bar: Stacked to prevent any placeholder truncation */}
+          <div className="rounded-2xl border border-white/8 bg-white/[0.02] p-3 space-y-3">
+            {/* Full-width Search Input */}
+            <div className="relative w-full">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
               <input
                 type="text"
-                placeholder="Search links by title or URL..."
+                placeholder="Search links by title, URL, or type..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-black/40 py-2 pl-9 pr-8 text-xs sm:text-sm text-white placeholder:text-zinc-500 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 pl-10 pr-9 text-xs sm:text-sm text-white placeholder:text-zinc-500 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
               )}
             </div>
 
-            {/* Filter Chips */}
-            <div className="flex flex-wrap items-center gap-1.5">
-              {[
-                { id: "all", label: `All (${links.length})` },
-                { id: "active", label: `Active (${activeCount})` },
-                { id: "media", label: `Media (${mediaCount})` },
-                { id: "upi", label: `UPI (${upiCount})` },
-                { id: "pinned", label: "★ Pinned" },
-              ].map((chip) => (
-                <button
-                  key={chip.id}
-                  type="button"
-                  onClick={() => setActiveFilter(chip.id as any)}
-                  className={cn(
-                    "rounded-xl px-2.5 py-1.5 text-xs font-medium transition-all",
-                    activeFilter === chip.id
-                      ? "bg-violet-500/20 text-violet-200 border border-violet-500/40"
-                      : "text-zinc-400 hover:bg-white/5 hover:text-white"
-                  )}
-                >
-                  {chip.label}
-                </button>
-              ))}
+            {/* Filter Pills row */}
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-white/5">
+              <div className="flex flex-wrap items-center gap-1.5">
+                {[
+                  { id: "all", label: `All (${links.length})` },
+                  { id: "active", label: `Active (${activeCount})` },
+                  { id: "media", label: `Media (${mediaCount})` },
+                  { id: "upi", label: `UPI (${upiCount})` },
+                  { id: "pinned", label: `★ Pinned (${pinnedCount})` },
+                ].map((chip) => (
+                  <button
+                    key={chip.id}
+                    type="button"
+                    onClick={() => setActiveFilter(chip.id as any)}
+                    className={cn(
+                      "rounded-xl px-2.5 py-1 text-xs font-medium transition-all",
+                      activeFilter === chip.id
+                        ? "bg-violet-500/25 text-violet-200 border border-violet-500/40"
+                        : "text-zinc-400 hover:bg-white/5 hover:text-white"
+                    )}
+                  >
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
+              <span className="text-[11px] text-zinc-500 font-medium">
+                Showing {filteredLinks.length} of {links.length}
+              </span>
             </div>
           </div>
 
-          {/* Links List / Empty State */}
+          {/* Links List */}
           {links.length === 0 ? (
             <button
               type="button"
@@ -662,7 +764,15 @@ export function LinksEditor({
             <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-8 text-center">
               <p className="text-sm font-semibold text-zinc-300">No matching links found</p>
               <p className="mt-1 text-xs text-zinc-500">Try adjusting your search query or filter selection.</p>
-              <Button variant="ghost" size="sm" onClick={() => { setSearchQuery(""); setActiveFilter("all"); }} className="mt-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSearchQuery("");
+                  setActiveFilter("all");
+                }}
+                className="mt-3"
+              >
                 Reset filters
               </Button>
             </div>
@@ -677,6 +787,9 @@ export function LinksEditor({
                       onEdit={() => openEdit(link)}
                       onDelete={() => setConfirmDelete(link)}
                       onToggle={(active) => toggleActive(link, active)}
+                      onDuplicate={() => duplicateLink(link)}
+                      onShowQr={() => setQrModalLink({ url: link.url, title: link.title })}
+                      onZoomImage={(url, title) => setZoomImage({ url, title })}
                     />
                   ))}
                 </div>
@@ -685,8 +798,8 @@ export function LinksEditor({
           )}
         </div>
 
-        {/* Right Column: Live Phone Preview */}
-        <div className={cn("w-full", viewMode === "editor" && "hidden lg:block")}>
+        {/* Right Column: Sticky Phone Preview Studio */}
+        <div className={cn("w-full min-w-0", viewMode === "editor" && "hidden lg:block")}>
           <PhonePreview profile={profile} links={links} />
         </div>
       </div>
@@ -704,7 +817,7 @@ export function LinksEditor({
         </button>
       )}
 
-      {/* Create / Edit Dialog */}
+      {/* Create / Edit Dialog with Live Mini-Card Preview */}
       <Dialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
@@ -712,7 +825,7 @@ export function LinksEditor({
         wide
       >
         <div className="space-y-5 max-h-[75vh] overflow-y-auto px-1 [scrollbar-width:none]">
-          {/* Quick Preset Pills inside Dialog */}
+          {/* Quick Preset Pills */}
           <div>
             <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-zinc-400">
               Card Type Preset
@@ -829,7 +942,7 @@ export function LinksEditor({
               </div>
             )}
 
-            {/* File upload shortcut */}
+            {/* File Upload Shortcut */}
             <div className="sm:col-span-2">
               <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-zinc-400">
                 …or upload file directly (Images, PDFs, Media, Docs)
@@ -987,6 +1100,67 @@ export function LinksEditor({
           </Button>
         </div>
       </Dialog>
+
+      {/* Lightbox Image Preview Modal */}
+      {zoomImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md animate-fade-in"
+          onClick={() => setZoomImage(null)}
+        >
+          <div className="relative max-w-2xl max-h-[85vh] rounded-3xl border border-white/15 bg-ink-900 overflow-hidden shadow-2xl p-3">
+            <button
+              type="button"
+              onClick={() => setZoomImage(null)}
+              className="absolute right-5 top-5 z-10 rounded-full bg-black/60 p-2 text-white hover:bg-black transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <img
+              src={zoomImage.url}
+              alt={zoomImage.title}
+              className="max-h-[75vh] w-auto mx-auto rounded-2xl object-contain shadow-lg"
+            />
+            <p className="mt-2.5 text-center text-xs text-zinc-400 font-medium truncate">
+              {zoomImage.title}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Link QR Code Modal */}
+      {qrModalLink && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-fade-in"
+          onClick={() => setQrModalLink(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-3xl border border-white/15 bg-ink-900 p-6 text-center shadow-2xl space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <h3 className="font-display text-sm font-semibold text-white truncate max-w-[220px]">
+                {qrModalLink.title}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setQrModalLink(null)}
+                className="rounded-full bg-white/5 p-1 text-zinc-400 hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="flex justify-center p-3 bg-white rounded-2xl shadow-inner mx-auto w-fit">
+              <canvas ref={qrCanvasRef} />
+            </div>
+            <p className="text-xs text-zinc-400 font-mono truncate">{qrModalLink.url}</p>
+            <div className="flex justify-center gap-2 pt-2">
+              <Button onClick={downloadLinkQr} className="w-full">
+                <Download className="h-4 w-4" /> Download QR (PNG)
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

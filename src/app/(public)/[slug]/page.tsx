@@ -11,6 +11,7 @@ import { NewsletterSubscribe } from "@/components/newsletter-subscribe";
 import { ShareButton } from "@/components/share-button";
 import { ProfilePasswordGate } from "@/components/profile-password-gate";
 import { QRCodeButton } from "@/components/qr-code";
+import { VCardButton } from "@/components/vcard-button";
 import { trackEvent } from "@/lib/analytics";
 import { parseDesign } from "@/lib/design";
 import { getBioBySlug } from "@/lib/queries";
@@ -170,6 +171,12 @@ export default async function PublicBioPage({ params }: Ctx) {
                 />
               </div>
               <QRCodeButton url={profileUrl} displayName={profile.displayName} />
+              <VCardButton
+                displayName={profile.displayName}
+                slug={profile.slug}
+                bio={profile.bio}
+                avatarUrl={profile.avatarUrl}
+              />
             </div>
           </div>
         }

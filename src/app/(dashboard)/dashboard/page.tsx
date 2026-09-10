@@ -72,7 +72,7 @@ export default async function OverviewPage() {
               style={{ background: profile.isPublished ? "#34d399" : "#fbbf24" }}
             />
             <span>
-              linkforge.page/<span className="text-zinc-200">{profile.slug}</span>
+              linkforge-demo.vercel.app/<span className="text-zinc-200">{profile.slug}</span>
             </span>
             <a
               href={`/${profile.slug}`}
