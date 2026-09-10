@@ -35,6 +35,8 @@ import { MediaEcosystem } from "@/components/landing/media-ecosystem";
 import { CreatorArchetypes } from "@/components/landing/creator-archetypes";
 import { LiveQrTool } from "@/components/landing/live-qr-tool";
 import { EdgePerformance } from "@/components/landing/edge-performance";
+import { CostCalculator } from "@/components/landing/cost-calculator";
+import { DeployEcosystem } from "@/components/landing/deploy-ecosystem";
 
 function GithubIcon({ className }: { className?: string }) {
   return (
@@ -126,6 +128,8 @@ export default function LandingPage() {
           <a href="#playground" className="transition-colors hover:text-white">Playground</a>
           <a href="#creators" className="transition-colors hover:text-white">Creators</a>
           <a href="#qr-tool" className="transition-colors hover:text-white">QR Studio</a>
+          <a href="#calculator" className="transition-colors hover:text-white">Calculator</a>
+          <a href="#deploy" className="transition-colors hover:text-white">Deploy</a>
           <a href="#free" className="transition-colors hover:text-white">Pricing</a>
           <a href="https://github.com/SudhirDevOps1/LinkForge" target="_blank" rel="noreferrer" className="flex items-center gap-1.5 transition-colors hover:text-white">
             <GithubIcon className="h-4 w-4" /> GitHub
@@ -177,13 +181,13 @@ export default function LandingPage() {
               Build your page
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
-            <Link
-              href="/demo"
+            <a
+              href="#playground"
               className="inline-flex h-12 items-center gap-2 rounded-xl border border-white/15 px-7 font-semibold text-zinc-200 transition-all hover:border-white/30 hover:bg-white/5"
             >
-              <Globe className="h-4 w-4" />
-              Live demo
-            </Link>
+              <Sparkles className="h-4 w-4 text-violet-400" />
+              Explore live themes
+            </a>
           </div>
         </Reveal>
 
@@ -331,6 +335,9 @@ export default function LandingPage() {
       {/* Comparison */}
       <Comparison />
 
+      {/* 💰 Interactive ROI & Cost Savings Calculator */}
+      <CostCalculator />
+
       {/* ⚡ Blazing Speed & Global Edge Architecture */}
       <EdgePerformance />
 
@@ -386,6 +393,9 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* 🚀 1-Click Deploy & Self-Host Everywhere */}
+      <DeployEcosystem />
+
       {/* FAQ */}
       <section id="faq" className="relative z-10 mx-auto max-w-3xl scroll-mt-24 px-5 py-20">
         <Reveal className="mb-10 text-center">
@@ -426,12 +436,12 @@ export default function LandingPage() {
               >
                 <GithubIcon className="h-4 w-4" />
               </a>
-              <Link
-                href="/demo"
+              <a
+                href="#playground"
                 className="flex h-9 items-center gap-2 rounded-xl border border-white/10 px-3.5 text-xs font-medium text-zinc-400 transition-colors hover:border-white/25 hover:text-white"
               >
-                <Globe className="h-3.5 w-3.5" /> Live demo
-              </Link>
+                <Sparkles className="h-3.5 w-3.5 text-violet-400" /> Themes
+              </a>
             </div>
           </div>
           <div>
@@ -444,6 +454,8 @@ export default function LandingPage() {
               <li><a href="#playground" className="text-zinc-400 transition-colors hover:text-white">Live Playground</a></li>
               <li><a href="#creators" className="text-zinc-400 transition-colors hover:text-white">Creator Archetypes</a></li>
               <li><a href="#qr-tool" className="text-zinc-400 transition-colors hover:text-white">Vector QR Studio</a></li>
+              <li><a href="#calculator" className="text-zinc-400 transition-colors hover:text-white">Savings Calculator</a></li>
+              <li><a href="#deploy" className="text-zinc-400 transition-colors hover:text-white">1-Click Deploy</a></li>
               <li><a href="#performance" className="text-zinc-400 transition-colors hover:text-white">Edge Performance</a></li>
               <li><a href="#free" className="text-zinc-400 transition-colors hover:text-white">Pricing</a></li>
             </ul>
@@ -451,8 +463,7 @@ export default function LandingPage() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Resources</p>
             <ul className="mt-4 space-y-2.5 text-sm">
-              <li><Link href="/demo" className="text-zinc-400 transition-colors hover:text-white">Demo page</Link></li>
-              <li><Link href="/login" className="text-zinc-400 transition-colors hover:text-white">Log in</Link></li>
+                            <li><Link href="/login" className="text-zinc-400 transition-colors hover:text-white">Log in</Link></li>
               <li><Link href="/signup" className="text-zinc-400 transition-colors hover:text-white">Sign up</Link></li>
               <li><a href="#faq" className="text-zinc-400 transition-colors hover:text-white">FAQ</a></li>
             </ul>

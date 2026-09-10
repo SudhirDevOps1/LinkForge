@@ -290,12 +290,12 @@ export function FinalCta() {
               Create my page — free
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
-            <Link
-              href="/demo"
+            <a
+              href="#playground"
               className="inline-flex h-12 items-center gap-2 rounded-xl border border-white/15 px-7 font-semibold text-zinc-200 transition-all hover:border-white/30 hover:bg-white/5"
             >
-              See live demo
-            </Link>
+              Try Playground
+            </a>
           </div>
           <p className="relative mt-5 text-xs text-zinc-500">
             No credit card · Cancel anytime (it&apos;s free — nothing to cancel)

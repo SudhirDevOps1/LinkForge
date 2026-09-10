@@ -28,10 +28,10 @@ export default function RootNotFound() {
           <Home className="h-4 w-4" /> Home
         </Link>
         <Link
-          href="/demo"
+          href="/#playground"
           className="inline-flex h-10 items-center gap-2 rounded-xl border border-white/15 px-5 text-sm font-medium text-zinc-200 transition-colors hover:bg-white/5"
         >
-          Live demo
+          Explore themes
         </Link>
       </div>
     </div>
