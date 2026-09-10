@@ -97,10 +97,12 @@ async function main() {
     [user] = await db
       .insert(users)
       .values({
+        id: crypto.randomUUID(),
         email,
         name: "Sudhir Singh",
         passwordHash: await bcrypt.hash("demo1234", 10),
         avatarUrl: null,
+        createdAt: new Date(),
       })
       .returning();
     console.log("✓ Demo user banaya:", email);
@@ -118,6 +120,7 @@ async function main() {
     [profile] = await db
       .insert(profiles)
       .values({
+        id: crypto.randomUUID(),
         userId: user.id,
         slug: "demo",
         displayName: "Sudhir Singh",
@@ -127,6 +130,8 @@ async function main() {
         layout: "bento",
         seoTitle: "Sudhir Singh — Developer",
         seoDescription: "Sudhir Singh (SudhirDevOps1) ke projects aur links ek jagah.",
+        createdAt: new Date(),
+        updatedAt: new Date(),
       })
       .returning();
     console.log("✓ Demo profile banaya: /demo");
@@ -175,6 +180,8 @@ async function main() {
           size: link.size,
           icon: link.icon,
           position: link.position,
+          createdAt: new Date(),
+          updatedAt: new Date(),
         })
         .returning({ id: links.id, title: links.title, url: links.url });
       createdLinks.push(created);
@@ -256,6 +263,8 @@ async function main() {
           icon: rl.icon,
           position: basePos + i,
           isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
         });
         added++;
       }
@@ -280,6 +289,7 @@ async function main() {
     }
     const stat = await import("fs").then((fs) => fs.statSync(pdfPath));
     await db.insert(mediaFiles).values({
+      id: crypto.randomUUID(),
       profileId: profile.id,
       fileName: "demo-media-kit.pdf",
       mimeType: "application/pdf",
@@ -287,6 +297,7 @@ async function main() {
       storageProvider: process.env.STORAGE_PROVIDER ?? "local",
       storageKey: "files/demo-media-kit.pdf",
       url: pdfUrl,
+      createdAt: new Date(),
     });
     const [posAgg] = await db
       .select({ max: max(links.position) })
@@ -303,6 +314,8 @@ async function main() {
       icon: "file",
       position: (posAgg?.max ?? 9) + 1,
       isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
     console.log("✓ Demo media file + file link banaye");
   } else {
@@ -374,6 +387,7 @@ async function main() {
       secret: randomToken(16),
       events: "click",
       isActive: false, // sample — disabled by default
+      createdAt: new Date(),
     });
     console.log("✓ Sample webhook (disabled)");
   }
@@ -388,6 +402,7 @@ async function main() {
       name: "Demo REST API key",
       prefix: demoKey.slice(0, 12),
       keyHash: sha256Hex(demoKey),
+      createdAt: new Date(),
     });
     console.log("✓ Demo API key");
   }

@@ -402,7 +402,15 @@ export async function autoMigrate(force = false): Promise<{ ok: boolean; count: 
 
     for (const statement of stmts) {
       try {
-        await db.execute(sql.raw(statement));
+        const anyDb = db as unknown as {
+          execute?: (query: unknown) => Promise<unknown>;
+          run?: (query: unknown) => Promise<unknown>;
+        };
+        if (typeof anyDb.execute === "function") {
+          await anyDb.execute(sql.raw(statement));
+        } else if (typeof anyDb.run === "function") {
+          await anyDb.run(sql.raw(statement));
+        }
         count++;
       } catch (err) {
         // Ignorable non-fatal errors (e.g. extension already exists or permission limits)
