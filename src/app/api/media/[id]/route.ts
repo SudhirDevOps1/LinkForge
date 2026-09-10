@@ -10,11 +10,37 @@ import {
   guardRateLimit,
   handle,
   json,
+  parseOrThrow,
 } from "@/lib/api";
 import { requireUser } from "@/lib/auth";
 import { getStorage } from "@/lib/storage";
+import { mediaFileUpdateSchema } from "@/lib/validations";
 
 type Ctx = { params: Promise<{ id: string }> };
+
+export const PATCH = handle(async (req: Request, ctx: Ctx) => {
+  assertSameOrigin(req);
+  await guardRateLimit(req, "media:update", 30);
+  const { profile } = await requireUser();
+  if (!profile) throw new ApiError(404, "Profile nahi mili");
+  const { id } = await ctx.params;
+  const input = parseOrThrow(mediaFileUpdateSchema, await req.json().catch(() => ({})));
+
+  const [row] = await db
+    .select()
+    .from(mediaFiles)
+    .where(and(eq(mediaFiles.id, id), eq(mediaFiles.profileId, profile.id)))
+    .limit(1);
+  if (!row) throw new ApiError(404, "File nahi mili");
+
+  const [updated] = await db
+    .update(mediaFiles)
+    .set({ fileName: input.fileName.trim() })
+    .where(eq(mediaFiles.id, id))
+    .returning();
+
+  return json({ file: updated });
+});
 
 export const DELETE = handle(async (req: Request, ctx: Ctx) => {
   assertSameOrigin(req);

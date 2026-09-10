@@ -4,6 +4,7 @@
 // ⚙️ SettingsClient — profile, avatar, data (export/import), webhooks, API keys
 // =============================================================================
 import {
+  AlertTriangle,
   Camera,
   Copy,
   Database,
@@ -223,14 +224,78 @@ function GeneralTab({ profile }: { profile: ProfileShape }) {
         </Button>
       </Card>
 
+      <SecurityCard />
       <BrandCustomization />
       <DangerZone />
     </div>
   );
 }
 
+function SecurityCard() {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function updatePassword() {
+    if (!newPassword || newPassword.length < 8) {
+      toast.error("Naya password kam se kam 8 characters ka hona chahiye");
+      return;
+    }
+    setSaving(true);
+    try {
+      await api("/api/account", {
+        method: "PATCH",
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      toast.success("Password kamyabi se badal gaya");
+      setCurrentPassword("");
+      setNewPassword("");
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Card className="space-y-4">
+      <h2 className="font-display text-lg font-semibold">Change Password</h2>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Current password">
+          <Input
+            type="password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            placeholder="••••••••"
+          />
+        </Field>
+        <Field label="New password" hint="Min 8 chars with letter & number">
+          <Input
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="••••••••"
+          />
+        </Field>
+      </div>
+      <Button
+        variant="secondary"
+        onClick={updatePassword}
+        loading={saving}
+        disabled={!newPassword}
+      >
+        Update Password
+      </Button>
+    </Card>
+  );
+}
+
 function DangerZone() {
   const [busy, setBusy] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
   async function signOutEverywhere() {
     setBusy(true);
     try {
@@ -240,16 +305,100 @@ function DangerZone() {
       setBusy(false);
     }
   }
+
+  async function deleteAccount() {
+    if (deleteConfirmText.trim() !== "DELETE") {
+      toast.error("Confirm karne ke liye DELETE type karein");
+      return;
+    }
+    setDeleting(true);
+    try {
+      await api("/api/account", {
+        method: "DELETE",
+        body: JSON.stringify({ confirmText: "DELETE" }),
+      });
+      toast.success("Aapka account aur sabhi data permanently delete ho gaya.");
+      window.location.href = "/signup";
+    } catch (err) {
+      toast.error((err as Error).message);
+      setDeleting(false);
+    }
+  }
+
   return (
-    <Card className="border-red-500/20">
-      <h2 className="font-display text-lg font-semibold text-red-300">Danger zone</h2>
-      <p className="mt-1.5 text-sm text-zinc-500">
-        Saare devices aur sessions se turant sign out karein.
-      </p>
-      <Button variant="danger" className="mt-4" onClick={signOutEverywhere} loading={busy}>
-        <LogOut className="h-4 w-4" /> Sign out everywhere
-      </Button>
-    </Card>
+    <div className="space-y-4">
+      <Card className="border-amber-500/20">
+        <h2 className="font-display text-lg font-semibold text-amber-300">Sessions</h2>
+        <p className="mt-1.5 text-sm text-zinc-500">
+          Saare devices aur browsers se active sessions turant terminate karein.
+        </p>
+        <Button variant="secondary" className="mt-4" onClick={signOutEverywhere} loading={busy}>
+          <LogOut className="h-4 w-4" /> Sign out everywhere
+        </Button>
+      </Card>
+
+      <Card className="border-red-500/30 bg-red-950/10">
+        <div className="flex items-start gap-3">
+          <div className="rounded-xl bg-red-500/10 p-2 text-red-400">
+            <AlertTriangle className="h-5 w-5" />
+          </div>
+          <div className="flex-1">
+            <h2 className="font-display text-lg font-semibold text-red-300">
+              Permanently Delete Account
+            </h2>
+            <p className="mt-1 text-sm text-zinc-400">
+              Aapka account, username/slug, sabhi links, analytics data aur Backblaze B2 / local
+              storage me uploaded sabhi documents/files permanently delete ho jayenge. Yeh action
+              irreversible hai.
+            </p>
+
+            {!deleteConfirmOpen ? (
+              <Button
+                variant="danger"
+                className="mt-4"
+                onClick={() => setDeleteConfirmOpen(true)}
+              >
+                <Trash2 className="h-4 w-4" /> Delete My Account
+              </Button>
+            ) : (
+              <div className="mt-4 space-y-3 rounded-2xl border border-red-500/30 bg-black/40 p-4">
+                <p className="text-xs font-medium text-red-300">
+                  Confirm karne ke liye neeche box me{" "}
+                  <span className="font-mono font-bold text-white">DELETE</span> type karein:
+                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Input
+                    value={deleteConfirmText}
+                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                    placeholder="DELETE"
+                    className="max-w-xs border-red-500/40 text-red-100 placeholder:text-zinc-600 focus:border-red-400"
+                    autoFocus
+                  />
+                  <Button
+                    variant="danger"
+                    disabled={deleteConfirmText !== "DELETE"}
+                    loading={deleting}
+                    onClick={deleteAccount}
+                  >
+                    Confirm Permanent Delete
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    disabled={deleting}
+                    onClick={() => {
+                      setDeleteConfirmOpen(false);
+                      setDeleteConfirmText("");
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </Card>
+    </div>
   );
 }
 

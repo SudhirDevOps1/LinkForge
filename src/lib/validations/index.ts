@@ -196,6 +196,34 @@ export const completeSchema = z.object({
   ticketId: z.string().uuid(),
 });
 
-export type SignupInput = z.infer<typeof signupSchema>;export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
+// ---- Media File Rename -----------------------------------------------------
+export const mediaFileUpdateSchema = z.object({
+  fileName: z.string().trim().min(1, "File name zaroori hai").max(120),
+});
+
+// ---- Account Management (Update & Permanent Deletion) -----------------------
+export const accountDeleteSchema = z.object({
+  confirmText: z.literal("DELETE", {
+    message: "Confirm karne ke liye DELETE type karein",
+  }),
+});
+
+export const accountUpdateSchema = z.object({
+  name: z.string().trim().min(1, "Naam zaroori hai").max(80).optional(),
+  currentPassword: z.string().min(1).optional(),
+  newPassword: z
+    .string()
+    .min(8, "Naya password kam se kam 8 characters ka ho")
+    .max(128)
+    .regex(/[a-zA-Z]/, "Password me ek letter hona chahiye")
+    .regex(/[0-9]/, "Password me ek number hona chahiye")
+    .optional(),
+});
+
+export type SignupInput = z.infer<typeof signupSchema>;
+export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
 export type LinkCreateInput = z.infer<typeof linkCreateSchema>;
 export type LinkUpdateInput = z.infer<typeof linkUpdateSchema>;
+export type MediaFileUpdateInput = z.infer<typeof mediaFileUpdateSchema>;
+export type AccountUpdateInput = z.infer<typeof accountUpdateSchema>;
+export type AccountDeleteInput = z.infer<typeof accountDeleteSchema>;

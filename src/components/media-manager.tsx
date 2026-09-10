@@ -6,7 +6,9 @@
 // Files configured storage provider par rehti hain (badge me provider dikhta hai).
 // =============================================================================
 import {
+  Check,
   Copy,
+  Edit2,
   ExternalLink,
   FileArchive,
   FileAudio,
@@ -16,6 +18,7 @@ import {
   Link2,
   Search,
   Trash2,
+  X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -107,6 +110,41 @@ export function MediaManager({
   const [query, setQuery] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [creatingLink, setCreatingLink] = useState<string | null>(null);
+  const [editingFile, setEditingFile] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [renaming, setRenaming] = useState(false);
+
+  function startRename(file: MediaFileUI) {
+    setEditingFile(file.id);
+    setEditName(file.fileName);
+  }
+
+  async function saveRename(file: MediaFileUI) {
+    const trimmed = editName.trim();
+    if (!trimmed || trimmed === file.fileName) {
+      setEditingFile(null);
+      return;
+    }
+    setRenaming(true);
+    try {
+      const res = await fetch(`/api/media/${file.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileName: trimmed }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string; file?: MediaFileUI };
+      if (!res.ok) throw new Error(data.error ?? "Rename failed");
+      setFiles((prev) =>
+        prev.map((f) => (f.id === file.id ? { ...f, fileName: trimmed } : f)),
+      );
+      toast.success("File rename ho gayi");
+      setEditingFile(null);
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setRenaming(false);
+    }
+  }
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -238,9 +276,54 @@ export function MediaManager({
                   </span>
                 </div>
                 <div className="p-4">
-                  <p className="truncate text-sm font-semibold text-white" title={file.fileName}>
-                    {file.fileName}
-                  </p>
+                  {editingFile === file.id ? (
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") void saveRename(file);
+                          if (e.key === "Escape") setEditingFile(null);
+                        }}
+                        autoFocus
+                        disabled={renaming}
+                        className="h-8 flex-1 rounded-lg border border-violet-400/50 bg-white/10 px-2 text-sm text-white focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => void saveRename(file)}
+                        disabled={renaming}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30"
+                        title="Save name"
+                      >
+                        <Check className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingFile(null)}
+                        disabled={renaming}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 text-zinc-400 hover:bg-white/10"
+                        title="Cancel"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="truncate text-sm font-semibold text-white" title={file.fileName}>
+                        {file.fileName}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => startRename(file)}
+                        className="rounded p-1 text-zinc-500 transition-colors hover:bg-white/5 hover:text-violet-300"
+                        title="Rename file"
+                      >
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  )}
                   <p className="mt-1 text-xs text-zinc-500">
                     {formatBytes(file.sizeBytes)} ·{" "}
                     {new Date(file.createdAt).toLocaleDateString("en", {

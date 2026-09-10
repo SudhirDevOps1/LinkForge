@@ -83,19 +83,24 @@ export async function signUp(input: {
   const [user] = await db
     .insert(users)
     .values({
+      id: crypto.randomUUID(),
       email,
       name: input.name.trim(),
       passwordHash: await hashPassword(input.password),
+      createdAt: new Date(),
     })
     .returning();
 
   // Har user ke liye ek default profile (bio page) banao
   const slug = await allocateSlug(input.name || email.split("@")[0]);
   await db.insert(profiles).values({
+    id: crypto.randomUUID(),
     userId: user.id,
     slug,
     displayName: input.name.trim(),
     bio: "",
+    createdAt: new Date(),
+    updatedAt: new Date(),
   });
   return user;
 }
@@ -116,6 +121,7 @@ export async function createSession(
       // Privacy-first: salted hash (AUTH_SECRET salt) — raw IP kabhi store nahi.
       ipHash: meta?.ip ? hashIp(meta.ip) : null,
       expiresAt,
+      createdAt: new Date(),
     })
     .returning();
   return session;
