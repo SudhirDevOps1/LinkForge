@@ -269,6 +269,8 @@ export interface BioProfileShape {
   slug?: string;
   /** Manual custom design (PATCH /api/design) — theme ke upar override layer */
   design?: DesignPrefs | null;
+  /** 🔒 Privacy: view count public page par dikhana hai ya nahi */
+  hidePublicStats?: boolean;
 }
 
 interface ActiveMediaModal {
@@ -416,6 +418,109 @@ export function BioRenderer({
                 )}
 
                 {/* 2. Top Title Row (Clickable) */}
+                {/* 📱 WhatsApp — special green CTA card */}
+                {link.type === "whatsapp" ? (
+                  <a
+                    href={hrefFor(link)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3.5"
+                    style={{ color: "#25D366" }}
+                  >
+                    <span
+                      className="flex shrink-0 items-center justify-center rounded-xl border"
+                      style={{ width: iconBox, height: iconBox, borderColor: "#25D36640", background: "#25D36615" }}
+                    >
+                      {linkIcon(link, undefined, iconSize)}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold text-sm">{link.title}</p>
+                      {link.description && <p className="mt-0.5 text-xs opacity-60">{link.description}</p>}
+                    </div>
+                    <span className="rounded-full bg-[#25D366] px-3 py-1 text-xs font-bold text-white">Message</span>
+                  </a>
+                ) : link.type === "upi" ? (
+                  /* 💳 UPI — India payment CTA */
+                  <a
+                    href={hrefFor(link)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3.5"
+                    style={{ color: "#097939" }}
+                  >
+                    <span
+                      className="flex shrink-0 items-center justify-center rounded-xl border"
+                      style={{ width: iconBox, height: iconBox, borderColor: "#09793940", background: "#09793915" }}
+                    >
+                      {linkIcon(link, undefined, iconSize)}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold text-sm">{link.title}</p>
+                      {link.description && <p className="mt-0.5 text-xs opacity-60">{link.description}</p>}
+                    </div>
+                    <span className="rounded-full bg-[#097939] px-3 py-1 text-xs font-bold text-white">Pay via UPI</span>
+                  </a>
+                ) : link.type === "phone" ? (
+                  /* 📞 Phone — click-to-call + copy */
+                  <div className="flex items-center gap-3.5">
+                    <span
+                      className="flex shrink-0 items-center justify-center rounded-xl border"
+                      style={{ width: iconBox, height: iconBox, borderColor: v.border, color: accent, background: v.surface }}
+                    >
+                      {linkIcon(link, undefined, iconSize)}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold text-sm" style={{ color: v.text }}>{link.title}</p>
+                      {link.description && <p className="mt-0.5 text-xs" style={{ color: v.muted }}>{link.description}</p>}
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <a
+                        href={hrefFor(link)}
+                        target={trackClicks ? "_blank" : undefined}
+                        rel="noopener noreferrer"
+                        className="rounded-lg px-2.5 py-1 text-xs font-semibold border transition-colors"
+                        style={{ borderColor: v.border, color: accent }}
+                      >Call</a>
+                      <button
+                        type="button"
+                        onClick={() => navigator.clipboard.writeText(link.url.replace(/^tel:/, ""))}
+                        className="rounded-lg px-2 py-1 text-xs border transition-colors"
+                        style={{ borderColor: v.border, color: v.muted }}
+                        title="Copy number"
+                      >📋</button>
+                    </div>
+                  </div>
+                ) : link.type === "email" ? (
+                  /* ✉️ Email — click-to-copy */
+                  <div className="flex items-center gap-3.5">
+                    <span
+                      className="flex shrink-0 items-center justify-center rounded-xl border"
+                      style={{ width: iconBox, height: iconBox, borderColor: v.border, color: accent, background: v.surface }}
+                    >
+                      {linkIcon(link, undefined, iconSize)}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold text-sm" style={{ color: v.text }}>{link.title}</p>
+                      {link.description && <p className="mt-0.5 text-xs" style={{ color: v.muted }}>{link.description}</p>}
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <a
+                        href={hrefFor(link)}
+                        target={trackClicks ? "_blank" : undefined}
+                        rel="noopener noreferrer"
+                        className="rounded-lg px-2.5 py-1 text-xs font-semibold border transition-colors"
+                        style={{ borderColor: v.border, color: accent }}
+                      >Mail</a>
+                      <button
+                        type="button"
+                        onClick={() => navigator.clipboard.writeText(link.url.replace(/^mailto:/, ""))}
+                        className="rounded-lg px-2 py-1 text-xs border transition-colors"
+                        style={{ borderColor: v.border, color: v.muted }}
+                        title="Copy email"
+                      >📋</button>
+                    </div>
+                  </div>
+                ) : (
                 <a
                   href={hrefFor(link)}
                   target={trackClicks ? "_blank" : undefined}
@@ -449,6 +554,12 @@ export function BioRenderer({
                       >
                         {link.title}
                       </p>
+                      {/* 📌 Pinned badge */}
+                      {link.isPinned && (
+                        <span className="rounded-md bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-amber-300 border border-amber-500/30">
+                          ★ FEATURED
+                        </span>
+                      )}
                       {/* Media Format Badges */}
                       {mediaType === "video" && (
                         <span className="rounded-md bg-purple-500/20 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-purple-300 border border-purple-500/30">
@@ -489,6 +600,7 @@ export function BioRenderer({
                     →
                   </span>
                 </a>
+                )}
 
                 {/* 3. In-App Rich Media Player / Cover / Reader */}
                 {/* VIDEO PLAYER */}

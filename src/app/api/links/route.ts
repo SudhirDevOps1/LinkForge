@@ -44,6 +44,9 @@ export const POST = handle(async (req: Request) => {
       size: input.size ?? "standard",
       position,
       thumbnailUrl: input.thumbnailUrl || null,
+      isPinned: input.isPinned ?? false,
+      scheduledAt: input.scheduledAt ? new Date(input.scheduledAt) : null,
+      expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
     })
     .returning();
   return json({ link: created }, { status: 201 });

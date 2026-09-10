@@ -40,6 +40,11 @@ export default async function SettingsPage() {
         ogImageUrl: profile.ogImageUrl,
         analyticsEnabled: profile.analyticsEnabled,
         isPublished: profile.isPublished,
+        // 🔒 Privacy — never send hash, only boolean
+        hasPassword: Boolean(profile.profilePassword),
+        noIndex: profile.noIndex ?? false,
+        hidePublicStats: profile.hidePublicStats ?? false,
+        announcement: (profile.announcement as { text: string; emoji?: string; url?: string; expiresAt?: string } | null) ?? null,
       }}
       webhooks={hooks.map((w) => ({
         id: w.id,

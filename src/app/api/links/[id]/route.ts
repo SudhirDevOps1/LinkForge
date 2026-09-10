@@ -19,7 +19,12 @@ export const PATCH = handle(async (req: Request, ctx: Ctx) => {
   const patch: Record<string, unknown> = { updatedAt: new Date() };
   for (const [key, value] of Object.entries(input)) {
     if (value === undefined) continue;
-    patch[key] = key === "thumbnailUrl" && (value === "" || value === null) ? null : value;
+    // Null cleanup for nullable date/url fields
+    if (["thumbnailUrl", "scheduledAt", "expiresAt"].includes(key)) {
+      patch[key] = value === "" || value === null ? null : value;
+    } else {
+      patch[key] = value;
+    }
   }
 
   const [updated] = await db

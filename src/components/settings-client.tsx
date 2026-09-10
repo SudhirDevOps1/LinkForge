@@ -13,7 +13,9 @@ import {
   KeyRound,
   Loader2,
   LogOut,
+  Megaphone,
   Plug,
+  Shield,
   Trash2,
   Upload,
   UserRound,
@@ -42,6 +44,13 @@ interface ApiKeyRow {
   createdAt: string;
 }
 
+interface AnnouncementShape {
+  text: string;
+  emoji?: string;
+  url?: string;
+  expiresAt?: string;
+}
+
 interface ProfileShape {
   slug: string;
   displayName: string;
@@ -53,6 +62,11 @@ interface ProfileShape {
   ogImageUrl: string | null;
   analyticsEnabled: boolean;
   isPublished: boolean;
+  // 🔒 Privacy
+  hasPassword: boolean; // server sends true/false, never the hash
+  noIndex: boolean;
+  hidePublicStats: boolean;
+  announcement: AnnouncementShape | null;
 }
 
 async function api<T = Record<string, unknown>>(path: string, init?: RequestInit): Promise<T> {
@@ -85,6 +99,7 @@ export function SettingsClient({
         onChange={setTab}
         tabs={[
           { id: "general", label: "General", icon: <UserRound className="h-4 w-4" /> },
+          { id: "privacy", label: "Privacy", icon: <Shield className="h-4 w-4" /> },
           { id: "avatar", label: "Avatar", icon: <Camera className="h-4 w-4" /> },
           { id: "data", label: "Data", icon: <Database className="h-4 w-4" /> },
           { id: "webhooks", label: "Webhooks", icon: <Webhook className="h-4 w-4" /> },
@@ -92,6 +107,7 @@ export function SettingsClient({
         ]}
       />
       {tab === "general" ? <GeneralTab profile={profile} /> : null}
+      {tab === "privacy" ? <PrivacyTab profile={profile} /> : null}
       {tab === "avatar" ? <AvatarTab profile={profile} /> : null}
       {tab === "data" ? <DataTab /> : null}
       {tab === "webhooks" ? <WebhooksTab initialHooks={initialHooks} /> : null}
@@ -227,6 +243,211 @@ function GeneralTab({ profile }: { profile: ProfileShape }) {
       <SecurityCard />
       <BrandCustomization />
       <DangerZone />
+    </div>
+  );
+}
+
+// ---- Privacy Tab -----------------------------------------------------------------
+function PrivacyTab({ profile }: { profile: ProfileShape }) {
+  const [newPassword, setNewPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
+  const [privacyForm, setPrivacyForm] = useState({
+    noIndex: profile.noIndex,
+    hidePublicStats: profile.hidePublicStats,
+  });
+  const [ann, setAnn] = useState<AnnouncementShape>(
+    profile.announcement ?? { text: "", emoji: "", url: "", expiresAt: "" },
+  );
+  const [saving, setSaving] = useState(false);
+
+  async function savePrivacy() {
+    setSaving(true);
+    try {
+      await api("/api/profile", {
+        method: "PATCH",
+        body: JSON.stringify({
+          ...privacyForm,
+          ...(newPassword ? { profilePassword: newPassword } : {}),
+        }),
+      });
+      toast.success("Privacy settings save ho gayi");
+      setNewPassword("");
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function removePassword() {
+    setSaving(true);
+    try {
+      await api("/api/profile", { method: "PATCH", body: JSON.stringify({ profilePassword: "" }) });
+      toast.success("Password hata diya gaya");
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function saveAnnouncement() {
+    setSaving(true);
+    try {
+      await api("/api/profile", {
+        method: "PATCH",
+        body: JSON.stringify({
+          announcement: ann.text.trim()
+            ? {
+                text: ann.text.trim(),
+                emoji: ann.emoji?.trim() || undefined,
+                url: ann.url?.trim() || undefined,
+                expiresAt: ann.expiresAt || undefined,
+              }
+            : null,
+        }),
+      });
+      toast.success("Announcement save ho gaya");
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* 🔒 Password Protection */}
+      <Card className="space-y-5">
+        <div>
+          <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
+            <Shield className="h-5 w-5 text-violet-300" /> Profile Password
+          </h2>
+          <p className="mt-1 text-sm text-zinc-400">
+            Visitors ko apna profile dekhne se pehle password daalna hoga.
+          </p>
+        </div>
+        {profile.hasPassword && (
+          <div className="flex items-center gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3">
+            <Shield className="h-4 w-4 text-emerald-400 shrink-0" />
+            <p className="text-sm text-emerald-300">Password abhi set hai. Visitors ko unlock karna hoga.</p>
+            <Button variant="ghost" onClick={removePassword} loading={saving} className="ml-auto shrink-0">
+              Remove
+            </Button>
+          </div>
+        )}
+        <Field label={profile.hasPassword ? "Change password" : "Set password"} hint="Min 4 characters">
+          <div className="relative">
+            <Input
+              type={showPass ? "text" : "password"}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Naya password daalein"
+              className="pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPass(!showPass)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200"
+            >
+              {showPass ? "🙈" : "👁️"}
+            </button>
+          </div>
+        </Field>
+        <Button onClick={savePrivacy} loading={saving} disabled={!newPassword}>
+          {profile.hasPassword ? "Update password" : "Set password"}
+        </Button>
+      </Card>
+
+      {/* 🔍 SEO & Visibility */}
+      <Card className="space-y-4">
+        <h2 className="font-display text-lg font-semibold">Visibility & Analytics</h2>
+        <div className="space-y-3">
+          <label className="flex items-center gap-3 text-sm text-zinc-300 cursor-pointer">
+            <Switch
+              checked={privacyForm.noIndex}
+              onCheckedChange={(v) => setPrivacyForm({ ...privacyForm, noIndex: v })}
+              aria-label="noindex"
+            />
+            <div>
+              <span className="font-medium">Search engines se chhupao</span>
+              <p className="text-xs text-zinc-500">Google/Bing ko profile index nahi karne dega (noindex)</p>
+            </div>
+          </label>
+          <label className="flex items-center gap-3 text-sm text-zinc-300 cursor-pointer">
+            <Switch
+              checked={privacyForm.hidePublicStats}
+              onCheckedChange={(v) => setPrivacyForm({ ...privacyForm, hidePublicStats: v })}
+              aria-label="hidePublicStats"
+            />
+            <div>
+              <span className="font-medium">View count public page par chhupao</span>
+              <p className="text-xs text-zinc-500">Visitors ko views/clicks nahi dikhengi</p>
+            </div>
+          </label>
+        </div>
+        <Button onClick={savePrivacy} loading={saving} variant="secondary">
+          Save visibility settings
+        </Button>
+      </Card>
+
+      {/* 📢 Announcement Banner */}
+      <Card className="space-y-4">
+        <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
+          <Megaphone className="h-5 w-5 text-violet-300" /> Announcement Banner
+        </h2>
+        <p className="text-sm text-zinc-400">
+          Profile ke top par ek highlighted message dikhaein (sale, event, news).
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Emoji (optional)">
+            <Input
+              maxLength={4}
+              placeholder="🎉"
+              value={ann.emoji ?? ""}
+              onChange={(e) => setAnn({ ...ann, emoji: e.target.value })}
+            />
+          </Field>
+          <Field label="Link URL (optional)">
+            <Input
+              placeholder="https://..."
+              value={ann.url ?? ""}
+              onChange={(e) => setAnn({ ...ann, url: e.target.value })}
+            />
+          </Field>
+        </div>
+        <Field label="Announcement text" hint="Max 160 characters">
+          <Textarea
+            maxLength={160}
+            placeholder="🚀 New collection launch! Click here"
+            value={ann.text}
+            onChange={(e) => setAnn({ ...ann, text: e.target.value })}
+          />
+        </Field>
+        <Field label="Expires at (optional)" hint="Is date ke baad banner auto-hide ho jayega">
+          <Input
+            type="datetime-local"
+            value={ann.expiresAt ?? ""}
+            onChange={(e) => setAnn({ ...ann, expiresAt: e.target.value })}
+          />
+        </Field>
+        <div className="flex gap-2">
+          <Button onClick={saveAnnouncement} loading={saving}>
+            Save announcement
+          </Button>
+          {profile.announcement && (
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setAnn({ text: "", emoji: "", url: "", expiresAt: "" });
+                saveAnnouncement();
+              }}
+            >
+              Remove
+            </Button>
+          )}
+        </div>
+      </Card>
     </div>
   );
 }

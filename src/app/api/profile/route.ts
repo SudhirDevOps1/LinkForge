@@ -1,5 +1,6 @@
 // 🪪 /api/profile — current user ki profile GET / PATCH
 import { and, eq, ne } from "drizzle-orm";
+import { hash } from "bcryptjs";
 import { db } from "@/db";
 import { profiles } from "@/db/schema";
 import { ApiError, assertSameOrigin, guardRateLimit, handle, json, parseOrThrow } from "@/lib/api";
@@ -10,7 +11,9 @@ import { RESERVED_SLUGS, profileUpdateSchema } from "@/lib/validations";
 export const GET = handle(async () => {
   const { profile } = await requireUser();
   if (!profile) throw new ApiError(404, "Profile nahi mili");
-  return json({ profile });
+  // Sensitive field return mat karo
+  const { profilePassword: _pw, ...safe } = profile;
+  return json({ profile: safe });
 });
 
 export const PATCH = handle(async (req: Request) => {
@@ -41,12 +44,24 @@ export const PATCH = handle(async (req: Request) => {
   const patch: Record<string, unknown> = { updatedAt: new Date() };
   for (const [key, value] of Object.entries(input)) {
     if (value === undefined) continue;
-    // empty string → null cleanup for optional nullable fields
+
+    // Cleanup empty strings → null for nullable fields
     if (["avatarUrl", "customDomain", "seoTitle", "seoDescription", "ogImageUrl"].includes(key)) {
       patch[key] = value === "" ? null : value;
-    } else {
-      patch[key] = value;
+      continue;
     }
+
+    // 🔒 Profile password: hash karo, "" = remove password
+    if (key === "profilePassword") {
+      if (value === "") {
+        patch["profilePassword"] = null;
+      } else {
+        patch["profilePassword"] = await hash(value as string, 10);
+      }
+      continue;
+    }
+
+    patch[key] = value;
   }
 
   const [updated] = await db
@@ -54,5 +69,8 @@ export const PATCH = handle(async (req: Request) => {
     .set(patch)
     .where(eq(profiles.id, profile.id))
     .returning();
-  return json({ profile: updated });
+
+  // Never expose the password hash to the client
+  const { profilePassword: _pw, ...safe } = updated;
+  return json({ profile: safe });
 });

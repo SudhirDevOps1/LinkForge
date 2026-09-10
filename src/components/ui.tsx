@@ -101,11 +101,13 @@ export function Label({ className, ...props }: React.LabelHTMLAttributes<HTMLLab
 export function Field({
   label,
   hint,
+  error,
   children,
   className,
 }: {
   label: string;
   hint?: string;
+  error?: string;
   children: React.ReactNode;
   className?: string;
 }) {
@@ -113,7 +115,11 @@ export function Field({
     <div className={className}>
       <Label>{label}</Label>
       {children}
-      {hint ? <p className="mt-1.5 text-xs text-zinc-500">{hint}</p> : null}
+      {error ? (
+        <p className="mt-1.5 text-xs text-rose-400">{error}</p>
+      ) : hint ? (
+        <p className="mt-1.5 text-xs text-zinc-500">{hint}</p>
+      ) : null}
     </div>
   );
 }

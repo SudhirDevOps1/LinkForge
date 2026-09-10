@@ -64,6 +64,10 @@ const PG_MIGRATIONS = [
     "og_image_url" text,
     "analytics_enabled" boolean NOT NULL DEFAULT true,
     "is_published" boolean NOT NULL DEFAULT true,
+    "profile_password" text,
+    "no_index" boolean NOT NULL DEFAULT false,
+    "hide_public_stats" boolean NOT NULL DEFAULT false,
+    "announcement" jsonb,
     "design" jsonb,
     "created_at" timestamp with time zone NOT NULL DEFAULT now(),
     "updated_at" timestamp with time zone NOT NULL DEFAULT now()
@@ -85,6 +89,9 @@ const PG_MIGRATIONS = [
     "position" integer NOT NULL DEFAULT 0,
     "is_active" boolean NOT NULL DEFAULT true,
     "thumbnail_url" text,
+    "is_pinned" boolean NOT NULL DEFAULT false,
+    "scheduled_at" timestamp with time zone,
+    "expires_at" timestamp with time zone,
     "created_at" timestamp with time zone NOT NULL DEFAULT now(),
     "updated_at" timestamp with time zone NOT NULL DEFAULT now()
   );`,
@@ -204,8 +211,15 @@ const PG_MIGRATIONS = [
   // Safe non-destructive column sync (in case tables existed previously from older schema)
   `ALTER TABLE "profiles" ADD COLUMN IF NOT EXISTS "design" jsonb;`,
   `ALTER TABLE "profiles" ADD COLUMN IF NOT EXISTS "og_image_url" text;`,
+  `ALTER TABLE "profiles" ADD COLUMN IF NOT EXISTS "profile_password" text;`,
+  `ALTER TABLE "profiles" ADD COLUMN IF NOT EXISTS "no_index" boolean NOT NULL DEFAULT false;`,
+  `ALTER TABLE "profiles" ADD COLUMN IF NOT EXISTS "hide_public_stats" boolean NOT NULL DEFAULT false;`,
+  `ALTER TABLE "profiles" ADD COLUMN IF NOT EXISTS "announcement" jsonb;`,
   `ALTER TABLE "links" ADD COLUMN IF NOT EXISTS "thumbnail_url" text;`,
   `ALTER TABLE "links" ADD COLUMN IF NOT EXISTS "size" text NOT NULL DEFAULT 'standard';`,
+  `ALTER TABLE "links" ADD COLUMN IF NOT EXISTS "is_pinned" boolean NOT NULL DEFAULT false;`,
+  `ALTER TABLE "links" ADD COLUMN IF NOT EXISTS "scheduled_at" timestamp with time zone;`,
+  `ALTER TABLE "links" ADD COLUMN IF NOT EXISTS "expires_at" timestamp with time zone;`,
   `ALTER TABLE "media_files" ADD COLUMN IF NOT EXISTS "storage_provider" text NOT NULL DEFAULT 'local';`,
   `ALTER TABLE "media_files" ADD COLUMN IF NOT EXISTS "size_bytes" integer NOT NULL DEFAULT 0;`,
 ];
@@ -257,6 +271,10 @@ const SQLITE_MIGRATIONS = [
     "og_image_url" text,
     "analytics_enabled" integer NOT NULL DEFAULT 1,
     "is_published" integer NOT NULL DEFAULT 1,
+    "profile_password" text,
+    "no_index" integer NOT NULL DEFAULT 0,
+    "hide_public_stats" integer NOT NULL DEFAULT 0,
+    "announcement" text,
     "design" text,
     "created_at" integer NOT NULL,
     "updated_at" integer NOT NULL
@@ -277,6 +295,9 @@ const SQLITE_MIGRATIONS = [
     "position" integer NOT NULL DEFAULT 0,
     "is_active" integer NOT NULL DEFAULT 1,
     "thumbnail_url" text,
+    "is_pinned" integer NOT NULL DEFAULT 0,
+    "scheduled_at" integer,
+    "expires_at" integer,
     "created_at" integer NOT NULL,
     "updated_at" integer NOT NULL
   );`,
@@ -389,8 +410,15 @@ const SQLITE_MIGRATIONS = [
   // Safe non-destructive column sync for SQLite (zero data loss — adds missing columns if tables were created earlier)
   `ALTER TABLE "profiles" ADD COLUMN "design" text;`,
   `ALTER TABLE "profiles" ADD COLUMN "og_image_url" text;`,
+  `ALTER TABLE "profiles" ADD COLUMN "profile_password" text;`,
+  `ALTER TABLE "profiles" ADD COLUMN "no_index" integer NOT NULL DEFAULT 0;`,
+  `ALTER TABLE "profiles" ADD COLUMN "hide_public_stats" integer NOT NULL DEFAULT 0;`,
+  `ALTER TABLE "profiles" ADD COLUMN "announcement" text;`,
   `ALTER TABLE "links" ADD COLUMN "thumbnail_url" text;`,
   `ALTER TABLE "links" ADD COLUMN "size" text NOT NULL DEFAULT 'standard';`,
+  `ALTER TABLE "links" ADD COLUMN "is_pinned" integer NOT NULL DEFAULT 0;`,
+  `ALTER TABLE "links" ADD COLUMN "scheduled_at" integer;`,
+  `ALTER TABLE "links" ADD COLUMN "expires_at" integer;`,
   `ALTER TABLE "media_files" ADD COLUMN "storage_provider" text NOT NULL DEFAULT 'local';`,
   `ALTER TABLE "media_files" ADD COLUMN "size_bytes" integer NOT NULL DEFAULT 0;`,
 ];

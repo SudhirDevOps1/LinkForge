@@ -22,7 +22,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Pencil, Plus, Trash2 } from "lucide-react";
+import { GripVertical, Pencil, Pin, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { Link } from "@/db/schema";
@@ -41,6 +41,28 @@ const SIZE_LABELS: Record<string, string> = {
   feature: "Feature (2×2)",
 };
 
+// Human-friendly labels for link types
+const TYPE_LABELS: Record<string, string> = {
+  link: "🔗 Link (Generic)",
+  file: "📁 File / Download",
+  video: "🎬 Video",
+  audio: "🎵 Audio",
+  image: "🖼️ Image",
+  pdf: "📄 PDF",
+  markdown: "📝 Markdown / Doc",
+  youtube: "▶️ YouTube (embed)",
+  spotify: "🎧 Spotify (embed)",
+  x: "𝕏 X / Twitter",
+  instagram: "📸 Instagram",
+  tiktok: "🎵 TikTok",
+  github: "💻 GitHub",
+  embed: "🔌 Custom Embed",
+  whatsapp: "💬 WhatsApp CTA",
+  upi: "💳 UPI / Pay",
+  phone: "📞 Phone (click-to-call)",
+  email: "✉️ Email (click-to-copy)",
+};
+
 interface LinkFormState {
   title: string;
   url: string;
@@ -48,6 +70,9 @@ interface LinkFormState {
   icon: string;
   type: string;
   size: string;
+  isPinned: boolean;
+  scheduledAt: string;
+  expiresAt: string;
 }
 
 const emptyForm: LinkFormState = {
@@ -57,6 +82,9 @@ const emptyForm: LinkFormState = {
   icon: "link",
   type: "link",
   size: "standard",
+  isPinned: false,
+  scheduledAt: "",
+  expiresAt: "",
 };
 
 // ---- Sortable row --------------------------------------------------------------
@@ -99,6 +127,11 @@ function SortableLinkRow({
         <p className="truncate text-sm font-semibold text-white">{link.title}</p>
         <p className="truncate text-xs text-zinc-500">{link.url}</p>
       </div>
+      {link.isPinned && (
+        <span className="hidden rounded-md bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-amber-300 border border-amber-500/30 sm:block">
+          ★ PIN
+        </span>
+      )}
       <span className="hidden rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-zinc-500 sm:block">
         {link.type}
       </span>
@@ -186,6 +219,9 @@ export function LinksEditor({
       icon: link.icon,
       type: link.type,
       size: link.size,
+      isPinned: link.isPinned ?? false,
+      scheduledAt: link.scheduledAt ? new Date(link.scheduledAt).toISOString().slice(0, 16) : "",
+      expiresAt: link.expiresAt ? new Date(link.expiresAt).toISOString().slice(0, 16) : "",
     });
     setDialogOpen(true);
   }
@@ -368,11 +404,11 @@ export function LinksEditor({
               onError={(msg) => toast.error(msg)}
             />
           </div>
-          <Field label="Type" hint="YouTube/Spotify links embed ho jate hain">
+          <Field label="Type" hint="YouTube/Spotify links embed ho jate hain; WhatsApp/UPI India CTA">
             <Select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
               {LINK_TYPES.map((t) => (
                 <option key={t} value={t}>
-                  {t}
+                  {TYPE_LABELS[t] ?? t}
                 </option>
               ))}
             </Select>
@@ -397,6 +433,39 @@ export function LinksEditor({
               onChange={(e) => setForm({ ...form, description: e.target.value })}
             />
           </Field>
+
+          {/* 📌 Pin + 🗓️ Schedule + ⏰ Expiry */}
+          <div className="sm:col-span-2 rounded-xl border border-white/8 bg-white/[0.02] p-4 space-y-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Advanced Options</p>
+            <label className="flex items-center gap-3 text-sm text-zinc-300 cursor-pointer">
+              <Switch
+                checked={form.isPinned}
+                onCheckedChange={(v) => setForm({ ...form, isPinned: v })}
+                aria-label="Pin this link"
+              />
+              <span className="flex items-center gap-1.5">
+                <Pin className="h-3.5 w-3.5 text-amber-400" />
+                <span>Featured / Pinned</span>
+                <span className="text-xs text-zinc-500">(always shows at top with ★ badge)</span>
+              </span>
+            </label>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Show from (optional)" hint="Is date ke baad hi dikhega">
+                <Input
+                  type="datetime-local"
+                  value={form.scheduledAt}
+                  onChange={(e) => setForm({ ...form, scheduledAt: e.target.value })}
+                />
+              </Field>
+              <Field label="Hide after (optional)" hint="Is date ke baad auto-hide ho jayega">
+                <Input
+                  type="datetime-local"
+                  value={form.expiresAt}
+                  onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
+                />
+              </Field>
+            </div>
+          </div>
         </div>
         <div className="mt-6 flex justify-end gap-2.5">
           <Button variant="ghost" onClick={() => setDialogOpen(false)}>

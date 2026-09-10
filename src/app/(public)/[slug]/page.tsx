@@ -5,9 +5,11 @@
 import type { Metadata } from "next";
 import { after } from "next/server";
 import { notFound } from "next/navigation";
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import { BioRenderer } from "@/components/bio-renderer";
 import { ShareButton } from "@/components/share-button";
+import { ProfilePasswordGate } from "@/components/profile-password-gate";
+import { QRCodeButton } from "@/components/qr-code";
 import { trackEvent } from "@/lib/analytics";
 import { parseDesign } from "@/lib/design";
 import { getBioBySlug } from "@/lib/queries";
@@ -29,6 +31,8 @@ export async function generateMetadata({ params }: Ctx): Promise<Metadata> {
     title,
     description,
     alternates: { canonical: `/${profile.slug}` },
+    // 🔍 noIndex support
+    robots: profile.noIndex ? "noindex,nofollow" : "index,follow",
     openGraph: {
       type: "profile",
       title,
@@ -52,6 +56,37 @@ export default async function PublicBioPage({ params }: Ctx) {
 
   const { profile, links } = bio;
 
+  // 🔒 Password gate check
+  if (profile.profilePassword) {
+    const jar = await cookies();
+    const unlocked = jar.get(`pf_unlock_${profile.id}`);
+    if (!unlocked) {
+      return (
+        <ProfilePasswordGate
+          slug={profile.slug}
+          displayName={profile.displayName}
+          avatarUrl={profile.avatarUrl}
+        />
+      );
+    }
+  }
+
+  // 🗓️ Filter out expired / not-yet-scheduled links
+  const now = new Date();
+  const visibleLinks = links.filter((link) => {
+    if (!link.isActive) return false;
+    if (link.scheduledAt && new Date(link.scheduledAt) > now) return false;
+    if (link.expiresAt && new Date(link.expiresAt) <= now) return false;
+    return true;
+  });
+
+  // 📌 Pinned links first, then by position
+  visibleLinks.sort((a, b) => {
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
+    return a.position - b.position;
+  });
+
   // Non-blocking view tracking + webhooks
   const hdrs = await headers();
   after(async () => {
@@ -63,7 +98,7 @@ export default async function PublicBioPage({ params }: Ctx) {
     });
     await triggerWebhooks(profile.id, "view", {
       profileSlug: profile.slug,
-      linkCount: links.length,
+      linkCount: visibleLinks.length,
     });
   });
 
@@ -79,6 +114,12 @@ export default async function PublicBioPage({ params }: Ctx) {
     },
   };
 
+  // 📢 Announcement banner — expired ones skip
+  const ann = profile.announcement as { text: string; emoji?: string; url?: string; expiresAt?: string } | null;
+  const showAnnouncement = ann && (!ann.expiresAt || new Date(ann.expiresAt) > now);
+
+  const profileUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/${profile.slug}`;
+
   return (
     <>
       <script
@@ -86,6 +127,21 @@ export default async function PublicBioPage({ params }: Ctx) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <meta name="theme-color" content={theme.swatch[0]} />
+
+      {/* 📢 Announcement Banner */}
+      {showAnnouncement && (
+        <div className="w-full bg-violet-600 px-4 py-2.5 text-center text-sm font-medium text-white">
+          {ann!.emoji && <span className="mr-1.5">{ann!.emoji}</span>}
+          {ann!.url ? (
+            <a href={ann!.url} target="_blank" rel="noreferrer" className="underline underline-offset-2">
+              {ann!.text}
+            </a>
+          ) : (
+            ann!.text
+          )}
+        </div>
+      )}
+
       <BioRenderer
         profile={{
           displayName: profile.displayName,
@@ -95,17 +151,23 @@ export default async function PublicBioPage({ params }: Ctx) {
           layout: profile.layout,
           slug: profile.slug,
           design: parseDesign(profile.design),
+          hidePublicStats: profile.hidePublicStats ?? false,
         }}
-        links={links}
+        links={visibleLinks}
       />
       <div
         className="mx-auto w-full max-w-xl px-5 pb-14"
         style={{ background: theme.vars.bg, color: theme.vars.text }}
       >
-        <ShareButton
-          url={`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/${profile.slug}`}
-          title={`${profile.displayName} | LinkForge`}
-        />
+        <div className="flex items-center gap-2">
+          <div className="flex-1">
+            <ShareButton
+              url={profileUrl}
+              title={`${profile.displayName} | LinkForge`}
+            />
+          </div>
+          <QRCodeButton url={profileUrl} displayName={profile.displayName} />
+        </div>
       </div>
     </>
   );

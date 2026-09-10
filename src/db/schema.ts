@@ -98,6 +98,17 @@ export const profiles = pgTable(
     ogImageUrl: text("og_image_url"),
     analyticsEnabled: boolean("analytics_enabled").notNull().default(true),
     isPublished: boolean("is_published").notNull().default(true),
+    // 🔒 Privacy & access control
+    profilePassword: text("profile_password"), // bcrypt hash; NULL = no password
+    noIndex: boolean("no_index").notNull().default(false), // hide from search engines
+    hidePublicStats: boolean("hide_public_stats").notNull().default(false), // hide view count on public page
+    // 📢 Announcement banner (optional top-of-page message)
+    announcement: jsonb("announcement").$type<{
+      text: string;
+      emoji?: string;
+      url?: string;
+      expiresAt?: string; // ISO date string
+    } | null>(),
     // Manual custom design (accent/radius/font/icon-size) — nullable JSON,
     // theme/layout ke upar override layer. NULL = theme defaults.
     design: jsonb("design").$type<{
@@ -141,6 +152,10 @@ export const links = pgTable(
     position: integer("position").notNull().default(0),
     isActive: boolean("is_active").notNull().default(true),
     thumbnailUrl: text("thumbnail_url"),
+    // 📌 Pin / 🗓️ Scheduling / ⏰ Expiry
+    isPinned: boolean("is_pinned").notNull().default(false), // pinned links render first
+    scheduledAt: timestamp("scheduled_at", { withTimezone: true }), // show only AFTER this date
+    expiresAt: timestamp("expires_at", { withTimezone: true }),      // hide AFTER this date
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

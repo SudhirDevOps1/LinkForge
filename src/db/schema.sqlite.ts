@@ -105,6 +105,17 @@ export const profiles = sqliteTable(
     isPublished: integer("is_published", { mode: "boolean" })
       .notNull()
       .default(true),
+    // 🔒 Privacy & access control
+    profilePassword: text("profile_password"), // bcrypt hash; NULL = no password
+    noIndex: integer("no_index", { mode: "boolean" }).notNull().default(false),
+    hidePublicStats: integer("hide_public_stats", { mode: "boolean" }).notNull().default(false),
+    // 📢 Announcement banner
+    announcement: text("announcement", { mode: "json" }).$type<{
+      text: string;
+      emoji?: string;
+      url?: string;
+      expiresAt?: string;
+    } | null>(),
     // Manual custom design (pg jsonb ka mirror — JSON text).
     design: text("design", { mode: "json" }).$type<{
       accent?: string;
@@ -138,6 +149,10 @@ export const links = sqliteTable(
     position: integer("position").notNull().default(0),
     isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
     thumbnailUrl: text("thumbnail_url"),
+    // 📌 Pin / 🗓️ Scheduling / ⏰ Expiry
+    isPinned: integer("is_pinned", { mode: "boolean" }).notNull().default(false),
+    scheduledAt: integer("scheduled_at", { mode: "timestamp_ms" }),
+    expiresAt: integer("expires_at", { mode: "timestamp_ms" }),
     createdAt: ts("created_at"),
     updatedAt: ts("updated_at"),
   },

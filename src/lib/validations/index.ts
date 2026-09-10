@@ -18,13 +18,15 @@ export const urlSchema = z
   .max(2048)
   .refine((v) => {
     if (v.startsWith("mailto:")) return true;
+    if (v.startsWith("tel:")) return true;   // 📞 Phone links
+    if (v.startsWith("upi:")) return true;   // 💳 UPI payment links
     try {
       const u = new URL(v);
       return u.protocol === "http:" || u.protocol === "https:";
     } catch {
       return false;
     }
-  }, "Valid http(s) URL chahiye");
+  }, "Valid http(s) / mailto: / tel: / upi: URL chahiye");
 
 export const LINK_TYPES = [
   "link",
@@ -41,6 +43,11 @@ export const LINK_TYPES = [
   "tiktok",
   "github",
   "embed",
+  // 📱 India-first quick CTAs
+  "whatsapp",  // wa.me/ link — green branded button
+  "upi",       // upi:// or any UPI link — UPI icon button
+  "phone",     // tel: — click-to-call
+  "email",     // mailto: — click-to-copy email
 ] as const;
 
 export const LINK_SIZES = ["standard", "wide", "tall", "feature"] as const;
@@ -80,6 +87,16 @@ export const resetSchema = z.object({
 });
 
 // ---- Profile ----------------------------------------------------------------
+export const announcementSchema = z
+  .object({
+    text: z.string().trim().min(1).max(160),
+    emoji: z.string().trim().max(8).optional(),
+    url: z.union([urlSchema, z.literal("")]).optional(),
+    expiresAt: z.string().optional(), // ISO date string
+  })
+  .nullable()
+  .optional();
+
 export const profileUpdateSchema = z.object({
   slug: slugSchema.optional(),
   displayName: z.string().trim().min(1).max(80).optional(),
@@ -103,6 +120,11 @@ export const profileUpdateSchema = z.object({
   ogImageUrl: z.union([urlSchema, z.literal("")]).optional(),
   analyticsEnabled: z.boolean().optional(),
   isPublished: z.boolean().optional(),
+  // 🔒 Privacy fields
+  profilePassword: z.union([z.string().min(4).max(128), z.literal("")]).optional(),
+  noIndex: z.boolean().optional(),
+  hidePublicStats: z.boolean().optional(),
+  announcement: announcementSchema,
 });
 
 // ---- Links ------------------------------------------------------------------
@@ -114,6 +136,10 @@ export const linkCreateSchema = z.object({
   type: z.enum(LINK_TYPES).optional().default("link"),
   size: z.enum(LINK_SIZES).optional().default("standard"),
   thumbnailUrl: z.union([urlSchema, z.literal(""), z.null()]).optional(),
+  // 📌 Pin / 🗓️ Schedule / ⏰ Expiry
+  isPinned: z.boolean().optional().default(false),
+  scheduledAt: z.string().nullable().optional(), // ISO date string
+  expiresAt: z.string().nullable().optional(),   // ISO date string
 });
 
 export const linkUpdateSchema = linkCreateSchema.partial().extend({
