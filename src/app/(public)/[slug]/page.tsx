@@ -168,10 +168,10 @@ export default async function PublicBioPage({ params }: Ctx) {
         }}
         links={visibleLinks}
         footerSlot={
-          <div className="w-full flex flex-col gap-4 mt-6">
+          <div key="bio-footer-slot-container" className="w-full flex flex-col gap-4 mt-6">
             {/* 📰 Featured Daily Micro-Blog Showcase */}
-            {publishedBlogPosts.length > 0 && (
-              <div className="w-full rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md transition hover:border-violet-500/40 hover:bg-white/[0.08]">
+            {publishedBlogPosts.length > 0 ? (
+              <div key="featured-blog-showcase" className="w-full rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md transition hover:border-violet-500/40 hover:bg-white/[0.08]">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-600/20 text-violet-300 border border-violet-500/30 shrink-0">
@@ -200,14 +200,15 @@ export default async function PublicBioPage({ params }: Ctx) {
                   </Link>
                 </div>
               </div>
-            )}
+            ) : null}
 
             <NewsletterSubscribe
+              key="newsletter-subscribe-widget"
               slug={profile.slug}
               displayName={profile.displayName}
               accentColor={theme.vars.accent}
             />
-            <div className="flex items-center gap-2 mt-2">
+            <div key="social-share-dock" className="flex items-center gap-2 mt-2">
               <div className="flex-1">
                 <ShareButton
                   url={profileUrl}
@@ -224,6 +225,7 @@ export default async function PublicBioPage({ params }: Ctx) {
             </div>
           </div>
         }
+
       />
     </>
   );

@@ -1227,7 +1227,8 @@ export function BioRenderer({
         </div>
 
         {/* Footer Slot (Newsletter + Share Dock) */}
-        {footerSlot}
+        {footerSlot ? <div key="bio-renderer-footer-slot-wrapper" className="w-full">{footerSlot}</div> : null}
+
 
         {/* Footer badge */}
         <a
