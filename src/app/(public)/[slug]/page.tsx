@@ -59,6 +59,8 @@ export default async function PublicBioPage({ params }: Ctx) {
   const bio = await getBioBySlug(slug);
   if (!bio || !bio.profile.isPublished) notFound();
 
+
+
   const { profile, links } = bio;
 
   // 🔒 Password gate check
