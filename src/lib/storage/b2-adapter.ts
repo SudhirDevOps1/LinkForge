@@ -61,17 +61,17 @@ export function resolveB2Config(): B2Config {
 
   if (!bucket) {
     throw new Error(
-      "B2_BUCKET (ya B2_BUCKET_NAME) environment variable required hai",
+      "B2_BUCKET (or B2_BUCKET_NAME) environment variable is required",
     );
   }
   if (!keyId) {
     throw new Error(
-      "B2_KEY_ID (ya B2_APPLICATION_KEY_ID) environment variable required hai",
+      "B2_KEY_ID (or B2_APPLICATION_KEY_ID) environment variable is required",
     );
   }
   if (!applicationKey) {
     throw new Error(
-      "B2_APPLICATION_KEY (ya B2_APP_KEY) environment variable required hai",
+      "B2_APPLICATION_KEY (or B2_APP_KEY) environment variable is required",
     );
   }
 

@@ -502,7 +502,7 @@ export function BioRenderer({
 
   return (
     <div
-      className={`theme-font-${v.font} relative min-h-screen w-full transition-colors duration-300`}
+      className={`theme-font-${v.font} relative min-h-screen w-full transition-colors duration-300 overflow-x-hidden`}
       style={{
         background: backgroundStyle,
         backgroundSize: bgEffect === "dots" ? "24px 24px" : undefined,
@@ -511,7 +511,36 @@ export function BioRenderer({
         letterSpacing,
       }}
     >
-      <div className="relative z-[1] mx-auto flex min-h-screen w-full max-w-xl flex-col items-center px-5 py-12">
+      {/* Ambient background light orbs for balanced widescreen and desktop presentation */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
+      >
+        <div
+          className="absolute -top-32 left-1/2 h-[500px] w-[900px] -translate-x-1/2 rounded-full blur-[140px] opacity-25"
+          style={{ background: `radial-gradient(circle, ${accent}, transparent 70%)` }}
+        />
+        <div
+          className="hidden md:block absolute -bottom-32 left-1/2 h-[450px] w-[800px] -translate-x-1/2 rounded-full blur-[160px] opacity-20"
+          style={{ background: `radial-gradient(circle, ${accent}, transparent 70%)` }}
+        />
+      </div>
+
+      <div
+        className={`relative z-[1] mx-auto flex min-h-screen w-full flex-col items-center px-4 sm:px-6 py-8 sm:py-12 transition-all ${
+          isBento
+            ? "max-w-xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl"
+            : "max-w-xl md:max-w-2xl"
+        }`}
+      >
+        {/* Desktop Card Wrapper: provides structure and eliminates empty void on desktop */}
+        <div
+          className={`w-full flex flex-col items-center transition-all ${
+            !isBento
+              ? "sm:rounded-3xl sm:border sm:border-white/10 sm:bg-white/[0.02] sm:p-7 sm:shadow-2xl sm:backdrop-blur-xl"
+              : ""
+          }`}
+        >
         {/* Avatar + identity with optional animated gradient halo ring */}
         <div className="relative">
           {hasAvatarRing && (
@@ -524,7 +553,7 @@ export function BioRenderer({
             />
           )}
           <div
-            className={`relative h-24 w-24 overflow-hidden border-2 z-10 ${avatarShapeClass}`}
+            className={`relative h-24 w-24 sm:h-28 sm:w-28 overflow-hidden border-2 z-10 transition-all ${avatarShapeClass}`}
             style={{ borderColor: accent, boxShadow: `0 0 40px ${accent}44` }}
           >
             {profile.avatarUrl ? (
@@ -546,7 +575,7 @@ export function BioRenderer({
         </div>
 
         <h1
-          className={`mt-5 text-center text-2xl tracking-tight ${fontWeightClass}`}
+          className={`mt-4 sm:mt-5 text-center text-2xl sm:text-3xl tracking-tight transition-all ${fontWeightClass}`}
           style={{
             fontSize: fontScale !== 1 ? `calc(1.5rem * ${fontScale})` : undefined,
             textTransform: textTransform as React.CSSProperties["textTransform"],
@@ -556,7 +585,7 @@ export function BioRenderer({
           {profile.displayName}
         </h1>
         {profile.bio ? (
-          <p className="mt-2 max-w-sm text-center text-sm leading-relaxed" style={{ color: v.muted }}>
+          <p className="mt-2 max-w-md text-center text-sm sm:text-base leading-relaxed transition-all" style={{ color: v.muted }}>
             {profile.bio}
           </p>
         ) : null}
@@ -580,8 +609,8 @@ export function BioRenderer({
         <div
           className={
             isBento
-              ? "mt-9 grid w-full auto-rows-[minmax(84px,auto)] grid-cols-2 gap-3"
-              : "mt-9 flex w-full flex-col gap-3"
+              ? "mt-8 sm:mt-10 grid w-full auto-rows-[minmax(84px,auto)] grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4"
+              : "mt-8 sm:mt-10 flex w-full flex-col gap-3 sm:gap-3.5"
           }
         >
           {active.map((link, idx) => {
@@ -1209,6 +1238,7 @@ export function BioRenderer({
           />
           Made with LinkForge
         </a>
+        </div>
       </div>
 
       {/* 🌟 IN-APP MEDIA VIEWER MODAL */}

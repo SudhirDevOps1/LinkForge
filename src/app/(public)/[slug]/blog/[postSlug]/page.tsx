@@ -8,19 +8,24 @@ import { eq } from "drizzle-orm";
 import { getBlogPost } from "@/lib/blog";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function BlogPostReaderPage(props: {
   params: Promise<{ slug: string; postSlug: string }>;
 }) {
   const { slug, postSlug } = await props.params;
+  const cleanSlug = (slug || "").toLowerCase().trim();
 
   const profile = await db.query.profiles.findFirst({
-    where: eq(profiles.slug, slug),
+    where: eq(profiles.slug, cleanSlug),
   });
 
   if (!profile) notFound();
 
-  const post = await getBlogPost(profile.id, postSlug);
+  let post = await getBlogPost(profile.id, postSlug);
+  if (!post) {
+    post = await getBlogPost(cleanSlug, postSlug);
+  }
   if (!post) notFound();
 
   return (

@@ -1,12 +1,15 @@
 // =============================================================================
 // 📝 B2 / Object Storage-Backed Daily Blog Service (Zero Database Bloat)
 // -----------------------------------------------------------------------------
-// As per architecture requirement: Blog contents (.txt / .md / .html) are
-// stored 100% in Backblaze B2 / Object Storage via StorageAdapter.
-// Neon PostgreSQL is never bloated with heavy article bodies.
+// Blog contents (.txt / .md / .html) are stored 100% in Object Storage via
+// StorageAdapter (Backblaze B2 in cloud, Local in offline/dev).
+// Database is never bloated with heavy article bodies.
 // Manifest index is maintained at `blogs/${profileId}/manifest.json`.
 // =============================================================================
 import { getStorageAdapter } from "./storage";
+import { db } from "@/db";
+import { profiles } from "@/db/schema";
+import { eq, or } from "drizzle-orm";
 
 export type BlogFormat = "markdown" | "html" | "txt";
 
@@ -49,21 +52,55 @@ function sanitizeBlogSlug(title: string, userSlug?: string): string {
   return base || `post-${Date.now()}`;
 }
 
-export async function getBlogManifest(profileId: string): Promise<BlogManifest> {
-  const adapter = await getStorageAdapter();
-  const manifestKey = `blogs/${profileId}/manifest.json`;
-
+/**
+ * Resolve profile ID and Slug from DB to support transparent dual lookup
+ */
+async function resolveProfileIdentifiers(identifier: string): Promise<{ id: string; slug: string } | null> {
   try {
-    const obj = await adapter.getObject(manifestKey);
-    if (!obj || !obj.data) {
-      return { profileId, updatedAt: new Date().toISOString(), posts: [] };
-    }
-    const parsed = JSON.parse(obj.data.toString("utf8")) as BlogManifest;
-    return parsed && Array.isArray(parsed.posts) ? parsed : { profileId, updatedAt: new Date().toISOString(), posts: [] };
-  } catch (err) {
-    console.warn(`[blog] Failed to read manifest for ${profileId}, returning empty:`, (err as Error).message);
-    return { profileId, updatedAt: new Date().toISOString(), posts: [] };
+    const clean = (identifier || "").toLowerCase().trim();
+    const prof = await db.query.profiles.findFirst({
+      where: or(eq(profiles.id, identifier), eq(profiles.slug, clean)),
+      columns: { id: true, slug: true },
+    });
+    return prof ? { id: prof.id, slug: prof.slug } : null;
+  } catch {
+    return null;
   }
+}
+
+export async function getBlogManifest(profileIdentifier: string): Promise<BlogManifest> {
+  const adapter = await getStorageAdapter();
+  const cleanId = (profileIdentifier || "").trim();
+
+  // Helper to read manifest from storage key
+  async function readKey(key: string): Promise<BlogManifest | null> {
+    try {
+      const obj = await adapter.getObject(key);
+      if (!obj || !obj.data) return null;
+      const parsed = JSON.parse(obj.data.toString("utf8")) as BlogManifest;
+      return parsed && Array.isArray(parsed.posts) ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+
+  // 1. Check direct path
+  let manifest = await readKey(`blogs/${cleanId}/manifest.json`);
+  if (manifest && manifest.posts && manifest.posts.length > 0) {
+    return manifest;
+  }
+
+  // 2. Check alternative identifier (ID vs Slug) from DB
+  const pair = await resolveProfileIdentifiers(cleanId);
+  if (pair) {
+    const altKey = pair.id === cleanId ? pair.slug : pair.id;
+    const altManifest = await readKey(`blogs/${altKey}/manifest.json`);
+    if (altManifest && altManifest.posts && altManifest.posts.length > 0) {
+      return altManifest;
+    }
+  }
+
+  return manifest || { profileId: cleanId, updatedAt: new Date().toISOString(), posts: [] };
 }
 
 export async function saveBlogPost(
@@ -77,6 +114,7 @@ export async function saveBlogPost(
     format?: BlogFormat;
     coverImage?: string;
   },
+  knownSlug?: string,
 ): Promise<BlogPostHeader> {
   const adapter = await getStorageAdapter();
   const slug = sanitizeBlogSlug(input.title, input.slug);
@@ -85,7 +123,7 @@ export async function saveBlogPost(
   const fileKey = `blogs/${profileId}/${slug}.${ext}`;
   const contentType = format === "html" ? "text/html; charset=utf-8" : "text/markdown; charset=utf-8";
 
-  // 1. Upload blog content directly to B2 / Object Storage (zero Neon DB bloat)
+  // 1. Upload blog content directly to Object Storage (zero database bloat)
   await adapter.putObject(fileKey, Buffer.from(input.content, "utf8"), contentType);
 
   // 2. Generate excerpt and reading time
@@ -110,7 +148,7 @@ export async function saveBlogPost(
     updatedAt: now,
   };
 
-  // 3. Update manifest in B2 / Object Storage
+  // 3. Update manifest
   const manifest = await getBlogManifest(profileId);
   const existingIdx = manifest.posts.findIndex((p) => p.slug === slug);
   if (existingIdx >= 0) {
@@ -120,35 +158,75 @@ export async function saveBlogPost(
     manifest.posts.unshift(header);
   }
   manifest.updatedAt = now;
+  manifest.profileId = profileId;
 
+  const manifestBuffer = Buffer.from(JSON.stringify(manifest, null, 2), "utf8");
+
+  // Save to primary manifest key
   await adapter.putObject(
     `blogs/${profileId}/manifest.json`,
-    Buffer.from(JSON.stringify(manifest, null, 2), "utf8"),
+    manifestBuffer,
     "application/json; charset=utf-8",
   );
+
+  // 4. Resolve slug and mirror manifest for 100% resilient lookup
+  let altSlug = knownSlug;
+  if (!altSlug) {
+    const pair = await resolveProfileIdentifiers(profileId);
+    altSlug = pair?.slug;
+  }
+
+  if (altSlug && altSlug !== profileId) {
+    try {
+      await adapter.putObject(
+        `blogs/${altSlug}/manifest.json`,
+        manifestBuffer,
+        "application/json; charset=utf-8",
+      );
+    } catch {
+      // Non-critical mirror
+    }
+  }
 
   return header;
 }
 
-export async function getBlogPost(profileId: string, slug: string): Promise<BlogPostDetail | null> {
-  const manifest = await getBlogManifest(profileId);
+export async function getBlogPost(profileIdentifier: string, slug: string): Promise<BlogPostDetail | null> {
+  const manifest = await getBlogManifest(profileIdentifier);
   const header = manifest.posts.find((p) => p.slug === slug);
   if (!header) return null;
 
   const adapter = await getStorageAdapter();
   try {
     const obj = await adapter.getObject(header.fileKey);
-    if (!obj || !obj.data) return null;
-    const content = obj.data.toString("utf8");
-    return { ...header, content };
+    if (obj && obj.data) {
+      return { ...header, content: obj.data.toString("utf8") };
+    }
   } catch (err) {
-    console.error(`[blog] Failed to fetch content for ${header.fileKey}:`, err);
-    return null;
+    console.error(`[blog] Failed to fetch primary content for ${header.fileKey}:`, err);
   }
+
+  // Fallback check if fileKey was keyed by slug instead of ID or vice versa
+  const pair = await resolveProfileIdentifiers(profileIdentifier);
+  if (pair) {
+    const altTarget = pair.id === profileIdentifier ? pair.slug : pair.id;
+    const ext = header.format === "html" ? "html" : header.format === "txt" ? "txt" : "md";
+    const altKey = `blogs/${altTarget}/${slug}.${ext}`;
+    try {
+      const obj = await adapter.getObject(altKey);
+      if (obj && obj.data) {
+        return { ...header, fileKey: altKey, content: obj.data.toString("utf8") };
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return null;
 }
 
-export async function deleteBlogPost(profileId: string, slug: string): Promise<boolean> {
-  const manifest = await getBlogManifest(profileId);
+export async function deleteBlogPost(profileIdentifier: string, slug: string): Promise<boolean> {
+  const manifest = await getBlogManifest(profileIdentifier);
   const header = manifest.posts.find((p) => p.slug === slug);
   if (!header) return false;
 
@@ -162,11 +240,26 @@ export async function deleteBlogPost(profileId: string, slug: string): Promise<b
   manifest.posts = manifest.posts.filter((p) => p.slug !== slug);
   manifest.updatedAt = new Date().toISOString();
 
+  const manifestBuffer = Buffer.from(JSON.stringify(manifest, null, 2), "utf8");
+
   await adapter.putObject(
-    `blogs/${profileId}/manifest.json`,
-    Buffer.from(JSON.stringify(manifest, null, 2), "utf8"),
+    `blogs/${manifest.profileId}/manifest.json`,
+    manifestBuffer,
     "application/json; charset=utf-8",
   );
+
+  const pair = await resolveProfileIdentifiers(profileIdentifier);
+  if (pair && pair.slug && pair.slug !== manifest.profileId) {
+    try {
+      await adapter.putObject(
+        `blogs/${pair.slug}/manifest.json`,
+        manifestBuffer,
+        "application/json; charset=utf-8",
+      );
+    } catch {
+      // ignore
+    }
+  }
 
   return true;
 }

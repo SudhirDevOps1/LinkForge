@@ -620,4 +620,4 @@ export function CreatorMonetizationStudio() {
   );
 }
 
-export const SuperprofileStudio = CreatorMonetizationStudio;
+export const CreatorStudio = CreatorMonetizationStudio;

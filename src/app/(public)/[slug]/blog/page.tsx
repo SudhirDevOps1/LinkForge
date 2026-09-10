@@ -8,17 +8,22 @@ import { eq } from "drizzle-orm";
 import { getBlogManifest } from "@/lib/blog";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function PublicBlogFeedPage(props: { params: Promise<{ slug: string }> }) {
   const { slug } = await props.params;
+  const cleanSlug = (slug || "").toLowerCase().trim();
 
   const profile = await db.query.profiles.findFirst({
-    where: eq(profiles.slug, slug),
+    where: eq(profiles.slug, cleanSlug),
   });
 
   if (!profile) notFound();
 
-  const manifest = await getBlogManifest(profile.id);
+  let manifest = await getBlogManifest(profile.id);
+  if (!manifest.posts || manifest.posts.length === 0) {
+    manifest = await getBlogManifest(cleanSlug);
+  }
   const posts = manifest.posts || [];
 
   return (

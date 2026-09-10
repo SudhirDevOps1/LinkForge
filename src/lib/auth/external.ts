@@ -19,7 +19,7 @@ import { allocateSlug, createSession, setSessionCookie } from "./index";
 function notConfigured(provider: string, envHint: string): ApiError {
   return new ApiError(
     501,
-    `${provider} provider configured nahi hai. ${envHint} env vars set karein. Setup guide: docs/auth.md`,
+    `${provider} provider is not configured. Please set ${envHint} environment variables. Setup guide: docs/auth.md`,
   );
 }
 

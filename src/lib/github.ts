@@ -31,8 +31,8 @@ const HEADERS = {
 
 async function gh<T>(path: string): Promise<T> {
   const res = await fetch(`https://api.github.com${path}`, { headers: HEADERS });
-  if (res.status === 404) throw new Error("GitHub user nahi mila");
-  if (res.status === 403) throw new Error("GitHub rate limit — thodi der baad retry karein");
+  if (res.status === 404) throw new Error("GitHub user not found");
+  if (res.status === 403) throw new Error("GitHub rate limit exceeded — please try again in a few minutes");
   if (!res.ok) throw new Error(`GitHub API error (${res.status})`);
   return (await res.json()) as T;
 }

@@ -23,7 +23,7 @@ export function createD1Db() {
   const binding = g.DB ?? g.D1_DATABASE ?? g.__env__?.DB;
   if (!binding) {
     throw new Error(
-      "Cloudflare D1 binding not found. wrangler.toml me [[d1_databases]] binding = \"DB\" configure karein.",
+      "Cloudflare D1 binding not found. Please configure [[d1_databases]] binding = \"DB\" in wrangler.toml.",
     );
   }
   return drizzle(binding as never, { schema });

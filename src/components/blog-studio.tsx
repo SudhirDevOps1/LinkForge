@@ -46,7 +46,10 @@ export function BlogStudio({ profileSlug }: { profileSlug: string }) {
   async function loadPosts() {
     setLoadingPosts(true);
     try {
-      const res = await fetch("/api/blog");
+      const url = profileSlug
+        ? `/api/blog?slug=${encodeURIComponent(profileSlug.toLowerCase().trim())}`
+        : "/api/blog";
+      const res = await fetch(url, { cache: "no-store" });
       const data = await res.json();
       if (res.ok && data.manifest?.posts) {
         setPosts(data.manifest.posts);
@@ -60,7 +63,7 @@ export function BlogStudio({ profileSlug }: { profileSlug: string }) {
 
   useEffect(() => {
     void loadPosts();
-  }, []);
+  }, [profileSlug]);
 
   // Auto-slugify
   function handleTitleChange(val: string) {
@@ -116,9 +119,13 @@ export function BlogStudio({ profileSlug }: { profileSlug: string }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to publish post");
 
-      toast.success(`Post "${data.post.title}" published to Object Storage!`);
-      void loadPosts();
+      toast.success(`Post "${data.post.title}" published to Object Storage successfully!`);
+      // Optimistically update published posts so it renders without delay
+      if (data.post) {
+        setPosts((prev) => [data.post, ...prev.filter((p) => p.slug !== data.post.slug)]);
+      }
       setActiveTab("posts");
+      await loadPosts();
     } catch (err: any) {
       toast.error(err.message);
     } finally {

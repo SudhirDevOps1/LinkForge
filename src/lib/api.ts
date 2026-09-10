@@ -73,7 +73,7 @@ export async function guardRateLimit(
   const id = clientIp(req);
   const result = await rateLimit(`${bucket}:${id}`, limit, windowMs);
   if (!result.success) {
-    throw new ApiError(429, "Too many requests — thoda slow down karein");
+    throw new ApiError(429, "Too many requests — please slow down");
   }
 }
 
