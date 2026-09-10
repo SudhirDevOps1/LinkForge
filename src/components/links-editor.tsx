@@ -327,14 +327,43 @@ export function LinksEditor({
                 const absolute = f.url.startsWith("http")
                   ? f.url
                   : `${window.location.origin}${f.url}`;
+                const ext = f.fileName.split(".").pop()?.toLowerCase() || "";
+                let detectedType = "file";
+                let detectedIcon = "file";
+                if (
+                  ["mp4", "webm", "mov", "mkv"].includes(ext) ||
+                  f.mimeType?.startsWith("video/")
+                ) {
+                  detectedType = "video";
+                  detectedIcon = "video";
+                } else if (
+                  ["mp3", "m4a", "wav", "ogg", "aac", "flac"].includes(ext) ||
+                  f.mimeType?.startsWith("audio/")
+                ) {
+                  detectedType = "audio";
+                  detectedIcon = "music";
+                } else if (
+                  ["jpg", "jpeg", "png", "webp", "gif", "avif"].includes(ext) ||
+                  f.mimeType?.startsWith("image/")
+                ) {
+                  detectedType = "image";
+                  detectedIcon = "camera";
+                } else if (ext === "pdf" || f.mimeType === "application/pdf") {
+                  detectedType = "pdf";
+                  detectedIcon = "file";
+                } else if (["md", "markdown", "txt"].includes(ext)) {
+                  detectedType = "markdown";
+                  detectedIcon = "file";
+                }
+
                 setForm((prev) => ({
                   ...prev,
                   url: absolute,
                   title: prev.title.trim() || nameWithoutExtension(f.fileName),
-                  type: "file",
-                  icon: "file",
+                  type: detectedType,
+                  icon: detectedIcon,
                 }));
-                toast.success(`"${f.fileName}" upload ho gayi — URL fill ho gaya`);
+                toast.success(`"${f.fileName}" upload ho gayi — ${detectedType.toUpperCase()} auto-set ho gaya`);
               }}
               onError={(msg) => toast.error(msg)}
             />

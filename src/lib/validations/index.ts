@@ -29,6 +29,11 @@ export const urlSchema = z
 export const LINK_TYPES = [
   "link",
   "file", // uploaded file (PDF, doc, media) — download/open card
+  "video",
+  "audio",
+  "image",
+  "pdf",
+  "markdown",
   "youtube",
   "spotify",
   "x",

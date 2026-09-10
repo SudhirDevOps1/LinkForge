@@ -172,20 +172,54 @@ export function MediaManager({
   async function createLink(file: MediaFileUI) {
     setCreatingLink(file.id);
     try {
+      const ext = file.fileName.split(".").pop()?.toLowerCase() || "";
+      let detectedType = "file";
+      let detectedIcon = "file";
+      let thumbnailUrl: string | undefined = undefined;
+
+      if (file.mimeType.startsWith("video/") || ["mp4", "webm", "mov", "mkv"].includes(ext)) {
+        detectedType = "video";
+        detectedIcon = "video";
+      } else if (
+        file.mimeType.startsWith("audio/") ||
+        ["mp3", "m4a", "wav", "ogg", "aac", "flac"].includes(ext)
+      ) {
+        detectedType = "audio";
+        detectedIcon = "music";
+      } else if (
+        file.mimeType.startsWith("image/") ||
+        ["jpg", "jpeg", "png", "webp", "gif", "avif"].includes(ext)
+      ) {
+        detectedType = "image";
+        detectedIcon = "camera";
+        thumbnailUrl = file.url.startsWith("http") ? file.url : `${window.location.origin}${file.url}`;
+      } else if (ext === "pdf" || file.mimeType === "application/pdf") {
+        detectedType = "pdf";
+        detectedIcon = "file";
+      } else if (["md", "markdown", "txt"].includes(ext)) {
+        detectedType = "markdown";
+        detectedIcon = "file";
+      }
+
+      const cleanTitle =
+        nameWithoutExtension(file.fileName).replace(/[_-]+/g, " ").trim() ||
+        file.fileName;
+
       const res = await fetch("/api/links", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: nameWithoutExtension(file.fileName) || file.fileName,
+          title: cleanTitle,
           url: file.url.startsWith("http") ? file.url : `${window.location.origin}${file.url}`,
           description: `${CATEGORY_META[fileCategory(file.mimeType)].label} · ${formatBytes(file.sizeBytes)}`,
-          type: "file",
-          icon: "file",
+          type: detectedType,
+          icon: detectedIcon,
+          thumbnailUrl,
         }),
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) throw new Error(data.error ?? "Link banane me error");
-      toast.success("Link ban gaya — Links tab me dikhega");
+      toast.success(`"${cleanTitle}" ka ${detectedType.toUpperCase()} link ban gaya`);
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
