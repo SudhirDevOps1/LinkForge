@@ -180,9 +180,11 @@ export class B2StorageAdapter implements StorageAdapter {
     key: string,
     body: Buffer | Uint8Array,
     contentType: string,
+    options?: { contentEncoding?: string },
   ): Promise<void> {
     const safeKey = sanitizeKey(key);
     const buf = Buffer.isBuffer(body) ? body : Buffer.from(body);
+    const encoding = options?.contentEncoding || (safeKey.endsWith(".gz") ? "gzip" : undefined);
     try {
       await this.client.send(
         new PutObjectCommand({
@@ -190,6 +192,7 @@ export class B2StorageAdapter implements StorageAdapter {
           Key: safeKey,
           Body: buf,
           ContentType: contentType,
+          ContentEncoding: encoding,
           ContentLength: buf.length,
           CacheControl: "private, max-age=31536000, immutable",
         }),
@@ -203,7 +206,7 @@ export class B2StorageAdapter implements StorageAdapter {
   /** Fetch object from private B2 as Buffer, or null if not found */
   async getObject(
     key: string,
-  ): Promise<{ data: Buffer; contentType: string } | null> {
+  ): Promise<{ data: Buffer; contentType: string; contentEncoding?: string } | null> {
     const safeKey = sanitizeKey(key);
     try {
       const res = await this.client.send(
@@ -238,6 +241,7 @@ export class B2StorageAdapter implements StorageAdapter {
       return {
         data: Buffer.from(bytes),
         contentType: res.ContentType || "application/octet-stream",
+        contentEncoding: res.ContentEncoding,
       };
     } catch (err: unknown) {
       const anyErr = err as { name?: string; $metadata?: { httpStatusCode?: number } };

@@ -268,3 +268,33 @@ export const uploadTickets = sqliteTable(
   },
   (t) => [index("tickets_profile_idx").on(t.profileId)],
 );
+
+export const analyticsRollups = sqliteTable(
+  "analytics_rollups",
+  {
+    id: id(),
+    profileId: uuidCol("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    linkId: uuidCol("link_id").references(() => links.id, { onDelete: "cascade" }),
+    date: text("date").notNull(),
+    device: text("device").notNull().default("Desktop"),
+    country: text("country").notNull().default("Unknown"),
+    views: integer("views").notNull().default(0),
+    clicks: integer("clicks").notNull().default(0),
+    uniqueVisitors: integer("unique_visitors").notNull().default(0),
+    createdAt: ts("created_at"),
+    updatedAt: ts("updated_at"),
+  },
+  (t) => [
+    uniqueIndex("rollups_unique_bucket_idx").on(
+      t.profileId,
+      t.date,
+      t.linkId,
+      t.device,
+      t.country,
+    ),
+    index("rollups_profile_date_idx").on(t.profileId, t.date),
+  ],
+);
+

@@ -315,6 +315,43 @@ export const uploadTickets = pgTable(
   (t) => [index("tickets_profile_idx").on(t.profileId)],
 );
 
+// ---------------------------------------------------------------------------
+// 📦 Analytics Rollups — Compact daily aggregates (Kam jagah me 98%+ DB savings)
+// Thousands of raw events compress into single rows: (profile, date, link, dev, country)
+// ---------------------------------------------------------------------------
+export const analyticsRollups = pgTable(
+  "analytics_rollups",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    profileId: uuid("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    linkId: uuid("link_id").references(() => links.id, { onDelete: "cascade" }),
+    date: text("date").notNull(), // YYYY-MM-DD
+    device: text("device").notNull().default("Desktop"),
+    country: text("country").notNull().default("Unknown"),
+    views: integer("views").notNull().default(0),
+    clicks: integer("clicks").notNull().default(0),
+    uniqueVisitors: integer("unique_visitors").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("rollups_unique_bucket_idx").on(
+      t.profileId,
+      t.date,
+      t.linkId,
+      t.device,
+      t.country,
+    ),
+    index("rollups_profile_date_idx").on(t.profileId, t.date),
+  ],
+);
+
 // ---- Inferred types --------------------------------------------------------
 export type User = typeof users.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
@@ -326,3 +363,5 @@ export type ApiKey = typeof apiKeys.$inferSelect;
 export type TeamMember = typeof teamMembers.$inferSelect;
 export type MediaFile = typeof mediaFiles.$inferSelect;
 export type UploadTicket = typeof uploadTickets.$inferSelect;
+export type AnalyticsRollup = typeof analyticsRollups.$inferSelect;
+

@@ -30,15 +30,20 @@ export const GET = handle(async (req: Request, ctx: RouteCtx) => {
   const filename = safeKey.split("/").pop() ?? "file";
   const cleanFilename = filename.replace(/["\r\n]/g, "");
 
+  const headers: Record<string, string> = {
+    "Content-Type": file.contentType || "application/octet-stream",
+    "Cache-Control": "private, max-age=3600",
+    "Content-Disposition": `inline; filename="${cleanFilename}"`,
+    "Content-Length": String(file.data.length),
+    "X-Content-Type-Options": "nosniff",
+  };
+  if (file.contentEncoding) {
+    headers["Content-Encoding"] = file.contentEncoding;
+  }
+
   return new Response(new Uint8Array(file.data), {
     status: 200,
-    headers: {
-      "Content-Type": file.contentType || "application/octet-stream",
-      "Cache-Control": "private, max-age=3600",
-      "Content-Disposition": `inline; filename="${cleanFilename}"`,
-      "Content-Length": String(file.data.length),
-      "X-Content-Type-Options": "nosniff",
-    },
+    headers,
   });
 });
 
@@ -48,11 +53,12 @@ export const PUT = handle(async (req: Request, ctx: RouteCtx) => {
   const safeKey = sanitizeKey(rawKey);
 
   const contentType = req.headers.get("content-type") || "application/octet-stream";
+  const contentEncoding = req.headers.get("content-encoding") ?? undefined;
   const arrayBuf = await req.arrayBuffer();
   const buf = Buffer.from(arrayBuf);
 
   const adapter = await getStorageAdapter();
-  await adapter.putObject(safeKey, buf, contentType);
+  await adapter.putObject(safeKey, buf, contentType, { contentEncoding });
 
   return json({ success: true, key: safeKey });
 });

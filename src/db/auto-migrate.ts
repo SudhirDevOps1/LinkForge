@@ -184,6 +184,23 @@ const PG_MIGRATIONS = [
   );`,
   `CREATE INDEX IF NOT EXISTS "tickets_profile_idx" ON "upload_tickets" ("profile_id");`,
 
+  // 13. Analytics Rollups (Compact daily summaries: 98%+ DB storage reduction)
+  `CREATE TABLE IF NOT EXISTS "analytics_rollups" (
+    "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    "profile_id" uuid NOT NULL REFERENCES "profiles"("id") ON DELETE CASCADE,
+    "link_id" uuid REFERENCES "links"("id") ON DELETE CASCADE,
+    "date" text NOT NULL,
+    "device" text NOT NULL DEFAULT 'Desktop',
+    "country" text NOT NULL DEFAULT 'Unknown',
+    "views" integer NOT NULL DEFAULT 0,
+    "clicks" integer NOT NULL DEFAULT 0,
+    "unique_visitors" integer NOT NULL DEFAULT 0,
+    "created_at" timestamp with time zone NOT NULL DEFAULT now(),
+    "updated_at" timestamp with time zone NOT NULL DEFAULT now()
+  );`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "rollups_unique_bucket_idx" ON "analytics_rollups" ("profile_id", "date", "link_id", "device", "country");`,
+  `CREATE INDEX IF NOT EXISTS "rollups_profile_date_idx" ON "analytics_rollups" ("profile_id", "date");`,
+
   // Safe non-destructive column sync (in case tables existed previously from older schema)
   `ALTER TABLE "profiles" ADD COLUMN IF NOT EXISTS "design" jsonb;`,
   `ALTER TABLE "profiles" ADD COLUMN IF NOT EXISTS "og_image_url" text;`,
@@ -351,6 +368,23 @@ const SQLITE_MIGRATIONS = [
     "created_at" integer NOT NULL
   );`,
   `CREATE INDEX IF NOT EXISTS "tickets_profile_idx" ON "upload_tickets" ("profile_id");`,
+
+  // 13. Analytics Rollups (SQLite)
+  `CREATE TABLE IF NOT EXISTS "analytics_rollups" (
+    "id" text PRIMARY KEY NOT NULL,
+    "profile_id" text NOT NULL REFERENCES "profiles"("id") ON DELETE CASCADE,
+    "link_id" text REFERENCES "links"("id") ON DELETE CASCADE,
+    "date" text NOT NULL,
+    "device" text NOT NULL DEFAULT 'Desktop',
+    "country" text NOT NULL DEFAULT 'Unknown',
+    "views" integer NOT NULL DEFAULT 0,
+    "clicks" integer NOT NULL DEFAULT 0,
+    "unique_visitors" integer NOT NULL DEFAULT 0,
+    "created_at" integer NOT NULL,
+    "updated_at" integer NOT NULL
+  );`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "rollups_unique_bucket_idx" ON "analytics_rollups" ("profile_id", "date", "link_id", "device", "country");`,
+  `CREATE INDEX IF NOT EXISTS "rollups_profile_date_idx" ON "analytics_rollups" ("profile_id", "date");`,
 ];
 
 // Runtime caching: Ek serverless cold start mein sirf ek baar execute ho

@@ -24,12 +24,13 @@ export interface StorageAdapter {
     key: string,
     body: Buffer | Uint8Array,
     contentType: string,
+    options?: { contentEncoding?: string },
   ): Promise<void>;
 
   /** Fetch object from storage as Buffer with Content-Type, or null if 404 */
   getObject(
     key: string,
-  ): Promise<{ data: Buffer; contentType: string } | null>;
+  ): Promise<{ data: Buffer; contentType: string; contentEncoding?: string } | null>;
 
   /** Delete object from storage, returns true if deleted or object did not exist */
   deleteObject(key: string): Promise<boolean>;

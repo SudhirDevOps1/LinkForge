@@ -47,6 +47,7 @@ export class LocalStorageAdapter implements StorageAdapter {
     key: string,
     body: Buffer | Uint8Array,
     contentType: string,
+    options?: { contentEncoding?: string },
   ): Promise<void> {
     const safeKey = sanitizeKey(key);
     const target = path.join(/*turbopackIgnore: true*/ UPLOAD_DIR, safeKey);
@@ -57,7 +58,7 @@ export class LocalStorageAdapter implements StorageAdapter {
 
   async getObject(
     key: string,
-  ): Promise<{ data: Buffer; contentType: string } | null> {
+  ): Promise<{ data: Buffer; contentType: string; contentEncoding?: string } | null> {
     const safeKey = sanitizeKey(key);
     const target = path.join(/*turbopackIgnore: true*/ UPLOAD_DIR, safeKey);
     try {
@@ -80,6 +81,7 @@ export class LocalStorageAdapter implements StorageAdapter {
       return {
         data,
         contentType: mimeMap[ext] || "application/octet-stream",
+        contentEncoding: safeKey.endsWith(".gz") ? "gzip" : undefined,
       };
     } catch {
       return null;
