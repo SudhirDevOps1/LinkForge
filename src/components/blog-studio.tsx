@@ -3,27 +3,72 @@
 import {
   BookOpen,
   Calendar,
-  Check,
   Code,
   ExternalLink,
   Eye,
-  FileCode,
   FileText,
-  Heading,
-  Layers,
   Link2,
   List,
   Loader2,
   Plus,
   Quote,
   Sparkles,
-  Tag,
   Trash2,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { BlogFormat, BlogPostHeader } from "@/lib/blog";
 import { cn } from "./ui";
+
+/** Lightweight markdown → HTML renderer (no external deps) */
+function renderMarkdown(md: string): string {
+  let html = md
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  // Fenced code blocks ```lang\n...\n```
+  html = html.replace(/```[\w]*\n([\s\S]*?)```/g, (_m, code) =>
+    `<pre class="my-3 overflow-x-auto rounded-xl bg-black/60 border border-white/10 p-4 text-xs font-mono text-emerald-300 leading-relaxed"><code>${code.trimEnd()}</code></pre>`
+  );
+  // Inline code
+  html = html.replace(/`([^`\n]+)`/g, (_m, c) =>
+    `<code class="rounded bg-white/10 px-1.5 py-0.5 text-xs font-mono text-violet-300">${c}</code>`
+  );
+  // Headings
+  html = html.replace(/^#### (.+)$/gm, (_m, t) => `<h4 class="mt-4 text-sm font-bold text-white">${t}</h4>`);
+  html = html.replace(/^### (.+)$/gm, (_m, t) => `<h3 class="mt-5 text-base font-bold text-white">${t}</h3>`);
+  html = html.replace(/^## (.+)$/gm, (_m, t) => `<h2 class="mt-5 text-lg font-bold text-white">${t}</h2>`);
+  html = html.replace(/^# (.+)$/gm, (_m, t) => `<h1 class="mt-6 text-xl font-black text-white">${t}</h1>`);
+  // Blockquote
+  html = html.replace(/^&gt; (.+)$/gm, (_m, t) =>
+    `<blockquote class="my-3 border-l-4 border-violet-500 pl-4 text-zinc-400 italic">${t}</blockquote>`
+  );
+  // HR
+  html = html.replace(/^---+$/gm, `<hr class="my-6 border-white/10" />`);
+  // Bold + Italic
+  html = html.replace(/\*\*\*(.+?)\*\*\*/g, `<strong><em>$1</em></strong>`);
+  html = html.replace(/\*\*(.+?)\*\*/g, `<strong class="font-bold text-white">$1</strong>`);
+  html = html.replace(/\*([^*\n]+?)\*/g, `<em class="italic text-zinc-300">$1</em>`);
+  // Links
+  html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
+    `<a href="$2" target="_blank" rel="noopener noreferrer" class="text-violet-400 underline hover:text-violet-300">$1</a>`
+  );
+  // List items
+  html = html.replace(/^[-*] (.+)$/gm, (_m, t) => `<li class="ml-4 list-disc text-zinc-300">${t}</li>`);
+  html = html.replace(/^\d+\. (.+)$/gm, (_m, t) => `<li class="ml-4 list-decimal text-zinc-300">${t}</li>`);
+  // Wrap <li> groups
+  html = html.replace(/((?:<li[^>]*>.*<\/li>\n?)+)/g, (block) => `<ul class="my-3 space-y-1">${block}</ul>`);
+  // Paragraphs
+  html = html.split(/\n\n+/).map((block) => {
+    const t = block.trim();
+    if (!t) return "";
+    if (/^<(h[1-6]|ul|ol|blockquote|pre|hr)/.test(t)) return t;
+    return `<p class="mt-3 leading-relaxed text-zinc-300">${t.replace(/\n/g, " ")}</p>`;
+  }).join("\n");
+
+  return html;
+}
 
 export function BlogStudio({ profileSlug }: { profileSlug: string }) {
   const [activeTab, setActiveTab] = useState<"editor" | "posts">("editor");
@@ -51,15 +96,18 @@ export function BlogStudio({ profileSlug }: { profileSlug: string }) {
         : "/api/blog";
       const res = await fetch(url, { cache: "no-store" });
       const data = await res.json();
-      if (res.ok && data.manifest?.posts) {
-        setPosts(data.manifest.posts);
+      if (!res.ok) {
+        toast.error(`Failed to load posts: ${data.error ?? res.status}`);
+        return;
       }
-    } catch {
-      // silent
+      setPosts(data.manifest?.posts ?? []);
+    } catch (err: any) {
+      toast.error(`Could not reach blog API: ${err.message}`);
     } finally {
       setLoadingPosts(false);
     }
   }
+
 
   useEffect(() => {
     void loadPosts();
@@ -372,14 +420,27 @@ export function BlogStudio({ profileSlug }: { profileSlug: string }) {
               className="w-full rounded-xl border border-white/10 bg-black/50 p-4 font-mono text-sm leading-relaxed text-zinc-200 placeholder:text-zinc-600 focus:border-violet-500/50 focus:outline-none"
             />
           ) : (
-            <div className="rounded-xl border border-white/10 bg-black/60 p-5 text-zinc-200 min-h-[300px]">
-              <h1 className="text-xl font-bold text-white mb-2">{title || "Untitled Post"}</h1>
-              <p className="text-xs text-zinc-400 mb-4">{readMins} min read • {new Date().toLocaleDateString()}</p>
-              <div className="prose prose-invert max-w-none text-sm leading-relaxed whitespace-pre-wrap">
-                {content}
-              </div>
+            <div className="rounded-xl border border-violet-500/30 bg-black/60 p-5 text-zinc-200 min-h-[300px] overflow-y-auto max-h-[520px]">
+              <h1 className="text-xl font-bold text-white mb-1">{title || "Untitled Post"}</h1>
+              <p className="text-xs text-zinc-500 mb-5 border-b border-white/10 pb-3">
+                {readMins} min read · {new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+              </p>
+              {format === "html" ? (
+                <div
+                  className="text-sm leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: content }}
+                />
+              ) : format === "txt" ? (
+                <pre className="text-sm leading-relaxed text-zinc-300 whitespace-pre-wrap font-sans">{content}</pre>
+              ) : (
+                <div
+                  className="text-sm leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }}
+                />
+              )}
             </div>
           )}
+
 
           <div className="flex justify-end pt-2">
             <button
