@@ -197,11 +197,31 @@ export async function getSessionUser(): Promise<SessionContext | null> {
     await db.delete(sessions).where(eq(sessions.id, token));
     return null;
   }
-  const [profile] = await db
+  let [profile] = await db
     .select()
     .from(profiles)
     .where(eq(profiles.userId, row.user.id))
     .limit(1);
+
+  // Auto-heal: agar user ka profile kisi wajah se create nahi hua tha, auto-create
+  if (!profile) {
+    try {
+      const slug = await allocateSlug(row.user.name || row.user.email.split("@")[0]);
+      const [newProfile] = await db
+        .insert(profiles)
+        .values({
+          userId: row.user.id,
+          slug,
+          displayName: row.user.name.trim() || "Creator",
+          bio: "",
+        })
+        .returning();
+      profile = newProfile;
+    } catch (err) {
+      console.warn("[auth] auto-heal profile creation notice:", (err as Error).message);
+    }
+  }
+
   return { user: row.user, session: row.session, profile: profile ?? null };
 }
 

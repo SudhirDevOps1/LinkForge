@@ -12,7 +12,14 @@ export default async function SettingsPage() {
   const ctx = await getSessionUser();
   if (!ctx) redirect("/login");
   const { user, profile } = ctx;
-  if (!profile) redirect("/dashboard");
+  if (!profile) {
+    return (
+      <div className="rounded-2xl border border-white/10 bg-ink-900/50 p-8 text-center">
+        <h2 className="text-lg font-semibold text-white">Profile setup ho raha hai</h2>
+        <p className="mt-1 text-sm text-zinc-400">Kripya page refresh karein.</p>
+      </div>
+    );
+  }
 
   const [hooks, keys] = await Promise.all([
     db.select().from(webhooks).where(eq(webhooks.profileId, profile.id)).orderBy(desc(webhooks.createdAt)),
