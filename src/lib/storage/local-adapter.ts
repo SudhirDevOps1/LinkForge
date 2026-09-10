@@ -4,11 +4,16 @@
 // =============================================================================
 import { mkdir, readdir, readFile, stat, unlink, writeFile } from "fs/promises";
 import path from "path";
+import os from "os";
 import { sanitizeKey } from "./index";
 import type { StorageAdapter } from "./types";
 
 const UPLOAD_DIR =
-  process.env.UPLOAD_DIR ?? path.join(/*turbopackIgnore: true*/ process.cwd(), "uploads");
+  process.env.UPLOAD_DIR ??
+  (process.env.VERCEL
+    ? path.join(os.tmpdir(), "uploads")
+    : path.join(/*turbopackIgnore: true*/ process.cwd(), "uploads"));
+
 
 export class LocalStorageAdapter implements StorageAdapter {
   readonly driver = "local";

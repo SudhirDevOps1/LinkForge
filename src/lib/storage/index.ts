@@ -10,8 +10,10 @@
 // =============================================================================
 import { randomBytes } from "crypto";
 import path from "path";
+import os from "os";
 import { isS3Compatible, storageProvider } from "@/config/storage.config";
 import type { StorageAdapter } from "./types";
+
 
 export interface StorageService {
   readonly provider: string;
@@ -61,7 +63,11 @@ export function newKey(folder: string, ext: string): string {
 }
 
 export const localUploadDir =
-  process.env.UPLOAD_DIR ?? path.join(process.cwd(), "uploads");
+  process.env.UPLOAD_DIR ??
+  (process.env.VERCEL
+    ? path.join(os.tmpdir(), "uploads")
+    : path.join(process.cwd(), "uploads"));
+
 
 // Lazy proxy for backwards compatibility without pulling fs/promises into the main bundle
 export const localStorage: StorageService = {
