@@ -6,11 +6,13 @@
 // =============================================================================
 import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
+import { autoMigrate } from "@/db/auto-migrate";
 import { subscribers } from "@/db/schema";
 import { ApiError, handle, json } from "@/lib/api";
 import { requireUser } from "@/lib/auth";
 
 export const GET = handle(async (req: Request) => {
+  await autoMigrate();
   const { profile } = await requireUser();
   if (!profile) throw new ApiError(404, "Profile not found");
 

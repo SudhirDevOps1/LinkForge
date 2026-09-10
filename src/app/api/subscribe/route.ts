@@ -8,6 +8,7 @@ import { createHash } from "crypto";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
+import { autoMigrate } from "@/db/auto-migrate";
 import { profiles, subscribers } from "@/db/schema";
 import { ApiError, guardRateLimit, handle, json, parseOrThrow } from "@/lib/api";
 import { verifyEmailMx } from "@/lib/email-verifier";
@@ -20,6 +21,9 @@ const subscribeSchema = z.object({
 export const POST = handle(async (req: Request) => {
   // Rate limit: 10 subscriptions per minute per IP
   await guardRateLimit(req, "subscribe:rate", 10);
+
+  // Auto-migrate ensures subscribers table exists on Neon / Postgres / SQLite
+  await autoMigrate();
 
   const { slug, email } = parseOrThrow(
     subscribeSchema,
@@ -48,12 +52,29 @@ export const POST = handle(async (req: Request) => {
   const ipHash = createHash("sha256").update(`sub::${ip}`).digest("hex").slice(0, 24);
   const userAgent = req.headers.get("user-agent")?.slice(0, 255) || "unknown";
 
-  // 4. Check if already subscribed
-  const [existing] = await db
-    .select({ id: subscribers.id })
-    .from(subscribers)
-    .where(and(eq(subscribers.profileId, profile.id), eq(subscribers.email, verification.email)))
-    .limit(1);
+  // 4. Check if already subscribed with self-healing retry
+  let existing: { id: string } | undefined;
+  try {
+    const [row] = await db
+      .select({ id: subscribers.id })
+      .from(subscribers)
+      .where(and(eq(subscribers.profileId, profile.id), eq(subscribers.email, verification.email)))
+      .limit(1);
+    existing = row;
+  } catch (dbErr: unknown) {
+    const msg = (dbErr as Error)?.message || "";
+    if (msg.includes("relation \"subscribers\" does not exist") || msg.includes("subscribers") || msg.includes("no such table")) {
+      await autoMigrate(true);
+      const [row] = await db
+        .select({ id: subscribers.id })
+        .from(subscribers)
+        .where(and(eq(subscribers.profileId, profile.id), eq(subscribers.email, verification.email)))
+        .limit(1);
+      existing = row;
+    } else {
+      throw dbErr;
+    }
+  }
 
   if (existing) {
     return json({

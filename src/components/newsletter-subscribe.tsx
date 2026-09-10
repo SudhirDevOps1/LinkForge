@@ -48,7 +48,11 @@ export function NewsletterSubscribe({
       };
 
       if (!res.ok) {
-        throw new Error(data.error ?? "Subscription failed");
+        let errText = data.error ?? "Subscription failed";
+        if (errText.includes("Failed query") || errText.includes("relation") || errText.includes("syntax")) {
+          errText = "Database provisioning in progress. Kripya kuchh seconds baad dobara try karein.";
+        }
+        throw new Error(errText);
       }
 
       setSubscribed(true);
