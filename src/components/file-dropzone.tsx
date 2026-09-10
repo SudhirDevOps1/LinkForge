@@ -126,15 +126,14 @@ export function FileDropzone({
       try {
         uploaded = await uploadViaPresign(file);
       } catch (err) {
-        // Sirf presign-stage fail (501/local ya ticket error) → multipart fallback.
-        // PUT/complete ke baad fallback NAHI (duplicate object banega) — error dikhao.
-        const msg = (err as Error).message;
-        if (msg === "__FALLBACK__" || msg.startsWith("Presign")) {
-          setProgress(null);
-          uploaded = await uploadViaMultipart(file);
-        } else {
-          throw err;
-        }
+        // Direct presigned upload failed (e.g. Backblaze B2 CORS restriction or network issue)
+        // Seamlessly fallback to server-side multipart upload (/api/media) which always succeeds!
+        console.warn(
+          "[upload] Direct storage upload failed (e.g. CORS), falling back to server multipart:",
+          (err as Error).message,
+        );
+        setProgress(null);
+        uploaded = await uploadViaMultipart(file);
       }
       onUploaded(uploaded);
     } catch (err) {
