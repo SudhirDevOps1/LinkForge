@@ -19,13 +19,18 @@ export interface UploadedFile {
   storageProvider: string;
 }
 
+const DEFAULT_MAX_MB = Number(
+  process.env.NEXT_PUBLIC_MAX_UPLOAD_MB ?? 50,
+);
+const DEFAULT_MAX_BYTES = DEFAULT_MAX_MB * 1024 * 1024;
+
 export function FileDropzone({
   onUploaded,
   onError,
   multiple = false,
   compact = false,
   accept,
-  maxBytes = 10 * 1024 * 1024,
+  maxBytes = DEFAULT_MAX_BYTES,
 }: {
   onUploaded: (file: UploadedFile) => void;
   onError?: (message: string) => void;

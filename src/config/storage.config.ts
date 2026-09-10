@@ -137,9 +137,16 @@ export const ALLOWED_IMAGE_TYPES = [
 // Koi bhi file (PDF, docs, audio, video, zip) configured storage provider
 // (local / B2 / R2 / S3 / MinIO / Vercel Blob) par jati hai.
 
-/** Max upload size — env se override (bytes). Default 10 MB. */
+/** Max upload size in MB — env se override (default 50 MB) */
+export const MAX_UPLOAD_MB = Number(
+  process.env.NEXT_PUBLIC_MAX_UPLOAD_MB ??
+    process.env.MAX_UPLOAD_MB ??
+    50,
+);
+
+/** Max upload size in bytes — env se override (default 50 MB). */
 export const MAX_UPLOAD_BYTES = Number(
-  process.env.MAX_UPLOAD_BYTES ?? 10 * 1024 * 1024,
+  process.env.MAX_UPLOAD_BYTES ?? MAX_UPLOAD_MB * 1024 * 1024,
 );
 
 /**
@@ -157,13 +164,24 @@ export const ALLOWED_UPLOAD_TYPES = [
   "text/markdown",
   "text/csv",
   "audio/mpeg",
+  "audio/mp3",
   "audio/wav",
+  "audio/x-wav",
   "audio/ogg",
   "audio/mp4",
+  "audio/x-m4a",
+  "audio/m4a",
+  "audio/aac",
+  "audio/x-aac",
+  "audio/flac",
   "audio/webm",
   "video/mp4",
   "video/webm",
+  "video/quicktime",
+  "video/x-msvideo",
+  "video/x-matroska",
   "application/zip",
+  "application/x-zip-compressed",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   "application/vnd.openxmlformats-officedocument.presentationml.presentation",

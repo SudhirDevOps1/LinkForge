@@ -9,32 +9,38 @@ import { ALLOWED_UPLOAD_TYPES } from "@/config/storage.config";
 /** Ticket TTL: presigned PUT URL 60s me expire (S3 sign bhi 60s) */
 export const TICKET_TTL_MS = 60_000;
 
-/** Extension → expected MIME (spoof check ke liye, lowercase ext) */
-export const EXT_MIME: Record<string, string> = {
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  png: "image/png",
-  gif: "image/gif",
-  webp: "image/webp",
-  avif: "image/avif",
-  pdf: "application/pdf",
-  txt: "text/plain",
-  md: "text/markdown",
-  csv: "text/csv",
-  mp3: "audio/mpeg",
-  wav: "audio/wav",
-  ogg: "audio/ogg",
-  m4a: "audio/mp4",
-  mp4: "video/mp4",
-  webm: "video/webm",
-  zip: "application/zip",
-  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+/** Extension → expected MIME(s) (spoof check ke liye, lowercase ext) */
+export const EXT_MIME: Record<string, string[]> = {
+  jpg: ["image/jpeg"],
+  jpeg: ["image/jpeg"],
+  png: ["image/png"],
+  gif: ["image/gif"],
+  webp: ["image/webp"],
+  avif: ["image/avif"],
+  pdf: ["application/pdf"],
+  txt: ["text/plain"],
+  md: ["text/markdown", "text/plain"],
+  csv: ["text/csv", "text/plain"],
+  mp3: ["audio/mpeg", "audio/mp3"],
+  wav: ["audio/wav", "audio/x-wav"],
+  ogg: ["audio/ogg", "video/ogg", "application/ogg"],
+  m4a: ["audio/mp4", "audio/x-m4a", "audio/m4a", "audio/aac"],
+  aac: ["audio/aac", "audio/x-aac"],
+  flac: ["audio/flac"],
+  mp4: ["video/mp4", "audio/mp4"],
+  mov: ["video/quicktime"],
+  mkv: ["video/x-matroska"],
+  avi: ["video/x-msvideo"],
+  webm: ["video/webm", "audio/webm"],
+  zip: ["application/zip", "application/x-zip-compressed"],
+  docx: ["application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
+  xlsx: ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
+  pptx: ["application/vnd.openxmlformats-officedocument.presentationml.presentation"],
 };
 
 export function mimeForExtension(ext: string): string | null {
-  return EXT_MIME[ext.toLowerCase()] ?? null;
+  const list = EXT_MIME[ext.toLowerCase()];
+  return list ? list[0] : null;
 }
 
 export function isAllowedMime(mime: string): boolean {
@@ -45,7 +51,10 @@ export function isAllowedMime(mime: string): boolean {
 export function extensionMatchesMime(fileName: string, mime: string): boolean {
   const dot = fileName.lastIndexOf(".");
   if (dot <= 0) return false;
-  return mimeForExtension(fileName.slice(dot + 1)) === mime;
+  const ext = fileName.slice(dot + 1).toLowerCase();
+  const list = EXT_MIME[ext];
+  if (!list) return false;
+  return list.includes(mime.toLowerCase());
 }
 
 /**
@@ -76,9 +85,13 @@ export async function verifyMagicBytes(
       m === "image/jpg" ? "image/jpeg" : m;
     if (norm(detected.mime) === claimedMime) return { ok: true, detected: detected.mime };
     // MP4/M4A same container (isom) — file-type mp4 batata hai
+    const isM4A =
+      claimedMime === "audio/mp4" ||
+      claimedMime === "audio/x-m4a" ||
+      claimedMime === "audio/m4a";
     if (
-      claimedMime === "audio/mp4" &&
-      (detected.mime === "video/mp4" || detected.mime === "audio/mp4")
+      isM4A &&
+      (detected.mime === "video/mp4" || detected.mime === "audio/mp4" || detected.mime === "audio/x-m4a")
     ) {
       return { ok: true, detected: detected.mime };
     }
