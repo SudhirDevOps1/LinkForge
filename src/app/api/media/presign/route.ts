@@ -28,7 +28,7 @@ import { presignSchema } from "@/lib/validations";
 export const POST = handle(async (req: Request) => {
   assertSameOrigin(req);
   await guardRateLimit(req, "media:presign", 20);
-  const { profile } = await requireUser();
+  const { user, profile } = await requireUser();
   if (!profile) throw new ApiError(404, "Profile nahi mili");
   if (!isS3Compatible) {
     throw new ApiError(
@@ -65,7 +65,7 @@ export const POST = handle(async (req: Request) => {
     throw new ApiError(501, "Provider presign support nahi karta");
   }
   const ext = safeName.split(".").pop() ?? "bin";
-  const key = newKey("files", ext);
+  const key = newKey(`files/${user.id}`, ext);
   const [ticket] = await db
     .insert(uploadTickets)
     .values({

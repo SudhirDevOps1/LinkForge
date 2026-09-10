@@ -36,7 +36,7 @@ export const GET = handle(async () => {
 export const POST = handle(async (req: Request) => {
   assertSameOrigin(req);
   await guardRateLimit(req, "media:upload", 20);
-  const { profile } = await requireUser();
+  const { user, profile } = await requireUser();
   if (!profile) throw new ApiError(404, "Profile nahi mili");
 
   const [agg] = await db
@@ -67,7 +67,7 @@ export const POST = handle(async (req: Request) => {
 
   const storage = await getStorage();
   const data = Buffer.from(await file.arrayBuffer());
-  const { key, url } = await storage.upload(data, newKey("files", ext), file.type);
+  const { key, url } = await storage.upload(data, newKey(`files/${user.id}`, ext), file.type);
 
   const [created] = await db
     .insert(mediaFiles)

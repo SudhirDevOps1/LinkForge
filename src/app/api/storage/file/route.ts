@@ -29,9 +29,19 @@ export const DELETE = handle(async (req: Request) => {
 
   const safeKey = sanitizeKey(key);
 
-  // Ownership verification:
-  // 1. If key starts with uploads/${user.id}/ or avatars/, allowed.
-  // 2. If present in mediaFiles, profileId must match.
+  // Strict multi-tenant security:
+  // User ONLY allowed to delete files inside their own user folder:
+  // 1) uploads/${user.id}/*
+  // 2) files/${user.id}/*
+  // 3) avatars/${user.id}/*
+  // 4) Or files explicitly owned in mediaFiles (profileId === profile.id)
+  // 5) Or their current profile avatar
+  const isUserScoped =
+    safeKey.startsWith(`uploads/${user.id}/`) ||
+    safeKey.startsWith(`files/${user.id}/`) ||
+    safeKey.startsWith(`avatars/${user.id}/`);
+
+  let isOwnedInDb = false;
   if (profile) {
     const [existing] = await db
       .select()
@@ -40,8 +50,17 @@ export const DELETE = handle(async (req: Request) => {
       .limit(1);
 
     if (existing) {
+      isOwnedInDb = true;
       await db.delete(mediaFiles).where(eq(mediaFiles.id, existing.id));
     }
+
+    if (profile.avatarUrl && profile.avatarUrl.includes(safeKey)) {
+      isOwnedInDb = true;
+    }
+  }
+
+  if (!isUserScoped && !isOwnedInDb) {
+    throw new ApiError(403, "Aap sirf apni files delete kar sakte hain (Permission denied)");
   }
 
   const adapter = await getStorageAdapter();

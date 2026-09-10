@@ -8,7 +8,7 @@ import { guardRateLimit, handle } from "@/lib/api";
 
 type Ctx = { params: Promise<{ key: string[] }> };
 
-const ALLOWED_PREFIXES = ["files/", "avatars/", "thumbs/"];
+const ALLOWED_PREFIXES = ["files/", "avatars/", "thumbs/", "uploads/"];
 
 export const GET = handle(async (req: Request, ctx: Ctx) => {
   // Hotlink abuse guard (public route hai)

@@ -11,7 +11,7 @@ import { getStorage, newKey } from "@/lib/storage";
 export const POST = handle(async (req: Request) => {
   assertSameOrigin(req);
   await guardRateLimit(req, "avatar:upload", 20);
-  const { profile } = await requireUser();
+  const { user, profile } = await requireUser();
   if (!profile) throw new ApiError(404, "Profile nahi mili");
 
   const form = await req.formData().catch(() => null);
@@ -28,7 +28,7 @@ export const POST = handle(async (req: Request) => {
   const ext = file.type.split("/")[1] ?? "bin";
   const storage = await getStorage();
   const data = Buffer.from(await file.arrayBuffer());
-  const { url } = await storage.upload(data, newKey("avatars", ext), file.type);
+  const { url } = await storage.upload(data, newKey(`avatars/${user.id}`, ext), file.type);
 
   const [updated] = await db
     .update(profiles)
