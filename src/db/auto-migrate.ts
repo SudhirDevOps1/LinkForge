@@ -385,6 +385,14 @@ const SQLITE_MIGRATIONS = [
   );`,
   `CREATE UNIQUE INDEX IF NOT EXISTS "rollups_unique_bucket_idx" ON "analytics_rollups" ("profile_id", "date", "link_id", "device", "country");`,
   `CREATE INDEX IF NOT EXISTS "rollups_profile_date_idx" ON "analytics_rollups" ("profile_id", "date");`,
+
+  // Safe non-destructive column sync for SQLite (zero data loss — adds missing columns if tables were created earlier)
+  `ALTER TABLE "profiles" ADD COLUMN "design" text;`,
+  `ALTER TABLE "profiles" ADD COLUMN "og_image_url" text;`,
+  `ALTER TABLE "links" ADD COLUMN "thumbnail_url" text;`,
+  `ALTER TABLE "links" ADD COLUMN "size" text NOT NULL DEFAULT 'standard';`,
+  `ALTER TABLE "media_files" ADD COLUMN "storage_provider" text NOT NULL DEFAULT 'local';`,
+  `ALTER TABLE "media_files" ADD COLUMN "size_bytes" integer NOT NULL DEFAULT 0;`,
 ];
 
 // Runtime caching: Ek serverless cold start mein sirf ek baar execute ho
@@ -413,12 +421,20 @@ export async function autoMigrate(force = false): Promise<{ ok: boolean; count: 
         }
         count++;
       } catch (err) {
-        // Ignorable non-fatal errors (e.g. extension already exists or permission limits)
-        const msg = (err as Error).message.toLowerCase();
+        // Ignorable non-fatal errors (e.g. extension or column already exists)
+        const fullMsg = (
+          ((err as unknown as { cause?: { message?: string } })?.cause?.message ?? "") +
+          " " +
+          ((err as Error).message ?? "") +
+          " " +
+          String(err)
+        ).toLowerCase();
+
         if (
-          msg.includes("already exists") ||
-          msg.includes("duplicate") ||
-          msg.includes("permission denied to create extension")
+          fullMsg.includes("already exists") ||
+          fullMsg.includes("duplicate") ||
+          fullMsg.includes("duplicate column") ||
+          fullMsg.includes("permission denied to create extension")
         ) {
           continue;
         }
