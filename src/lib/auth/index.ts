@@ -67,11 +67,28 @@ export async function signUp(input: {
   password: string;
 }): Promise<User> {
   const email = input.email.toLowerCase().trim();
-  const existing = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(eq(users.email, email))
-    .limit(1);
+
+  let existing: { id: string }[] = [];
+  try {
+    existing = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+  } catch (err) {
+    const msg = String(err).toLowerCase();
+    if (msg.includes("does not exist") || msg.includes("no such table") || msg.includes("relation")) {
+      const { autoMigrate } = await import("@/db/auto-migrate");
+      await autoMigrate(true);
+      existing = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+    } else {
+      throw err;
+    }
+  }
   if (existing.length > 0) {
     throw new ApiError(409, "Is email se account pehle se exists karta hai");
   }
@@ -155,11 +172,30 @@ export async function signIn(input: {
     return signInExternal(input);
   }
   const email = input.email.toLowerCase().trim();
-  const [user] = await db
-    .select()
-    .from(users)
-    .where(eq(users.email, email))
-    .limit(1);
+  let user: User | undefined;
+  try {
+    const res = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+    user = res[0];
+  } catch (err) {
+    const msg = String(err).toLowerCase();
+    if (msg.includes("does not exist") || msg.includes("no such table") || msg.includes("relation")) {
+      const { autoMigrate } = await import("@/db/auto-migrate");
+      await autoMigrate(true);
+      const res = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+      user = res[0];
+    } else {
+      throw err;
+    }
+  }
+
   if (!user?.passwordHash) {
     throw new ApiError(401, "Galat email ya password");
   }

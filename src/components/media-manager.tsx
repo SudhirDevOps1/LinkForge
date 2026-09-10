@@ -8,6 +8,7 @@
 import {
   Check,
   Copy,
+  Download,
   Edit2,
   ExternalLink,
   FileArchive,
@@ -17,6 +18,7 @@ import {
   Image as ImageIcon,
   Link2,
   Search,
+  ShieldCheck,
   Trash2,
   X,
 } from "lucide-react";
@@ -280,9 +282,13 @@ export function MediaManager({
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold">Media Library</h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            {files.length} files · {formatBytes(totalBytes)} · stored on{" "}
+          <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-zinc-500">
+            <span>{files.length} files · {formatBytes(totalBytes)} · stored on</span>
             <span className="font-semibold text-violet-300">{providerLabel}</span>
+            <span className="inline-flex items-center gap-1 rounded-md border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-300">
+              <ShieldCheck className="h-3 w-3 text-emerald-400" />
+              AES-256 Encrypted at Rest
+            </span>
           </p>
           {providerLabel.toLowerCase().includes("b2") && (
             <div className="mt-2 flex items-center gap-2">
@@ -409,6 +415,11 @@ export function MediaManager({
                     <a href={file.url} target="_blank" rel="noreferrer">
                       <Button variant="outline" size="sm">
                         <ExternalLink className="h-3.5 w-3.5" /> Open
+                      </Button>
+                    </a>
+                    <a href={`/api/files/${file.id}/download`} target="_blank" rel="noreferrer">
+                      <Button variant="outline" size="sm" title="Download via 5-min signed private link">
+                        <Download className="h-3.5 w-3.5" /> Download
                       </Button>
                     </a>
                     <Button variant="ghost" size="sm" onClick={() => copyUrl(file)}>

@@ -18,6 +18,7 @@ import { fileCategory } from "@/lib/media";
 import { getStorage } from "@/lib/storage";
 import { isTicketExpired, verifyMagicBytes } from "@/lib/upload-validation";
 import { completeSchema } from "@/lib/validations";
+import { encryptField } from "@/lib/db-cipher";
 
 async function consumeTicket(id: string) {
   await db.update(uploadTickets).set({ usedAt: new Date() }).where(eq(uploadTickets.id, id));
@@ -93,15 +94,22 @@ export const POST = handle(async (req: Request) => {
     .insert(mediaFiles)
     .values({
       profileId: profile.id,
-      fileName: ticket.fileName,
+      fileName: encryptField(ticket.fileName),
       mimeType: ticket.expectedMime,
       sizeBytes: actualSize,
       storageProvider: storage.provider,
-      storageKey: ticket.storageKey,
+      storageKey: encryptField(ticket.storageKey),
       url: storage.getUrl(ticket.storageKey),
     })
     .returning();
   await consumeTicket(ticket.id);
 
-  return json({ file: created, category: fileCategory(ticket.expectedMime) }, { status: 201 });
+  return json({
+    file: {
+      ...created,
+      fileName: ticket.fileName,
+      storageKey: ticket.storageKey,
+    },
+    category: fileCategory(ticket.expectedMime),
+  }, { status: 201 });
 });

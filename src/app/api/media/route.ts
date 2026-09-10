@@ -20,6 +20,8 @@ import { requireUser } from "@/lib/auth";
 import { fileCategory, formatBytes, sanitizeFileName } from "@/lib/media";
 import { getStorage, newKey } from "@/lib/storage";
 
+import { decryptField, encryptField } from "@/lib/db-cipher";
+
 export const GET = handle(async () => {
   const { profile } = await requireUser();
   if (!profile) throw new ApiError(404, "Profile nahi mili");
@@ -29,8 +31,19 @@ export const GET = handle(async () => {
     .where(eq(mediaFiles.profileId, profile.id))
     .orderBy(desc(mediaFiles.createdAt))
     .limit(200);
-  const totalBytes = rows.reduce((sum, r) => sum + (r.sizeBytes ?? 0), 0);
-  return json({ files: rows, totalBytes, totalLabel: formatBytes(totalBytes) });
+
+  const decryptedRows = rows.map((r) => {
+    const decKey = decryptField(r.storageKey);
+    return {
+      ...r,
+      fileName: decryptField(r.fileName),
+      storageKey: decKey,
+      url: r.url.startsWith("http") ? r.url : `/api/storage/file/${decKey}`,
+    };
+  });
+
+  const totalBytes = decryptedRows.reduce((sum, r) => sum + (r.sizeBytes ?? 0), 0);
+  return json({ files: decryptedRows, totalBytes, totalLabel: formatBytes(totalBytes) });
 });
 
 export const POST = handle(async (req: Request) => {
@@ -73,14 +86,21 @@ export const POST = handle(async (req: Request) => {
     .insert(mediaFiles)
     .values({
       profileId: profile.id,
-      fileName: safeName,
+      fileName: encryptField(safeName),
       mimeType: file.type,
       sizeBytes: file.size,
       storageProvider: storage.provider,
-      storageKey: key,
+      storageKey: encryptField(key),
       url,
     })
     .returning();
 
-  return json({ file: created, category: fileCategory(file.type) }, { status: 201 });
+  return json({
+    file: {
+      ...created,
+      fileName: safeName,
+      storageKey: key,
+    },
+    category: fileCategory(file.type),
+  }, { status: 201 });
 });

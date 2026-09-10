@@ -11,7 +11,8 @@ export interface StorageAdapter {
     key: string,
     contentType: string,
     expiresInSec?: number,
-  ): Promise<{ url: string; method: "PUT"; expiresInSeconds: number }>;
+    options?: { contentEncoding?: string },
+  ): Promise<{ url: string; method: "PUT"; expiresInSeconds: number; headers?: Record<string, string> }>;
 
   /** Generate time-limited direct GET download URL with TTL (default 300s) */
   getPresignedGetUrl(

@@ -21,13 +21,15 @@ export class LocalStorageAdapter implements StorageAdapter {
     key: string,
     contentType: string,
     expiresInSec = 600,
-  ): Promise<{ url: string; method: "PUT"; expiresInSeconds: number }> {
+    options?: { contentEncoding?: string },
+  ): Promise<{ url: string; method: "PUT"; expiresInSeconds: number; headers?: Record<string, string> }> {
     const safeKey = sanitizeKey(key);
     // Local development endpoint for direct PUT
     return {
       url: `/api/storage/file/${safeKey}`,
       method: "PUT",
       expiresInSeconds: expiresInSec,
+      headers: options?.contentEncoding ? { "Content-Encoding": options.contentEncoding } : undefined,
     };
   }
 

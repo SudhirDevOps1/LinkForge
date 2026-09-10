@@ -134,19 +134,23 @@ export class B2StorageAdapter implements StorageAdapter {
     key: string,
     contentType: string,
     expiresInSec = B2_PRESIGN_PUT_EXPIRY_SEC,
-  ): Promise<{ url: string; method: "PUT"; expiresInSeconds: number }> {
+    options?: { contentEncoding?: string },
+  ): Promise<{ url: string; method: "PUT"; expiresInSeconds: number; headers?: Record<string, string> }> {
     const safeKey = sanitizeKey(key);
     try {
-      const url = await getSignedUrl(
-        this.client,
-        new PutObjectCommand({
-          Bucket: this.config.bucket,
-          Key: safeKey,
-          ContentType: contentType,
-        }),
-        { expiresIn: expiresInSec },
-      );
-      return { url, method: "PUT", expiresInSeconds: expiresInSec };
+      const command = new PutObjectCommand({
+        Bucket: this.config.bucket,
+        Key: safeKey,
+        ContentType: contentType,
+        ...(options?.contentEncoding ? { ContentEncoding: options.contentEncoding } : {}),
+      });
+      const url = await getSignedUrl(this.client, command, { expiresIn: expiresInSec });
+      return {
+        url,
+        method: "PUT",
+        expiresInSeconds: expiresInSec,
+        headers: options?.contentEncoding ? { "Content-Encoding": options.contentEncoding } : undefined,
+      };
     } catch (err) {
       console.error(`[b2-adapter] getPresignedPutUrl failed for "${safeKey}":`, err);
       throw new Error(`B2 presigned upload failed: ${(err as Error).message}`);

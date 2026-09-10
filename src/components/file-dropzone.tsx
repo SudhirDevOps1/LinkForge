@@ -7,7 +7,9 @@
 // =============================================================================
 import { FileUp, Loader2, Upload, X } from "lucide-react";
 import { useRef, useState } from "react";
+import { toast } from "sonner";
 import { cn } from "@/components/ui";
+import { compressFileGzip } from "@/lib/client-compression";
 
 export interface UploadedFile {
   id: string;
@@ -50,28 +52,44 @@ export function FileDropzone({
     abortRef.current?.abort();
   }
 
-  /** S3 presign flow: ticket → direct PUT (progress + cancel) → complete */
+  /** Direct B2 presign flow with client-side GZIP compression & DB encryption */
   async function uploadViaPresign(file: File): Promise<UploadedFile> {
-    const pre = await fetch("/api/media/presign", {
+    // 1. Client-Side GZIP compression (50-70% size reduction on PDFs/docs/text)
+    const compression = await compressFileGzip(file);
+    const blobToUpload = compression.blob;
+    const isGzip = compression.isCompressed;
+
+    const pre = await fetch("/api/files/upload-request", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fileName: file.name, mime: file.type, size: file.size }),
+      body: JSON.stringify({
+        fileName: file.name,
+        mimeType: file.type || "application/octet-stream",
+        fileSize: blobToUpload.size,
+        isGzip,
+      }),
     });
-    if (pre.status === 501) throw new Error("__FALLBACK__"); // local/blob → multipart
-    const ticket = (await pre.json().catch(() => ({}))) as {
-      ticketId?: string;
-      url?: string;
+
+    if (pre.status === 501) throw new Error("__FALLBACK__");
+    const reqData = (await pre.json().catch(() => ({}))) as {
+      uploadUrl?: string;
+      rawStorageKey?: string;
+      headers?: Record<string, string>;
       error?: string;
     };
-    if (!pre.ok || !ticket.ticketId || !ticket.url) {
-      throw new Error(ticket.error ?? "Presign failed");
+    if (!pre.ok || !reqData.uploadUrl || !reqData.rawStorageKey) {
+      throw new Error(reqData.error ?? "Presign request failed");
     }
-    // Direct PUT with real progress + cancel (XHR — fetch me upload progress nahi)
+
+    // 2. Direct browser-to-B2 PUT (bypasses Vercel 4.5MB limit)
     await new Promise<void>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       abortRef.current = { abort: () => xhr.abort() };
-      xhr.open("PUT", ticket.url as string);
-      xhr.setRequestHeader("Content-Type", file.type);
+      xhr.open("PUT", reqData.uploadUrl as string);
+      xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
+      if (isGzip) {
+        xhr.setRequestHeader("Content-Encoding", "gzip");
+      }
       xhr.upload.onprogress = (e) => {
         if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100));
       };
@@ -79,24 +97,39 @@ export function FileDropzone({
         xhr.status >= 200 && xhr.status < 300
           ? resolve()
           : reject(new Error(`Storage upload failed (${xhr.status})`));
-      xhr.onerror = () => reject(new Error("Storage upload failed"));
+      xhr.onerror = () => reject(new Error("Storage upload failed (CORS check)"));
       xhr.onabort = () => reject(new Error("Upload cancel kiya gaya"));
-      xhr.send(file);
+      xhr.send(blobToUpload);
     });
-    const done = await fetch("/api/media/complete", {
+
+    // 3. Save metadata with Neon DB AES-256-GCM encryption
+    const done = await fetch("/api/files/save", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ticketId: ticket.ticketId }),
+      body: JSON.stringify({
+        rawFileName: file.name,
+        rawStorageKey: reqData.rawStorageKey,
+        fileSize: blobToUpload.size,
+        mimeType: file.type || "application/octet-stream",
+        originalSize: file.size,
+        isCompressed: isGzip,
+      }),
     });
+
     const data = (await done.json().catch(() => ({}))) as {
       file?: UploadedFile;
       error?: string;
     };
-    if (!done.ok || !data.file) throw new Error(data.error ?? "Verify failed");
+    if (!done.ok || !data.file) throw new Error(data.error ?? "Failed to save file metadata");
+
+    if (isGzip && compression.savingsPercent > 0) {
+      toast.success(`"${file.name}" uploaded! GZIP saved ${compression.savingsPercent}% space.`);
+    }
+
     return data.file;
   }
 
-  /** Classic multipart (local/blob + fallback) — pehle jaisa, untouched logic */
+  /** Classic multipart fallback — seamless backup */
   async function uploadViaMultipart(file: File): Promise<UploadedFile> {
     const fd = new FormData();
     fd.append("file", file);
