@@ -31,7 +31,8 @@ export function handle<Args extends unknown[]>(
     } catch (err) {
       if (err instanceof ApiError) return apiError(err.status, err.message);
       console.error("[api] unexpected error:", err);
-      return apiError(500, "Internal server error");
+      const message = err instanceof Error ? err.message : "Internal server error";
+      return apiError(500, message);
     }
   };
 }

@@ -26,6 +26,15 @@ interface S3Env {
   forcePathStyle: boolean;
 }
 
+function clean(val: string | undefined): string | undefined {
+  if (!val) return undefined;
+  let s = val.trim();
+  if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+    s = s.slice(1, -1).trim();
+  }
+  return s || undefined;
+}
+
 /**
  * Private B2 bucket (free tier) — public URL kaam nahi karta, app proxy
  * (/api/file/...) stream karta hai. Sirf b2 + B2_PRIVATE_BUCKET=true par on.
@@ -33,21 +42,21 @@ interface S3Env {
 export const isPrivateB2 =
   storageProvider === "b2" &&
   ["true", "1", "yes"].includes(
-    (process.env.B2_PRIVATE_BUCKET ?? process.env.B2_IS_PRIVATE ?? "").trim().toLowerCase(),
+    (clean(process.env.B2_PRIVATE_BUCKET) ?? clean(process.env.B2_IS_PRIVATE) ?? "").toLowerCase(),
   );
 
 function resolveEnv(): S3Env {
   switch (storageProvider) {
     case "b2": {
-      const bucket = process.env.B2_BUCKET_NAME ?? process.env.B2_BUCKET;
+      const bucket = clean(process.env.B2_BUCKET_NAME) ?? clean(process.env.B2_BUCKET);
       const keyId =
-        process.env.B2_APPLICATION_KEY_ID ??
-        process.env.B2_KEY_ID ??
-        process.env.B2_ACCESS_KEY_ID;
+        clean(process.env.B2_APPLICATION_KEY_ID) ??
+        clean(process.env.B2_KEY_ID) ??
+        clean(process.env.B2_ACCESS_KEY_ID);
       const secretKey =
-        process.env.B2_APPLICATION_KEY ??
-        process.env.B2_APP_KEY ??
-        process.env.B2_SECRET_ACCESS_KEY;
+        clean(process.env.B2_APPLICATION_KEY) ??
+        clean(process.env.B2_APP_KEY) ??
+        clean(process.env.B2_SECRET_ACCESS_KEY);
 
       if (!bucket) {
         throw new Error("B2_BUCKET_NAME (ya B2_BUCKET) env var required hai (STORAGE_PROVIDER=b2)");
@@ -59,64 +68,74 @@ function resolveEnv(): S3Env {
         throw new Error("B2_APPLICATION_KEY (ya B2_APP_KEY) env var required hai (STORAGE_PROVIDER=b2)");
       }
 
-      const rawEndpoint = process.env.B2_ENDPOINT?.trim();
+      let rawEndpoint = clean(process.env.B2_ENDPOINT) ?? "";
       let endpoint: string;
-      if (rawEndpoint) {
-        endpoint = rawEndpoint.startsWith("http://") || rawEndpoint.startsWith("https://")
-          ? rawEndpoint
-          : `https://${rawEndpoint}`;
-      } else {
-        endpoint = `https://s3.${process.env.B2_REGION ?? "us-west-004"}.backblazeb2.com`;
-      }
+      let region = clean(process.env.B2_REGION);
 
-      // Auto-extract region from endpoint if not explicitly provided
-      const regionMatch = endpoint.match(/s3\.([a-z0-9-]+)\.backblazeb2\.com/i);
-      const region = process.env.B2_REGION ?? regionMatch?.[1] ?? "us-west-004";
+      if (rawEndpoint) {
+        if (!rawEndpoint.startsWith("http://") && !rawEndpoint.startsWith("https://")) {
+          rawEndpoint = `https://${rawEndpoint}`;
+        }
+        rawEndpoint = rawEndpoint.replace(/\/+$/, "");
+
+        const b2Match = rawEndpoint.match(
+          /(?:https?:\/\/)?(?:[a-zA-Z0-9-]+\.)*s3\.([a-z0-9-]+)\.backblazeb2\.com/i,
+        );
+        if (b2Match) {
+          region = region ?? b2Match[1];
+          endpoint = `https://s3.${region}.backblazeb2.com`;
+        } else {
+          endpoint = rawEndpoint;
+        }
+      } else {
+        region = region ?? "us-west-004";
+        endpoint = `https://s3.${region}.backblazeb2.com`;
+      }
 
       return {
         endpoint,
-        region,
+        region: region ?? "us-west-004",
         bucket,
         accessKeyId: keyId,
         secretAccessKey: secretKey,
-        publicBaseUrl: process.env.B2_PUBLIC_URL,
+        publicBaseUrl: clean(process.env.B2_PUBLIC_URL),
         forcePathStyle: true,
       };
     }
     case "r2":
       return {
-        endpoint: `https://${required("R2_ACCOUNT_ID")}.r2.cloudflarestorage.com`,
+        endpoint: `https://${clean(required("R2_ACCOUNT_ID"))}.r2.cloudflarestorage.com`,
         region: "auto",
-        bucket: required("R2_BUCKET_NAME"),
-        accessKeyId: required("R2_ACCESS_KEY_ID"),
-        secretAccessKey: required("R2_SECRET_ACCESS_KEY"),
-        publicBaseUrl: process.env.R2_PUBLIC_URL,
+        bucket: clean(required("R2_BUCKET_NAME"))!,
+        accessKeyId: clean(required("R2_ACCESS_KEY_ID"))!,
+        secretAccessKey: clean(required("R2_SECRET_ACCESS_KEY"))!,
+        publicBaseUrl: clean(process.env.R2_PUBLIC_URL),
         forcePathStyle: true,
       };
     case "minio":
       return {
-        endpoint: process.env.MINIO_ENDPOINT ?? "http://localhost:9000",
-        region: process.env.MINIO_REGION ?? "us-east-1",
-        bucket: required("MINIO_BUCKET_NAME"),
-        accessKeyId: process.env.MINIO_ACCESS_KEY ?? "minioadmin",
-        secretAccessKey: process.env.MINIO_SECRET_KEY ?? "minioadmin",
-        publicBaseUrl: process.env.MINIO_PUBLIC_URL,
+        endpoint: clean(process.env.MINIO_ENDPOINT) ?? "http://localhost:9000",
+        region: clean(process.env.MINIO_REGION) ?? "us-east-1",
+        bucket: clean(required("MINIO_BUCKET_NAME"))!,
+        accessKeyId: clean(process.env.MINIO_ACCESS_KEY) ?? "minioadmin",
+        secretAccessKey: clean(process.env.MINIO_SECRET_KEY) ?? "minioadmin",
+        publicBaseUrl: clean(process.env.MINIO_PUBLIC_URL),
         forcePathStyle: true,
       };
     default: // s3
       return {
-        region: process.env.AWS_REGION ?? "us-east-1",
-        bucket: required("AWS_BUCKET_NAME"),
-        accessKeyId: required("AWS_ACCESS_KEY_ID"),
-        secretAccessKey: required("AWS_SECRET_ACCESS_KEY"),
-        publicBaseUrl: process.env.AWS_PUBLIC_URL,
+        region: clean(process.env.AWS_REGION) ?? "us-east-1",
+        bucket: clean(required("AWS_BUCKET_NAME"))!,
+        accessKeyId: clean(required("AWS_ACCESS_KEY_ID"))!,
+        secretAccessKey: clean(required("AWS_SECRET_ACCESS_KEY"))!,
+        publicBaseUrl: clean(process.env.AWS_PUBLIC_URL),
         forcePathStyle: false,
       };
   }
 }
 
 function required(name: string): string {
-  const value = process.env[name];
+  const value = clean(process.env[name]);
   if (!value) throw new Error(`${name} env var required hai (STORAGE_PROVIDER=${storageProvider})`);
   return value;
 }
@@ -131,6 +150,8 @@ export function createS3Storage(): StorageService {
       secretAccessKey: env.secretAccessKey,
     },
     forcePathStyle: env.forcePathStyle,
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    responseChecksumValidation: "WHEN_REQUIRED",
   });
 
   const publicUrl = (key: string) =>
@@ -146,21 +167,34 @@ export function createS3Storage(): StorageService {
     provider: storageProvider,
     async upload(data, key, contentType) {
       const safe = sanitizeKey(key);
-      await client.send(
-        new PutObjectCommand({
-          Bucket: env.bucket,
-          Key: safe,
-          Body: data,
-          ContentType: contentType,
-          CacheControl: "public, max-age=31536000, immutable",
-        }),
-      );
+      const buf = Buffer.isBuffer(data) ? data : Buffer.from(data);
+      try {
+        await client.send(
+          new PutObjectCommand({
+            Bucket: env.bucket,
+            Key: safe,
+            Body: buf,
+            ContentType: contentType,
+            ContentLength: buf.length,
+            CacheControl: "public, max-age=31536000, immutable",
+          }),
+        );
+      } catch (err) {
+        console.error(`[storage:${storageProvider}] PutObject failed for key "${safe}":`, err);
+        throw new Error(`Storage upload failed: ${(err as Error).message}`);
+      }
       return { key: safe, url: publicUrl(safe) };
     },
     async delete(key) {
-      await client.send(
-        new DeleteObjectCommand({ Bucket: env.bucket, Key: sanitizeKey(key) }),
-      );
+      const safe = sanitizeKey(key);
+      try {
+        await client.send(
+          new DeleteObjectCommand({ Bucket: env.bucket, Key: safe }),
+        );
+      } catch (err) {
+        console.error(`[storage:${storageProvider}] DeleteObject failed for key "${safe}":`, err);
+        throw new Error(`Storage delete failed: ${(err as Error).message}`);
+      }
     },
     getUrl: publicUrl,
     /** Proxy streaming: private bucket objects app route se serve hote hain */
@@ -202,51 +236,66 @@ export function createS3Storage(): StorageService {
     /** Complete-flow: object ka actual size/type (ticket verify ke liye) */
     async stat(key) {
       const safe = sanitizeKey(key);
-      const head = await client.send(
-        new HeadObjectCommand({ Bucket: env.bucket, Key: safe }),
-      );
-      return { sizeBytes: head.ContentLength ?? 0, contentType: head.ContentType };
+      try {
+        const head = await client.send(
+          new HeadObjectCommand({ Bucket: env.bucket, Key: safe }),
+        );
+        return { sizeBytes: head.ContentLength ?? 0, contentType: head.ContentType };
+      } catch (err) {
+        console.error(`[storage:${storageProvider}] HeadObject failed for key "${safe}":`, err);
+        throw new Error(`Storage stat failed: ${(err as Error).message}`);
+      }
     },
     /** Complete-flow: pehle maxBytes (magic-byte signature check) */
     async readPrefix(key, maxBytes) {
       const safe = sanitizeKey(key);
       const n = Math.max(1, Math.min(maxBytes, 64 * 1024));
-      const res = await client.send(
-        new GetObjectCommand({ Bucket: env.bucket, Key: safe, Range: `bytes=0-${n - 1}` }),
-      );
-      const body = res.Body as unknown as
-        | { transformToByteArray?: () => Promise<Uint8Array> }
-        | AsyncIterable<Uint8Array>
-        | undefined;
-      if (body && typeof (body as { transformToByteArray?: unknown }).transformToByteArray === "function") {
-        return await (body as { transformToByteArray: () => Promise<Uint8Array> }).transformToByteArray();
+      try {
+        const res = await client.send(
+          new GetObjectCommand({ Bucket: env.bucket, Key: safe, Range: `bytes=0-${n - 1}` }),
+        );
+        const body = res.Body as unknown as
+          | { transformToByteArray?: () => Promise<Uint8Array> }
+          | AsyncIterable<Uint8Array>
+          | undefined;
+        if (body && typeof (body as { transformToByteArray?: unknown }).transformToByteArray === "function") {
+          return await (body as { transformToByteArray: () => Promise<Uint8Array> }).transformToByteArray();
+        }
+        const chunks: Uint8Array[] = [];
+        if (body && Symbol.asyncIterator in Object(body)) {
+          for await (const chunk of body as AsyncIterable<Uint8Array>) chunks.push(chunk);
+        }
+        const total = chunks.reduce((s, c) => s + c.length, 0);
+        const out = new Uint8Array(total);
+        let off = 0;
+        for (const c of chunks) {
+          out.set(c, off);
+          off += c.length;
+        }
+        return out;
+      } catch (err) {
+        console.error(`[storage:${storageProvider}] readPrefix failed for key "${safe}":`, err);
+        throw new Error(`Storage read failed: ${(err as Error).message}`);
       }
-      const chunks: Uint8Array[] = [];
-      if (body && Symbol.asyncIterator in Object(body)) {
-        for await (const chunk of body as AsyncIterable<Uint8Array>) chunks.push(chunk);
-      }
-      const total = chunks.reduce((s, c) => s + c.length, 0);
-      const out = new Uint8Array(total);
-      let off = 0;
-      for (const c of chunks) {
-        out.set(c, off);
-        off += c.length;
-      }
-      return out;
     },
     /** Browser → storage direct upload (60s valid) */
     async getPresignedUploadUrl(key, contentType) {
       const safe = sanitizeKey(key);
-      const url = await getSignedUrl(
-        client,
-        new PutObjectCommand({
-          Bucket: env.bucket,
-          Key: safe,
-          ContentType: contentType,
-        }),
-        { expiresIn: 60 },
-      );
-      return { url, key: safe, publicUrl: publicUrl(safe) };
+      try {
+        const url = await getSignedUrl(
+          client,
+          new PutObjectCommand({
+            Bucket: env.bucket,
+            Key: safe,
+            ContentType: contentType,
+          }),
+          { expiresIn: 60 },
+        );
+        return { url, key: safe, publicUrl: publicUrl(safe) };
+      } catch (err) {
+        console.error(`[storage:${storageProvider}] getSignedUrl failed for key "${safe}":`, err);
+        throw new Error(`Storage presign failed: ${(err as Error).message}`);
+      }
     },
   };
 }
