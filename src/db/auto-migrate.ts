@@ -251,12 +251,86 @@ const PG_MIGRATIONS = [
   );`,
   `CREATE INDEX IF NOT EXISTS "verifications_identifier_idx" ON "verifications" ("identifier");`,
 
+  // 17. Passkeys (WebAuthn / FIDO2)
+  `CREATE TABLE IF NOT EXISTS "passkeys" (
+    "id" text PRIMARY KEY,
+    "name" text,
+    "public_key" text NOT NULL,
+    "user_id" uuid NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+    "credential_id" text NOT NULL,
+    "counter" integer NOT NULL DEFAULT 0,
+    "device_type" text NOT NULL DEFAULT 'singleDevice',
+    "backed_up" boolean NOT NULL DEFAULT false,
+    "transports" text,
+    "aaguid" text,
+    "created_at" timestamp with time zone NOT NULL DEFAULT now()
+  );`,
+  `CREATE INDEX IF NOT EXISTS "passkeys_user_idx" ON "passkeys" ("user_id");`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "passkeys_credential_id_idx" ON "passkeys" ("credential_id");`,
+
+  // 18. Two Factor (TOTP Authenticator & Backup Codes)
+  `CREATE TABLE IF NOT EXISTS "two_factors" (
+    "id" text PRIMARY KEY,
+    "secret" text NOT NULL,
+    "backup_codes" text NOT NULL,
+    "user_id" uuid NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+    "verified" boolean NOT NULL DEFAULT true,
+    "failed_verification_count" integer NOT NULL DEFAULT 0,
+    "locked_until" timestamp with time zone
+  );`,
+  `CREATE INDEX IF NOT EXISTS "two_factors_user_idx" ON "two_factors" ("user_id");`,
+
+  // 19. Organizations (Multi-tenant Workspaces)
+  `CREATE TABLE IF NOT EXISTS "organizations" (
+    "id" text PRIMARY KEY,
+    "name" text NOT NULL,
+    "slug" text NOT NULL,
+    "logo" text,
+    "metadata" text,
+    "created_at" timestamp with time zone NOT NULL DEFAULT now()
+  );`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "organizations_slug_idx" ON "organizations" ("slug");`,
+
+  // 20. Members (Team Memberships)
+  `CREATE TABLE IF NOT EXISTS "members" (
+    "id" text PRIMARY KEY,
+    "organization_id" text NOT NULL REFERENCES "organizations"("id") ON DELETE CASCADE,
+    "user_id" uuid NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+    "role" text NOT NULL DEFAULT 'member',
+    "created_at" timestamp with time zone NOT NULL DEFAULT now()
+  );`,
+  `CREATE INDEX IF NOT EXISTS "members_org_idx" ON "members" ("organization_id");`,
+  `CREATE INDEX IF NOT EXISTS "members_user_idx" ON "members" ("user_id");`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "members_org_user_idx" ON "members" ("organization_id", "user_id");`,
+
+  // 21. Invitations (Team Invites)
+  `CREATE TABLE IF NOT EXISTS "invitations" (
+    "id" text PRIMARY KEY,
+    "organization_id" text NOT NULL REFERENCES "organizations"("id") ON DELETE CASCADE,
+    "email" text NOT NULL,
+    "role" text NOT NULL DEFAULT 'member',
+    "status" text NOT NULL DEFAULT 'pending',
+    "team_id" text,
+    "inviter_id" uuid NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+    "expires_at" timestamp with time zone NOT NULL,
+    "created_at" timestamp with time zone NOT NULL DEFAULT now()
+  );`,
+  `CREATE INDEX IF NOT EXISTS "invitations_org_idx" ON "invitations" ("organization_id");`,
+  `CREATE INDEX IF NOT EXISTS "invitations_email_idx" ON "invitations" ("email");`,
+
   // Safe non-destructive column sync (in case tables existed previously from older schema)
   `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "email_verified" boolean NOT NULL DEFAULT false;`,
   `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "image" text;`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "two_factor_enabled" boolean NOT NULL DEFAULT false;`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "is_anonymous" boolean NOT NULL DEFAULT false;`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "banned" boolean NOT NULL DEFAULT false;`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "ban_reason" text;`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "ban_expires" timestamp with time zone;`,
   `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "updated_at" timestamp with time zone NOT NULL DEFAULT now();`,
   `ALTER TABLE "sessions" ADD COLUMN IF NOT EXISTS "token" text NOT NULL DEFAULT '';`,
   `ALTER TABLE "sessions" ADD COLUMN IF NOT EXISTS "ip_address" text;`,
+  `ALTER TABLE "sessions" ADD COLUMN IF NOT EXISTS "impersonated_by" text;`,
+  `ALTER TABLE "sessions" ADD COLUMN IF NOT EXISTS "active_organization_id" text;`,
   `ALTER TABLE "sessions" ADD COLUMN IF NOT EXISTS "updated_at" timestamp with time zone NOT NULL DEFAULT now();`,
   `ALTER TABLE "profiles" ADD COLUMN IF NOT EXISTS "design" jsonb;`,
   `ALTER TABLE "profiles" ADD COLUMN IF NOT EXISTS "og_image_url" text;`,
@@ -499,12 +573,86 @@ const SQLITE_MIGRATIONS = [
   );`,
   `CREATE INDEX IF NOT EXISTS "verifications_identifier_idx" ON "verifications" ("identifier");`,
 
+  // 17. Passkeys (WebAuthn / FIDO2)
+  `CREATE TABLE IF NOT EXISTS "passkeys" (
+    "id" text PRIMARY KEY NOT NULL,
+    "name" text,
+    "public_key" text NOT NULL,
+    "user_id" text NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+    "credential_id" text NOT NULL,
+    "counter" integer NOT NULL DEFAULT 0,
+    "device_type" text NOT NULL DEFAULT 'singleDevice',
+    "backed_up" integer NOT NULL DEFAULT 0,
+    "transports" text,
+    "aaguid" text,
+    "created_at" integer NOT NULL
+  );`,
+  `CREATE INDEX IF NOT EXISTS "passkeys_user_idx" ON "passkeys" ("user_id");`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "passkeys_credential_id_idx" ON "passkeys" ("credential_id");`,
+
+  // 18. Two Factor (TOTP Authenticator & Backup Codes)
+  `CREATE TABLE IF NOT EXISTS "two_factors" (
+    "id" text PRIMARY KEY NOT NULL,
+    "secret" text NOT NULL,
+    "backup_codes" text NOT NULL,
+    "user_id" text NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+    "verified" integer NOT NULL DEFAULT 1,
+    "failed_verification_count" integer NOT NULL DEFAULT 0,
+    "locked_until" integer
+  );`,
+  `CREATE INDEX IF NOT EXISTS "two_factors_user_idx" ON "two_factors" ("user_id");`,
+
+  // 19. Organizations (Multi-tenant Workspaces)
+  `CREATE TABLE IF NOT EXISTS "organizations" (
+    "id" text PRIMARY KEY NOT NULL,
+    "name" text NOT NULL,
+    "slug" text NOT NULL,
+    "logo" text,
+    "metadata" text,
+    "created_at" integer NOT NULL
+  );`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "organizations_slug_idx" ON "organizations" ("slug");`,
+
+  // 20. Members (Team Memberships)
+  `CREATE TABLE IF NOT EXISTS "members" (
+    "id" text PRIMARY KEY NOT NULL,
+    "organization_id" text NOT NULL REFERENCES "organizations"("id") ON DELETE CASCADE,
+    "user_id" text NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+    "role" text NOT NULL DEFAULT 'member',
+    "created_at" integer NOT NULL
+  );`,
+  `CREATE INDEX IF NOT EXISTS "members_org_idx" ON "members" ("organization_id");`,
+  `CREATE INDEX IF NOT EXISTS "members_user_idx" ON "members" ("user_id");`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "members_org_user_idx" ON "members" ("organization_id", "user_id");`,
+
+  // 21. Invitations (Team Invites)
+  `CREATE TABLE IF NOT EXISTS "invitations" (
+    "id" text PRIMARY KEY NOT NULL,
+    "organization_id" text NOT NULL REFERENCES "organizations"("id") ON DELETE CASCADE,
+    "email" text NOT NULL,
+    "role" text NOT NULL DEFAULT 'member',
+    "status" text NOT NULL DEFAULT 'pending',
+    "team_id" text,
+    "inviter_id" text NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+    "expires_at" integer NOT NULL,
+    "created_at" integer NOT NULL
+  );`,
+  `CREATE INDEX IF NOT EXISTS "invitations_org_idx" ON "invitations" ("organization_id");`,
+  `CREATE INDEX IF NOT EXISTS "invitations_email_idx" ON "invitations" ("email");`,
+
   // Safe non-destructive column sync for SQLite (zero data loss — adds missing columns if tables were created earlier)
   `ALTER TABLE "users" ADD COLUMN "email_verified" integer NOT NULL DEFAULT 0;`,
   `ALTER TABLE "users" ADD COLUMN "image" text;`,
+  `ALTER TABLE "users" ADD COLUMN "two_factor_enabled" integer NOT NULL DEFAULT 0;`,
+  `ALTER TABLE "users" ADD COLUMN "is_anonymous" integer NOT NULL DEFAULT 0;`,
+  `ALTER TABLE "users" ADD COLUMN "banned" integer NOT NULL DEFAULT 0;`,
+  `ALTER TABLE "users" ADD COLUMN "ban_reason" text;`,
+  `ALTER TABLE "users" ADD COLUMN "ban_expires" integer;`,
   `ALTER TABLE "users" ADD COLUMN "updated_at" integer;`,
   `ALTER TABLE "sessions" ADD COLUMN "token" text NOT NULL DEFAULT '';`,
   `ALTER TABLE "sessions" ADD COLUMN "ip_address" text;`,
+  `ALTER TABLE "sessions" ADD COLUMN "impersonated_by" text;`,
+  `ALTER TABLE "sessions" ADD COLUMN "active_organization_id" text;`,
   `ALTER TABLE "sessions" ADD COLUMN "updated_at" integer;`,
   `ALTER TABLE "profiles" ADD COLUMN "design" text;`,
   `ALTER TABLE "profiles" ADD COLUMN "og_image_url" text;`,

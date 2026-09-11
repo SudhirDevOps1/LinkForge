@@ -34,6 +34,11 @@ export const users = pgTable(
     passwordHash: text("password_hash"), // null when OAuth-only user
     avatarUrl: text("avatar_url"),
     role: text("role").notNull().default("user"),
+    twoFactorEnabled: boolean("two_factor_enabled").notNull().default(false),
+    isAnonymous: boolean("is_anonymous").notNull().default(false),
+    banned: boolean("banned").notNull().default(false),
+    banReason: text("ban_reason"),
+    banExpires: timestamp("ban_expires", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -58,6 +63,8 @@ export const sessions = pgTable(
     ipAddress: text("ip_address"),
     userAgent: text("user_agent"),
     ipHash: text("ip_hash"), // privacy-first: raw IP kabhi store nahi hota
+    impersonatedBy: text("impersonated_by"),
+    activeOrganizationId: text("active_organization_id"),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
@@ -458,6 +465,122 @@ export const verifications = pgTable(
   ],
 );
 
+// ---------------------------------------------------------------------------
+// 🛡️ Passkeys — WebAuthn / FIDO2 Passwordless Authentication
+// ---------------------------------------------------------------------------
+export const passkeys = pgTable(
+  "passkeys",
+  {
+    id: text("id").primaryKey(),
+    name: text("name"),
+    publicKey: text("public_key").notNull(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    credentialID: text("credential_id").notNull(),
+    counter: integer("counter").notNull().default(0),
+    deviceType: text("device_type").notNull().default("singleDevice"),
+    backedUp: boolean("backed_up").notNull().default(false),
+    transports: text("transports"),
+    aaguid: text("aaguid"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("passkeys_user_idx").on(t.userId),
+    uniqueIndex("passkeys_credential_id_idx").on(t.credentialID),
+  ],
+);
+
+// ---------------------------------------------------------------------------
+// 🛡️ Two Factor — Authenticator App (TOTP Mode) & Offline Recovery Codes
+// ---------------------------------------------------------------------------
+export const twoFactors = pgTable(
+  "two_factors",
+  {
+    id: text("id").primaryKey(),
+    secret: text("secret").notNull(),
+    backupCodes: text("backup_codes").notNull(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    verified: boolean("verified").notNull().default(true),
+    failedVerificationCount: integer("failed_verification_count").notNull().default(0),
+    lockedUntil: timestamp("locked_until", { withTimezone: true }),
+  },
+  (t) => [
+    index("two_factors_user_idx").on(t.userId),
+  ],
+);
+
+// ---------------------------------------------------------------------------
+// 🛡️ Organizations — Multi-tenant Teams & Workspaces
+// ---------------------------------------------------------------------------
+export const organizations = pgTable(
+  "organizations",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    slug: text("slug").notNull(),
+    logo: text("logo"),
+    metadata: text("metadata"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("organizations_slug_idx").on(t.slug),
+  ],
+);
+
+export const members = pgTable(
+  "members",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    role: text("role").notNull().default("member"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("members_org_idx").on(t.organizationId),
+    index("members_user_idx").on(t.userId),
+    uniqueIndex("members_org_user_idx").on(t.organizationId, t.userId),
+  ],
+);
+
+export const invitations = pgTable(
+  "invitations",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    email: text("email").notNull(),
+    role: text("role").notNull().default("member"),
+    status: text("status").notNull().default("pending"),
+    teamId: text("team_id"),
+    inviterId: uuid("inviter_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("invitations_org_idx").on(t.organizationId),
+    index("invitations_email_idx").on(t.email),
+  ],
+);
+
 // ---- Inferred types --------------------------------------------------------
 export type User = typeof users.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
@@ -473,4 +596,9 @@ export type AnalyticsRollup = typeof analyticsRollups.$inferSelect;
 export type Subscriber = typeof subscribers.$inferSelect;
 export type Account = typeof accounts.$inferSelect;
 export type Verification = typeof verifications.$inferSelect;
+export type Passkey = typeof passkeys.$inferSelect;
+export type TwoFactor = typeof twoFactors.$inferSelect;
+export type Organization = typeof organizations.$inferSelect;
+export type Member = typeof members.$inferSelect;
+export type Invitation = typeof invitations.$inferSelect;
 

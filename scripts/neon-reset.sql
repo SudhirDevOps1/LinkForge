@@ -7,12 +7,17 @@
 -- 3. Left sidebar me "SQL Editor" par click karein.
 -- 4. Yeh poori script copy karke editor me paste karein.
 -- 5. "Run" (green button) par click karein.
--- Result: Database clean ho jayega aur saare 16 tables + indexes ready ho jayenge!
+-- Result: Database clean ho jayega aur saare 21 tables + indexes ready ho jayenge!
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
 -- STEP 1: PURANE TABLES KO SAFELY DROP KAREIN (CASCADE CLEANUP)
 -- -----------------------------------------------------------------------------
+DROP TABLE IF EXISTS "invitations" CASCADE;
+DROP TABLE IF EXISTS "members" CASCADE;
+DROP TABLE IF EXISTS "organizations" CASCADE;
+DROP TABLE IF EXISTS "two_factors" CASCADE;
+DROP TABLE IF EXISTS "passkeys" CASCADE;
 DROP TABLE IF EXISTS "verifications" CASCADE;
 DROP TABLE IF EXISTS "accounts" CASCADE;
 DROP TABLE IF EXISTS "subscribers" CASCADE;
@@ -36,7 +41,7 @@ DROP TABLE IF EXISTS "users" CASCADE;
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- -----------------------------------------------------------------------------
--- STEP 3: SARE 16 TABLES + INDEXES CREATE KAREIN
+-- STEP 3: SARE 21 TABLES + INDEXES CREATE KAREIN
 -- -----------------------------------------------------------------------------
 
 -- 1. Users
@@ -49,6 +54,11 @@ CREATE TABLE "users" (
   "password_hash" text,
   "avatar_url" text,
   "role" text NOT NULL DEFAULT 'user',
+  "two_factor_enabled" boolean NOT NULL DEFAULT false,
+  "is_anonymous" boolean NOT NULL DEFAULT false,
+  "banned" boolean NOT NULL DEFAULT false,
+  "ban_reason" text,
+  "ban_expires" timestamp with time zone,
   "created_at" timestamp with time zone NOT NULL DEFAULT now(),
   "updated_at" timestamp with time zone NOT NULL DEFAULT now()
 );
@@ -62,6 +72,8 @@ CREATE TABLE "sessions" (
   "ip_address" text,
   "user_agent" text,
   "ip_hash" text,
+  "impersonated_by" text,
+  "active_organization_id" text,
   "expires_at" timestamp with time zone NOT NULL,
   "created_at" timestamp with time zone NOT NULL DEFAULT now(),
   "updated_at" timestamp with time zone NOT NULL DEFAULT now()
@@ -275,6 +287,73 @@ CREATE TABLE "verifications" (
   "updated_at" timestamp with time zone NOT NULL DEFAULT now()
 );
 CREATE INDEX "verifications_identifier_idx" ON "verifications" ("identifier");
+
+-- 17. Passkeys (WebAuthn / FIDO2)
+CREATE TABLE "passkeys" (
+  "id" text PRIMARY KEY,
+  "name" text,
+  "public_key" text NOT NULL,
+  "user_id" uuid NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+  "credential_id" text NOT NULL,
+  "counter" integer NOT NULL DEFAULT 0,
+  "device_type" text NOT NULL DEFAULT 'singleDevice',
+  "backed_up" boolean NOT NULL DEFAULT false,
+  "transports" text,
+  "aaguid" text,
+  "created_at" timestamp with time zone NOT NULL DEFAULT now()
+);
+CREATE INDEX "passkeys_user_idx" ON "passkeys" ("user_id");
+CREATE UNIQUE INDEX "passkeys_credential_id_idx" ON "passkeys" ("credential_id");
+
+-- 18. Two Factor (TOTP Authenticator & Backup Codes)
+CREATE TABLE "two_factors" (
+  "id" text PRIMARY KEY,
+  "secret" text NOT NULL,
+  "backup_codes" text NOT NULL,
+  "user_id" uuid NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+  "verified" boolean NOT NULL DEFAULT true,
+  "failed_verification_count" integer NOT NULL DEFAULT 0,
+  "locked_until" timestamp with time zone
+);
+CREATE INDEX "two_factors_user_idx" ON "two_factors" ("user_id");
+
+-- 19. Organizations (Multi-tenant Workspaces)
+CREATE TABLE "organizations" (
+  "id" text PRIMARY KEY,
+  "name" text NOT NULL,
+  "slug" text NOT NULL,
+  "logo" text,
+  "metadata" text,
+  "created_at" timestamp with time zone NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX "organizations_slug_idx" ON "organizations" ("slug");
+
+-- 20. Members (Team Memberships)
+CREATE TABLE "members" (
+  "id" text PRIMARY KEY,
+  "organization_id" text NOT NULL REFERENCES "organizations"("id") ON DELETE CASCADE,
+  "user_id" uuid NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+  "role" text NOT NULL DEFAULT 'member',
+  "created_at" timestamp with time zone NOT NULL DEFAULT now()
+);
+CREATE INDEX "members_org_idx" ON "members" ("organization_id");
+CREATE INDEX "members_user_idx" ON "members" ("user_id");
+CREATE UNIQUE INDEX "members_org_user_idx" ON "members" ("organization_id", "user_id");
+
+-- 21. Invitations (Team Invites)
+CREATE TABLE "invitations" (
+  "id" text PRIMARY KEY,
+  "organization_id" text NOT NULL REFERENCES "organizations"("id") ON DELETE CASCADE,
+  "email" text NOT NULL,
+  "role" text NOT NULL DEFAULT 'member',
+  "status" text NOT NULL DEFAULT 'pending',
+  "team_id" text,
+  "inviter_id" uuid NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+  "expires_at" timestamp with time zone NOT NULL,
+  "created_at" timestamp with time zone NOT NULL DEFAULT now()
+);
+CREATE INDEX "invitations_org_idx" ON "invitations" ("organization_id");
+CREATE INDEX "invitations_email_idx" ON "invitations" ("email");
 
 -- -----------------------------------------------------------------------------
 -- STEP 4: VERIFICATION QUERY

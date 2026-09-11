@@ -6,8 +6,32 @@
 // =============================================================================
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
+import { admin, anonymous, organization, twoFactor } from "better-auth/plugins";
+import { passkey } from "@better-auth/passkey";
 import { db } from "@/db";
-import { accounts, sessions, users, verifications } from "@/db/schema";
+import {
+  accounts,
+  invitations,
+  members,
+  organizations,
+  passkeys,
+  sessions,
+  twoFactors,
+  users,
+  verifications,
+} from "@/db/schema";
+
+const rpId =
+  process.env.AUTH_RP_ID ||
+  (process.env.NEXT_PUBLIC_APP_URL
+    ? (() => {
+        try {
+          return new URL(process.env.NEXT_PUBLIC_APP_URL).hostname;
+        } catch {
+          return "localhost";
+        }
+      })()
+    : "localhost");
 
 export const auth = betterAuth({
   appName: "LinkForge",
@@ -25,6 +49,11 @@ export const auth = betterAuth({
       session: sessions,
       account: accounts,
       verification: verifications,
+      passkey: passkeys,
+      twoFactor: twoFactors,
+      organization: organizations,
+      member: members,
+      invitation: invitations,
     },
   }),
   emailAndPassword: {
@@ -41,6 +70,23 @@ export const auth = betterAuth({
       maxAge: 5 * 60, // 5 minutes cache
     },
   },
+  plugins: [
+    passkey({
+      rpID: rpId,
+      rpName: "LinkForge",
+    }),
+    twoFactor({
+      issuer: "LinkForge",
+    }),
+    admin({
+      defaultRole: "user",
+      adminRole: "admin",
+    }),
+    anonymous({
+      emailDomainName: "guest.linkforge.internal",
+    }),
+    organization(),
+  ],
   advanced: {
     database: {
       generateId: "uuid",

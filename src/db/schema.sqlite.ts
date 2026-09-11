@@ -44,10 +44,18 @@ export const users = sqliteTable(
     id: id(),
     email: text("email").notNull(),
     name: text("name").notNull().default(""),
+    emailVerified: integer("email_verified", { mode: "boolean" }).notNull().default(false),
+    image: text("image"),
     passwordHash: text("password_hash"),
     avatarUrl: text("avatar_url"),
     role: text("role").notNull().default("user"),
+    twoFactorEnabled: integer("two_factor_enabled", { mode: "boolean" }).notNull().default(false),
+    isAnonymous: integer("is_anonymous", { mode: "boolean" }).notNull().default(false),
+    banned: integer("banned", { mode: "boolean" }).notNull().default(false),
+    banReason: text("ban_reason"),
+    banExpires: integer("ban_expires", { mode: "timestamp_ms" }),
     createdAt: ts("created_at"),
+    updatedAt: ts("updated_at"),
   },
   (t) => [uniqueIndex("users_email_idx").on(t.email)],
 );
@@ -59,12 +67,20 @@ export const sessions = sqliteTable(
     userId: uuidCol("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
+    token: text("token").notNull().default(""),
+    ipAddress: text("ip_address"),
     userAgent: text("user_agent"),
     ipHash: text("ip_hash"),
+    impersonatedBy: text("impersonated_by"),
+    activeOrganizationId: text("active_organization_id"),
     expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
     createdAt: ts("created_at"),
+    updatedAt: ts("updated_at"),
   },
-  (t) => [index("sessions_user_idx").on(t.userId)],
+  (t) => [
+    index("sessions_user_idx").on(t.userId),
+    index("sessions_token_idx").on(t.token),
+  ],
 );
 
 export const passwordResetTokens = sqliteTable(
@@ -329,6 +345,145 @@ export const subscribers = sqliteTable(
   (t) => [
     uniqueIndex("subscribers_profile_email_idx").on(t.profileId, t.email),
     index("subscribers_profile_idx").on(t.profileId),
+  ],
+);
+
+export const accounts = sqliteTable(
+  "accounts",
+  {
+    id: text("id").primaryKey(),
+    userId: uuidCol("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    accountId: text("account_id").notNull(),
+    providerId: text("provider_id").notNull(),
+    accessToken: text("access_token"),
+    refreshToken: text("refresh_token"),
+    idToken: text("id_token"),
+    accessTokenExpiresAt: integer("access_token_expires_at", { mode: "timestamp_ms" }),
+    refreshTokenExpiresAt: integer("refresh_token_expires_at", { mode: "timestamp_ms" }),
+    scope: text("scope"),
+    password: text("password"),
+    createdAt: ts("created_at"),
+    updatedAt: ts("updated_at"),
+  },
+  (t) => [
+    index("accounts_user_idx").on(t.userId),
+    uniqueIndex("accounts_provider_account_idx").on(t.providerId, t.accountId),
+  ],
+);
+
+export const verifications = sqliteTable(
+  "verifications",
+  {
+    id: text("id").primaryKey(),
+    identifier: text("identifier").notNull(),
+    value: text("value").notNull(),
+    expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+    createdAt: ts("created_at"),
+    updatedAt: ts("updated_at"),
+  },
+  (t) => [
+    index("verifications_identifier_idx").on(t.identifier),
+  ],
+);
+
+export const passkeys = sqliteTable(
+  "passkeys",
+  {
+    id: text("id").primaryKey(),
+    name: text("name"),
+    publicKey: text("public_key").notNull(),
+    userId: uuidCol("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    credentialID: text("credential_id").notNull(),
+    counter: integer("counter").notNull().default(0),
+    deviceType: text("device_type").notNull().default("singleDevice"),
+    backedUp: integer("backed_up", { mode: "boolean" }).notNull().default(false),
+    transports: text("transports"),
+    aaguid: text("aaguid"),
+    createdAt: ts("created_at"),
+  },
+  (t) => [
+    index("passkeys_user_idx").on(t.userId),
+    uniqueIndex("passkeys_credential_id_idx").on(t.credentialID),
+  ],
+);
+
+export const twoFactors = sqliteTable(
+  "two_factors",
+  {
+    id: text("id").primaryKey(),
+    secret: text("secret").notNull(),
+    backupCodes: text("backup_codes").notNull(),
+    userId: uuidCol("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    verified: integer("verified", { mode: "boolean" }).notNull().default(true),
+    failedVerificationCount: integer("failed_verification_count").notNull().default(0),
+    lockedUntil: integer("locked_until", { mode: "timestamp_ms" }),
+  },
+  (t) => [
+    index("two_factors_user_idx").on(t.userId),
+  ],
+);
+
+export const organizations = sqliteTable(
+  "organizations",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    slug: text("slug").notNull(),
+    logo: text("logo"),
+    metadata: text("metadata"),
+    createdAt: ts("created_at"),
+  },
+  (t) => [
+    uniqueIndex("organizations_slug_idx").on(t.slug),
+  ],
+);
+
+export const members = sqliteTable(
+  "members",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    userId: uuidCol("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    role: text("role").notNull().default("member"),
+    createdAt: ts("created_at"),
+  },
+  (t) => [
+    index("members_org_idx").on(t.organizationId),
+    index("members_user_idx").on(t.userId),
+    uniqueIndex("members_org_user_idx").on(t.organizationId, t.userId),
+  ],
+);
+
+export const invitations = sqliteTable(
+  "invitations",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    email: text("email").notNull(),
+    role: text("role").notNull().default("member"),
+    status: text("status").notNull().default("pending"),
+    teamId: text("team_id"),
+    inviterId: uuidCol("inviter_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+    createdAt: ts("created_at"),
+  },
+  (t) => [
+    index("invitations_org_idx").on(t.organizationId),
+    index("invitations_email_idx").on(t.email),
   ],
 );
 

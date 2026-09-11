@@ -12,6 +12,7 @@ import {
   Globe,
   KeyRound,
   Loader2,
+  Lock,
   LogOut,
   Megaphone,
   Plug,
@@ -25,6 +26,8 @@ import {
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Badge, Button, Card, Field, Input, Select, Switch, Tabs, Textarea } from "@/components/ui";
+import { PasskeySettings } from "@/components/dashboard/PasskeySettings";
+import { TwoFactorSettings } from "@/components/dashboard/TwoFactorSettings";
 
 interface WebhookRow {
   id: string;
@@ -99,6 +102,7 @@ export function SettingsClient({
         onChange={setTab}
         tabs={[
           { id: "general", label: "General", icon: <UserRound className="h-4 w-4" /> },
+          { id: "security", label: "Security & 2FA", icon: <Lock className="h-4 w-4" /> },
           { id: "privacy", label: "Privacy", icon: <Shield className="h-4 w-4" /> },
           { id: "avatar", label: "Avatar", icon: <Camera className="h-4 w-4" /> },
           { id: "data", label: "Data", icon: <Database className="h-4 w-4" /> },
@@ -107,6 +111,12 @@ export function SettingsClient({
         ]}
       />
       {tab === "general" ? <GeneralTab profile={profile} /> : null}
+      {tab === "security" ? (
+        <div className="space-y-6">
+          <PasskeySettings />
+          <TwoFactorSettings />
+        </div>
+      ) : null}
       {tab === "privacy" ? <PrivacyTab profile={profile} /> : null}
       {tab === "avatar" ? <AvatarTab profile={profile} /> : null}
       {tab === "data" ? <DataTab /> : null}
