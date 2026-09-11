@@ -43,6 +43,7 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { DigitalCheckoutDrawer, type DigitalItem } from "./digital-checkout-drawer";
 
 export function linkIcon(
   link: Pick<Link, "icon" | "type">,
@@ -656,6 +657,42 @@ export function BioRenderer({
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(d?.audioFeedback ?? false);
+  const [checkoutItem, setCheckoutItem] = useState<DigitalItem | null>(null);
+
+  const openDigitalCheckout = (link: Link) => {
+    playClick();
+    const priceMatch = link.title.match(/\[(.*?)\]/) || link.description?.match(/\[(.*?)\]/);
+    const price = priceMatch
+      ? priceMatch[1]
+      : link.type === "course"
+        ? "Full Course"
+        : link.type === "product"
+          ? "Instant"
+          : undefined;
+
+    let syllabus: Array<{ title: string; duration?: string; isFreePreview?: boolean }> | undefined;
+    if (link.description?.includes("•")) {
+      const parts = link.description.split("•").map((p) => p.trim());
+      syllabus = parts
+        .filter((p) => p.toLowerCase().includes("ch") || p.toLowerCase().includes("mod") || p.includes(":"))
+        .map((p, i) => ({
+          title: p.replace(/^Ch\d+:\s*/i, "").replace(/^Module\s*\d+:\s*/i, ""),
+          duration: p.match(/\((.*?)\)/)?.[1] || undefined,
+          isFreePreview: i === 0,
+        }));
+    }
+
+    setCheckoutItem({
+      id: link.id,
+      title: link.title.replace(/\[.*?\]/, "").trim(),
+      url: hrefFor(link),
+      description: link.description || undefined,
+      price,
+      type: link.type,
+      downloadUrl: link.url,
+      syllabus: syllabus && syllabus.length > 0 ? syllabus : undefined,
+    });
+  };
 
   const playClick = () => {
     if (!soundEnabled || typeof window === "undefined") return;
@@ -1135,6 +1172,23 @@ export function BioRenderer({
             </div>
           )}
           {filteredLinks.map((link, idx) => {
+            // ── Section Divider / Category Header Card ───────────────────
+            if (link.type === "header" || link.type === "section" || link.title.startsWith("---")) {
+              const cleanTitle = link.title.replace(/^-+\s*/, "").replace(/\s*-+$/, "");
+              return (
+                <div key={link.id} className="col-span-full pt-6 pb-2">
+                  <div className="flex items-center gap-3">
+                    <span className="h-[1px] flex-1 bg-white/10" />
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 font-mono flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
+                      {cleanTitle}
+                    </h3>
+                    <span className="h-[1px] flex-1 bg-white/10" />
+                  </div>
+                </div>
+              );
+            }
+
             const mediaType = detectMediaType(link);
             const entranceClass =
               d?.entranceAnimation === "pop"
@@ -1214,12 +1268,11 @@ export function BioRenderer({
                     <span className="rounded-full bg-[#25D366] px-3 py-1 text-xs font-bold text-white">Message</span>
                   </a>
                 ) : link.type === "upi" ? (
-                  /* 💳 UPI — India payment CTA */
-                  <a
-                    href={hrefFor(link)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3.5"
+                  /* 💳 UPI — India payment CTA with In-Bio Drawer trigger */
+                  <button
+                    type="button"
+                    onClick={() => openDigitalCheckout(link)}
+                    className="flex items-center gap-3.5 w-full text-left cursor-pointer"
                     style={{ color: "#097939" }}
                   >
                     <span
@@ -1232,8 +1285,8 @@ export function BioRenderer({
                       <p className="truncate font-semibold text-sm">{link.title}</p>
                       {link.description && <p className="mt-0.5 text-xs opacity-60">{link.description}</p>}
                     </div>
-                    <span className="rounded-full bg-[#097939] px-3 py-1 text-xs font-bold text-white">Pay via UPI</span>
-                  </a>
+                    <span className="rounded-full bg-[#097939] px-3 py-1 text-xs font-bold text-white shadow-sm">Pay via UPI</span>
+                  </button>
                 ) : link.type === "phone" ? (
                   /* 📞 Phone — click-to-call + copy */
                   <div className="flex items-center gap-3.5">
@@ -1295,12 +1348,10 @@ export function BioRenderer({
                     </div>
                   </div>
                 ) : link.type === "course" || link.type === "playlist" ? (
-                  /* 🎓 Course & Playlist Lesson Card */
-                  <a
-                    href={hrefFor(link)}
-                    target={trackClicks ? "_blank" : undefined}
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3.5"
+                  /* 🎓 Course & Playlist Lesson Card with In-Bio Curriculum Drawer */
+                  <div
+                    onClick={() => openDigitalCheckout(link)}
+                    className="flex items-center gap-3.5 cursor-pointer w-full text-left"
                   >
                     <span
                       className="flex shrink-0 items-center justify-center rounded-xl border"
@@ -1329,17 +1380,22 @@ export function BioRenderer({
                         </p>
                       )}
                     </div>
-                    <span className="rounded-full bg-violet-600 px-3 py-1 text-xs font-bold text-white shadow-sm shrink-0">
-                      {link.description?.includes("Modules") ? "Enroll" : "Watch"}
-                    </span>
-                  </a>
-                ) : link.type === "product" ? (
-                  /* 🛍️ Digital Store & Product Card */
-                  <a
-                    href={hrefFor(link)}
-                    target={trackClicks ? "_blank" : undefined}
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3.5"
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openDigitalCheckout(link);
+                      }}
+                      className="rounded-full bg-violet-600 px-3 py-1 text-xs font-bold text-white shadow-sm shrink-0 hover:bg-violet-500 transition-colors"
+                    >
+                      {link.description?.includes("Modules") ? "Curriculum" : "View"}
+                    </button>
+                  </div>
+                ) : link.type === "product" || link.type === "lead_magnet" ? (
+                  /* 🛍️ Digital Store & Lead Magnet Card with 1-Tap Checkout Drawer */
+                  <div
+                    onClick={() => openDigitalCheckout(link)}
+                    className="flex items-center gap-3.5 cursor-pointer w-full text-left"
                   >
                     <span
                       className="flex shrink-0 items-center justify-center rounded-xl border"
@@ -1351,7 +1407,7 @@ export function BioRenderer({
                         background: "#d946ef15",
                       }}
                     >
-                      <ShoppingBag className="h-4 w-4" />
+                      {link.type === "lead_magnet" ? <Download className="h-4 w-4" /> : <ShoppingBag className="h-4 w-4" />}
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
@@ -1359,7 +1415,7 @@ export function BioRenderer({
                           {link.title}
                         </p>
                         <span className="rounded-md bg-fuchsia-500/20 px-1.5 py-0.5 text-[10px] font-bold text-fuchsia-300 border border-fuchsia-500/30">
-                          STORE
+                          {link.type === "lead_magnet" ? "FREEBIE" : "STORE"}
                         </span>
                       </div>
                       {link.description && (
@@ -1368,17 +1424,22 @@ export function BioRenderer({
                         </p>
                       )}
                     </div>
-                    <span className="rounded-full bg-fuchsia-600 px-3 py-1 text-xs font-bold text-white shadow-sm shrink-0">
-                      Get Now
-                    </span>
-                  </a>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openDigitalCheckout(link);
+                      }}
+                      className="rounded-full bg-fuchsia-600 px-3 py-1 text-xs font-bold text-white shadow-sm shrink-0 hover:bg-fuchsia-500 transition-colors"
+                    >
+                      {link.title.toLowerCase().includes("free") ? "Download" : "Get Now"}
+                    </button>
+                  </div>
                 ) : link.type === "cal" ? (
                   /* 📅 Calendly / Cal.com Meeting Booking Card */
-                  <a
-                    href={hrefFor(link)}
-                    target={trackClicks ? "_blank" : undefined}
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3.5"
+                  <div
+                    onClick={() => openDigitalCheckout(link)}
+                    className="flex items-center gap-3.5 cursor-pointer w-full text-left"
                   >
                     <span
                       className="flex shrink-0 items-center justify-center rounded-xl border"
@@ -1407,10 +1468,17 @@ export function BioRenderer({
                         </p>
                       )}
                     </div>
-                    <span className="rounded-full bg-sky-600 px-3 py-1 text-xs font-bold text-white shadow-sm shrink-0">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openDigitalCheckout(link);
+                      }}
+                      className="rounded-full bg-sky-600 px-3 py-1 text-xs font-bold text-white shadow-sm shrink-0 hover:bg-sky-500 transition-colors"
+                    >
                       Book
-                    </span>
-                  </a>
+                    </button>
+                  </div>
                 ) : link.type === "substack" ? (
                   /* 📰 Substack / Medium Newsletter Card */
                   <a
@@ -1987,6 +2055,15 @@ export function BioRenderer({
           </div>
         </div>
       )}
+
+      {/* 🛍️ In-Bio 1-Tap Digital Checkout & Lead Magnet Drawer */}
+      <DigitalCheckoutDrawer
+        item={checkoutItem}
+        slug={profile.slug || ""}
+        displayName={profile.displayName || "Creator"}
+        onClose={() => setCheckoutItem(null)}
+        accentColor={accent}
+      />
     </div>
   );
 }

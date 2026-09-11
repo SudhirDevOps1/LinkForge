@@ -225,6 +225,16 @@ export default async function PublicBioPage({ params }: Ctx) {
                 avatarUrl={profile.avatarUrl}
               />
             </div>
+            {/* 💼 Creator Media Kit & Sponsorships */}
+            <div className="w-full text-center pt-1">
+              <Link
+                href={`/${profile.slug}/mediakit`}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Verified Media Kit & Sponsorships →</span>
+              </Link>
+            </div>
           </div>
         }
 

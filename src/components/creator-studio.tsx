@@ -24,7 +24,7 @@ import { toast } from "sonner";
 import { BrandIcon } from "./icons";
 import { cn } from "./ui";
 
-type MonetizeTab = "courses" | "sessions" | "products" | "tipping";
+type MonetizeTab = "courses" | "sessions" | "products" | "lead_magnet" | "tipping";
 
 interface CourseChapter {
   id: string;
@@ -64,9 +64,48 @@ export function CreatorMonetizationStudio() {
   const [prodFormat, setProdFormat] = useState("ZIP Source Code + PDF");
   const [savingProd, setSavingProd] = useState(false);
 
-  // 4. Tipping State
+  // 4. Lead Magnet Funnel State
+  const [leadTitle, setLeadTitle] = useState("DevOps & Cloud Production Architecture Cheat Sheet");
+  const [leadUrl, setLeadUrl] = useState("https://yourstore.com/downloads/devops-cheatsheet.pdf");
+  const [leadDesc, setLeadDesc] = useState("Instant download with email confirmation. Covers Kubernetes, Docker, CI/CD.");
+  const [savingLead, setSavingLead] = useState(false);
+
+  // 5. Tipping State
   const [upiId, setUpiId] = useState("user@upi");
   const [savingTip, setSavingTip] = useState(false);
+
+  async function handleAddLeadMagnet() {
+    if (!leadTitle.trim() || !leadUrl.trim()) {
+      toast.error("Resource title and download URL are required");
+      return;
+    }
+    setSavingLead(true);
+    try {
+      const res = await fetch("/api/integrations/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          links: [
+            {
+              title: `🎁 ${leadTitle} [FREE]`,
+              url: leadUrl.trim(),
+              description: leadDesc.trim(),
+              icon: "download",
+              type: "lead_magnet",
+              size: "wide",
+            },
+          ],
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to add lead magnet");
+      toast.success("Freebie lead magnet added to bio!");
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setSavingLead(false);
+    }
+  }
 
   async function handleAddCourse() {
     if (!courseTitle.trim() || !courseCheckoutUrl.trim()) {
@@ -245,7 +284,21 @@ export function CreatorMonetizationStudio() {
           )}
         >
           <ShoppingBag className="h-4 w-4" />
-          <span>Digital Downloads & E-Books</span>
+          <span>Digital Products & E-Books</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("lead_magnet")}
+          className={cn(
+            "flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition cursor-pointer",
+            activeTab === "lead_magnet"
+              ? "bg-amber-600 text-white shadow-sm"
+              : "text-zinc-400 hover:text-white hover:bg-white/5",
+          )}
+        >
+          <Download className="h-4 w-4" />
+          <span>Freebie Lead Magnets</span>
         </button>
 
         <button
@@ -577,7 +630,67 @@ export function CreatorMonetizationStudio() {
         </div>
       )}
 
-      {/* 4. UPI & DIRECT SUPPORT */}
+      {/* 4. FREEBIE LEAD MAGNET FUNNEL */}
+      {activeTab === "lead_magnet" && (
+        <div className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                <Download className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="text-base font-bold text-white">Freebie Lead Magnet Funnel</h2>
+                <p className="text-xs text-zinc-400">Offer a free PDF, code template, or preset in exchange for visitor email.</p>
+              </div>
+            </div>
+            <span className="rounded-full bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-bold text-amber-400 border border-amber-500/20">
+              EMAIL CAPTURE
+            </span>
+          </div>
+
+          <div className="space-y-3">
+            <div>
+              <label className="text-[11px] font-medium text-zinc-400">Resource Title</label>
+              <input
+                value={leadTitle}
+                onChange={(e) => setLeadTitle(e.target.value)}
+                placeholder="e.g. 50+ Modern Tailwind UI Components Guide"
+                className="mt-1 h-10 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-sm text-white focus:border-amber-500/50 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] font-medium text-zinc-400">Download Link / Asset URL</label>
+              <input
+                value={leadUrl}
+                onChange={(e) => setLeadUrl(e.target.value)}
+                placeholder="https://yourstore.com/downloads/free-guide.pdf or Google Drive link"
+                className="mt-1 h-10 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-sm text-white focus:border-amber-500/50 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] font-medium text-zinc-400">Short Subtitle / Description</label>
+              <input
+                value={leadDesc}
+                onChange={(e) => setLeadDesc(e.target.value)}
+                placeholder="Enter email to unlock instant PDF download with zero spam."
+                className="mt-1 h-10 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-sm text-white focus:border-amber-500/50 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => void handleAddLeadMagnet()}
+            disabled={savingLead || !leadTitle.trim() || !leadUrl.trim()}
+            className="w-full h-11 rounded-xl bg-amber-600 font-semibold text-sm text-white hover:bg-amber-500 transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer shadow-lg shadow-amber-600/20"
+          >
+            {savingLead ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            <span>Add Freebie Lead Magnet Card to Bio</span>
+          </button>
+        </div>
+      )}
+
+      {/* 5. UPI & DIRECT SUPPORT */}
       {activeTab === "tipping" && (
         <div className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-5">
           <div className="flex items-center justify-between">

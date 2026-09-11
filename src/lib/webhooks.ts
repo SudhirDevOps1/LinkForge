@@ -10,7 +10,7 @@ import { hmacSha256Hex } from "@/lib/crypto";
 import { safeFetch } from "@/lib/outbound";
 
 export interface WebhookPayload {
-  event: "click" | "view" | "test";
+  event: "click" | "view" | "test" | "inquiry";
   timestamp: string;
   data: Record<string, unknown>;
 }
@@ -35,7 +35,9 @@ function formatPayloadForUrl(url: string, payload: WebhookPayload): { body: stri
               ? `A visitor clicked a link on your profile.`
               : payload.event === "view"
                 ? `New visitor view recorded on your LinkForge profile!`
-                : `LinkForge Webhook Test Dispatched Successfully!`,
+                : payload.event === "inquiry"
+                  ? `New brand sponsorship proposal received via your Media Kit!`
+                  : `LinkForge Webhook Test Dispatched Successfully!`,
           color: 9133302, // #8b5cf6 (LinkForge Violet)
           timestamp: payload.timestamp,
           fields: Object.entries(payload.data).slice(0, 8).map(([key, val]) => ({
@@ -134,7 +136,7 @@ async function deliver(url: string, secret: string, payload: WebhookPayload) {
 /** Profile ke saare active webhooks ko event bhejo (non-blocking). */
 export async function triggerWebhooks(
   profileId: string,
-  event: "click" | "view" | "test",
+  event: "click" | "view" | "test" | "inquiry",
   data: Record<string, unknown>,
 ): Promise<void> {
   try {
