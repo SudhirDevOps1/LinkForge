@@ -29,6 +29,7 @@ export default async function SettingsPage() {
   return (
     <SettingsClient
       userEmail={user.email}
+      twoFactorEnabled={Boolean(user.twoFactorEnabled)}
       profile={{
         slug: profile.slug,
         displayName: profile.displayName,

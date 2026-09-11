@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button, Field, Input } from "@/components/ui";
 import { AltchaWidget } from "@/components/auth/AltchaWidget";
+import { SocialAuthButtons } from "@/components/auth/SocialAuthButtons";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -176,6 +177,9 @@ export default function SignupPage() {
             </>
           )}
         </Button>
+
+        {/* 🌐 Social Sign-On (GitHub, Google, Discord via Better Auth) */}
+        <SocialAuthButtons mode="signup" />
       </div>
 
       <p className="mt-6 text-center text-sm text-zinc-500">

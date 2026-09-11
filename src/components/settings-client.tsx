@@ -94,11 +94,13 @@ async function api<T = Record<string, unknown>>(path: string, init?: RequestInit
 export function SettingsClient({
   profile,
   userEmail,
+  twoFactorEnabled = false,
   webhooks: initialHooks,
   apiKeys: initialKeys,
 }: {
   profile: ProfileShape;
   userEmail: string;
+  twoFactorEnabled?: boolean;
   webhooks: WebhookRow[];
   apiKeys: ApiKeyRow[];
 }) {
@@ -128,7 +130,7 @@ export function SettingsClient({
       {tab === "security" ? (
         <div className="space-y-6">
           <PasskeySettings />
-          <TwoFactorSettings />
+          <TwoFactorSettings initialEnabled={twoFactorEnabled} />
         </div>
       ) : null}
       {tab === "privacy" ? <PrivacyTab profile={profile} /> : null}

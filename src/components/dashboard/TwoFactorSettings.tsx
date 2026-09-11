@@ -4,7 +4,7 @@
 // 🛡️ TwoFactorSettings — Zero-Cost TOTP Authenticator App (Google/MS/1Password)
 // =============================================================================
 import { Check, Copy, KeyRound, QrCode, Shield, ShieldAlert, ShieldCheck } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
 import { Badge, Button, Card, Field, Input } from "@/components/ui";
@@ -15,6 +15,7 @@ interface TwoFactorSettingsProps {
 }
 
 export function TwoFactorSettings({ initialEnabled = false }: TwoFactorSettingsProps) {
+  const { data: session } = authClient.useSession();
   const [isEnabled, setIsEnabled] = useState(initialEnabled);
   const [step, setStep] = useState<"idle" | "password" | "scan" | "backup">("idle");
   const [password, setPassword] = useState("");
@@ -23,6 +24,14 @@ export function TwoFactorSettings({ initialEnabled = false }: TwoFactorSettingsP
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // Sync actual user twoFactorEnabled status from Better-Auth session
+  useEffect(() => {
+    if (session?.user) {
+      const active = Boolean((session.user as any).twoFactorEnabled);
+      setIsEnabled(active);
+    }
+  }, [session]);
 
   // Step 1: Start 2FA setup by validating password
   async function handleStartEnable(e: React.FormEvent) {
@@ -35,6 +44,16 @@ export function TwoFactorSettings({ initialEnabled = false }: TwoFactorSettingsP
     try {
       const res = await authClient.twoFactor.enable({ password });
       if (res.error) {
+        if (
+          res.error.message?.toLowerCase().includes("already enabled") ||
+          (res.error as any).status === 400
+        ) {
+          setIsEnabled(true);
+          setStep("idle");
+          setPassword("");
+          toast.info("Two-Factor Authentication is already active on your account.");
+          return;
+        }
         toast.error(res.error.message || "Invalid password or failed to start 2FA setup.");
         return;
       }

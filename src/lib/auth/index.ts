@@ -339,12 +339,22 @@ export async function signIn(input: {
 
 export async function signOut(): Promise<void> {
   const jar = await cookies();
-  const token =
+  const rawToken =
     jar.get(SESSION_COOKIE)?.value ||
     jar.get("better-auth.session_token")?.value ||
     jar.get("__Secure-better-auth.session_token")?.value;
-  if (token) {
-    await db.delete(sessions).where(or(eq(sessions.id, token), eq(sessions.token, token)));
+  if (rawToken) {
+    const token = rawToken.includes(".") ? rawToken.split(".")[0] : rawToken;
+    await db
+      .delete(sessions)
+      .where(
+        or(
+          eq(sessions.id, token),
+          eq(sessions.token, token),
+          eq(sessions.id, rawToken),
+          eq(sessions.token, rawToken),
+        ),
+      );
     await clearSessionCookie();
     jar.delete("better-auth.session_token");
     jar.delete("__Secure-better-auth.session_token");
@@ -359,20 +369,37 @@ export async function signOutEverywhere(userId: string): Promise<void> {
 // ---- Current session -----------------------------------------------------------
 export async function getSessionUser(): Promise<SessionContext | null> {
   const jar = await cookies();
-  const token =
+  const rawToken =
     jar.get(SESSION_COOKIE)?.value ||
     jar.get("better-auth.session_token")?.value ||
     jar.get("__Secure-better-auth.session_token")?.value;
-  if (!token) return null;
+  if (!rawToken) return null;
+  const token = rawToken.includes(".") ? rawToken.split(".")[0] : rawToken;
   const [row] = await db
     .select({ session: sessions, user: users })
     .from(sessions)
     .innerJoin(users, eq(users.id, sessions.userId))
-    .where(or(eq(sessions.id, token), eq(sessions.token, token)))
+    .where(
+      or(
+        eq(sessions.id, token),
+        eq(sessions.token, token),
+        eq(sessions.id, rawToken),
+        eq(sessions.token, rawToken),
+      ),
+    )
     .limit(1);
   if (!row) return null;
   if (row.session.expiresAt.getTime() < Date.now()) {
-    await db.delete(sessions).where(or(eq(sessions.id, token), eq(sessions.token, token)));
+    await db
+      .delete(sessions)
+      .where(
+        or(
+          eq(sessions.id, token),
+          eq(sessions.token, token),
+          eq(sessions.id, rawToken),
+          eq(sessions.token, rawToken),
+        ),
+      );
     return null;
   }
   let profile: Profile | undefined;

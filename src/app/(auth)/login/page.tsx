@@ -27,6 +27,7 @@ import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button, Field, Input } from "@/components/ui";
 import { AltchaWidget } from "@/components/auth/AltchaWidget";
+import { SocialAuthButtons } from "@/components/auth/SocialAuthButtons";
 import { authClient } from "@/lib/auth/auth-client";
 
 function LoginForm() {
@@ -343,6 +344,9 @@ function LoginForm() {
             </>
           )}
         </Button>
+
+        {/* 🌐 Social Sign-On (GitHub, Google, Discord via Better Auth) */}
+        <SocialAuthButtons mode="signin" />
 
         {/* Biometric Passkey Login Option */}
         <div className="relative my-3 flex items-center justify-center">
