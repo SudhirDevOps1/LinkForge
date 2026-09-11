@@ -275,6 +275,13 @@ export const designPrefsSchema = z.object({
   // Display Name Animation
   nameAnimation: z.string().max(40).optional(),
   nameGradient: z.string().max(40).optional(),
+  // Elite Public Bio Website Features
+  statusBadge: z.string().max(60).optional(),
+  showSearch: z.boolean().optional(),
+  showCategories: z.boolean().optional(),
+  showFloatingBar: z.boolean().optional(),
+  showSaveContact: z.boolean().optional(),
+  audioFeedback: z.boolean().optional(),
   // Advanced code injection
   customCss: z.string().max(4000).optional(),
   extraBodyClass: z.string().max(80).optional(),

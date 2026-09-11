@@ -15,6 +15,8 @@ import {
   BookOpen,
   Calendar,
   Camera,
+  Check,
+  Copy,
   Download,
   ExternalLink,
   FileCode,
@@ -28,9 +30,16 @@ import {
   Maximize2,
   Music,
   Play,
+  QrCode,
+  Search,
+  Share2,
   ShoppingBag,
+  Sparkles,
   Star,
+  UserPlus,
   Video,
+  Volume2,
+  VolumeX,
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -641,6 +650,135 @@ export function BioRenderer({
 
   const hrefFor = (link: Link) => (trackClicks ? `/r/${link.id}` : link.url);
 
+  // ── Elite Public Website Features: Search, Categories & Audio Feedback ──────
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(d?.audioFeedback ?? false);
+
+  const playClick = () => {
+    if (!soundEnabled || typeof window === "undefined") return;
+    try {
+      const AudioCtx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(560, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(180, ctx.currentTime + 0.035);
+      gain.gain.setValueAtTime(0.06, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.035);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.035);
+    } catch {}
+  };
+
+  const isSocialLink = (l: Link) => {
+    const t = (l.type || "").toLowerCase();
+    const u = (l.url || "").toLowerCase();
+    const socials = [
+      "github", "youtube", "twitter", "x", "instagram", "linkedin", "telegram",
+      "discord", "facebook", "tiktok", "twitch", "threads", "bluesky", "spotify",
+      "email", "mail", "phone", "contact"
+    ];
+    return socials.includes(t) || socials.some((s) => u.includes(s));
+  };
+
+  const isMediaLink = (l: Link) => {
+    const t = (l.type || "").toLowerCase();
+    return ["video", "audio", "document", "image", "media", "doc", "pdf"].includes(t);
+  };
+
+  const isShopLink = (l: Link) => {
+    const t = (l.type || "").toLowerCase();
+    return ["product", "course", "shop", "digital"].includes(t);
+  };
+
+  const counts = {
+    all: active.length,
+    featured: active.filter((l) => l.isPinned).length,
+    socials: active.filter(isSocialLink).length,
+    media: active.filter(isMediaLink).length,
+    shop: active.filter(isShopLink).length,
+  };
+
+  const categories = [
+    { id: "all", label: "All", count: counts.all },
+    ...(counts.featured > 0 ? [{ id: "featured", label: "Featured", count: counts.featured }] : []),
+    ...(counts.socials > 0 ? [{ id: "socials", label: "Socials", count: counts.socials }] : []),
+    ...(counts.media > 0 ? [{ id: "media", label: "Media", count: counts.media }] : []),
+    ...(counts.shop > 0 ? [{ id: "shop", label: "Store", count: counts.shop }] : []),
+  ];
+
+  const showCategoryTabs = (d?.showCategories ?? true) && categories.length > 2;
+  const showSearchBar = (d?.showSearch ?? true) && active.length >= 4;
+  const showTopFloatingBar = d?.showFloatingBar ?? true;
+
+  const filteredLinks = active.filter((link) => {
+    if (selectedCategory === "featured" && !link.isPinned) return false;
+    if (selectedCategory === "socials" && !isSocialLink(link)) return false;
+    if (selectedCategory === "media" && !isMediaLink(link)) return false;
+    if (selectedCategory === "shop" && !isShopLink(link)) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const matchTitle = (link.title || "").toLowerCase().includes(q);
+      const matchDesc = (link.description || "").toLowerCase().includes(q);
+      const matchUrl = (link.url || "").toLowerCase().includes(q);
+      return matchTitle || matchDesc || matchUrl;
+    }
+    return true;
+  });
+
+  const downloadVCard = () => {
+    playClick();
+    const name = profile.displayName || "Creator";
+    const bio = (profile.bio || "").replace(/\n/g, " ");
+    const slugUrl = profile.slug
+      ? (typeof window !== "undefined" ? `${window.location.origin}/${profile.slug}` : `https://linkforge-demo.vercel.app/${profile.slug}`)
+      : "";
+    const vcard = [
+      "BEGIN:VCARD",
+      "VERSION:3.0",
+      `FN:${name}`,
+      `TITLE:${bio}`,
+      `URL:${slugUrl}`,
+      "NOTE:Saved from LinkForge Bio",
+      "END:VCARD",
+    ].join("\r\n");
+
+    const blob = new Blob([vcard], { type: "text/vcard;charset=utf-8" });
+    const u = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = u;
+    a.download = `${name.replace(/[^a-zA-Z0-9]/g, "_")}.vcf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(u);
+  };
+
+  const handleShare = async () => {
+    playClick();
+    const shareUrl = typeof window !== "undefined" ? window.location.href : `https://linkforge-demo.vercel.app/${profile.slug || ""}`;
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: `${profile.displayName} | LinkForge`,
+          text: profile.bio || `Check out ${profile.displayName}'s official bio`,
+          url: shareUrl,
+        });
+        return;
+      } catch {}
+    }
+    setShareModalOpen(true);
+  };
+
   const cardStyleFor = (hover = false): React.CSSProperties => {
     let surfaceBg = hover ? v.surfaceHover : v.surface;
     let borderColor = effectiveLinkBorderColor || effectiveBorderColor || v.border;
@@ -780,6 +918,64 @@ export function BioRenderer({
             : "max-w-xl md:max-w-2xl"
         }`}
       >
+        {/* 🌐 Top Floating Glass Action Bar (Hero Header) */}
+        {showTopFloatingBar && (
+          <header
+            className="w-full mb-6 flex items-center justify-between gap-3 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-lg transition-all"
+            style={{ borderColor: `${accent}25` }}
+          >
+            {/* Status indicator or brand tag */}
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="relative flex h-2 w-2 shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: accent }} />
+                <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: accent }} />
+              </span>
+              <span className="text-[11px] sm:text-xs font-semibold text-zinc-300 truncate">
+                {d?.statusBadge || "🟢 Available for projects"}
+              </span>
+            </div>
+
+            {/* Quick Actions: Audio, vCard Contact, Share */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              {d?.audioFeedback && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSoundEnabled(!soundEnabled);
+                    playClick();
+                  }}
+                  title={soundEnabled ? "Mute tactile click sounds" : "Enable tactile click sounds"}
+                  className="p-1.5 rounded-xl border border-white/10 bg-white/5 text-zinc-400 hover:text-white transition-all text-xs"
+                >
+                  {soundEnabled ? <Volume2 className="h-3.5 w-3.5 text-violet-400" /> : <VolumeX className="h-3.5 w-3.5" />}
+                </button>
+              )}
+
+              {(d?.showSaveContact ?? true) && (
+                <button
+                  type="button"
+                  onClick={downloadVCard}
+                  title="Save contact card (vCard)"
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-white/10 bg-white/5 text-zinc-300 hover:text-white hover:bg-white/10 transition-all text-xs font-medium"
+                >
+                  <UserPlus className="h-3.5 w-3.5 text-violet-400" />
+                  <span className="hidden sm:inline">Save Contact</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={handleShare}
+                title="Share profile"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-white/10 bg-white/5 text-zinc-300 hover:text-white hover:bg-white/10 transition-all text-xs font-medium"
+              >
+                <Share2 className="h-3.5 w-3.5 text-violet-400" />
+                <span>Share</span>
+              </button>
+            </div>
+          </header>
+        )}
+
         {/* Desktop Card Wrapper: provides structure and eliminates empty void on desktop */}
         <div
           className={`w-full flex flex-col items-center transition-all ${
@@ -859,6 +1055,60 @@ export function BioRenderer({
           </a>
         ) : null}
 
+        {/* 🔍 Search Bar & Category Filter Tabs */}
+        {(showSearchBar || showCategoryTabs) && (
+          <div className="w-full mt-6 space-y-3">
+            {/* Search Input */}
+            {showSearchBar && (
+              <div className="relative w-full">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search links, articles, projects..."
+                  className="w-full rounded-2xl border border-white/10 bg-black/40 pl-10 pr-9 py-2.5 text-xs text-zinc-200 outline-none placeholder:text-zinc-600 focus:border-violet-400/50 backdrop-blur-md transition-colors"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-200 text-xs px-1"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Category Filter Pills */}
+            {showCategoryTabs && (
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {categories.map((cat) => {
+                  const isCatActive = selectedCategory === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedCategory(cat.id);
+                        playClick();
+                      }}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap border transition-all ${
+                        isCatActive
+                          ? "border-violet-400/70 bg-violet-500/20 text-white shadow-sm"
+                          : "border-white/10 bg-white/[0.03] text-zinc-400 hover:text-zinc-200 hover:bg-white/5"
+                      }`}
+                    >
+                      <span>{cat.label}</span>
+                      <span className="text-[10px] opacity-70">({cat.count})</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Links Container */}
         <div
@@ -868,7 +1118,23 @@ export function BioRenderer({
               : "mt-8 sm:mt-10 flex w-full flex-col gap-3 sm:gap-3.5"
           }
         >
-          {active.map((link, idx) => {
+          {filteredLinks.length === 0 && (
+            <div className="col-span-full py-12 text-center">
+              <p className="text-xs text-zinc-500">No links found matching your search.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery("");
+                  setSelectedCategory("all");
+                  playClick();
+                }}
+                className="mt-3 text-xs font-semibold text-violet-400 hover:underline"
+              >
+                Reset filters
+              </button>
+            </div>
+          )}
+          {filteredLinks.map((link, idx) => {
             const mediaType = detectMediaType(link);
             const entranceClass =
               d?.entranceAnimation === "pop"
@@ -1625,6 +1891,102 @@ export function BioRenderer({
           </div>
         </div>
       ) : null}
+
+      {/* 🚀 Share & QR Code Modal */}
+      {shareModalOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+          onClick={() => setShareModalOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-sm rounded-3xl border border-white/15 bg-zinc-950 p-6 shadow-2xl space-y-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <Share2 className="w-4 h-4 text-violet-400" />
+                Share Profile
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShareModalOpen(false)}
+                className="rounded-full p-1 text-zinc-400 hover:bg-white/10 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Profile URL Copy Bar */}
+            <div className="flex items-center gap-2 p-2 rounded-xl border border-white/10 bg-zinc-900">
+              <input
+                type="text"
+                readOnly
+                value={typeof window !== "undefined" ? window.location.href : `https://linkforge-demo.vercel.app/${profile.slug || ""}`}
+                className="flex-1 bg-transparent text-xs text-zinc-300 font-mono outline-none truncate"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const url = typeof window !== "undefined" ? window.location.href : `https://linkforge-demo.vercel.app/${profile.slug || ""}`;
+                  navigator.clipboard.writeText(url);
+                  setCopiedLink(true);
+                  setTimeout(() => setCopiedLink(false), 2000);
+                  playClick();
+                }}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-xs font-bold text-white transition-all shrink-0"
+              >
+                {copiedLink ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedLink ? "Copied" : "Copy"}</span>
+              </button>
+            </div>
+
+            {/* QR Code */}
+            <div className="flex flex-col items-center justify-center p-4 rounded-2xl bg-white text-black shadow-inner">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
+                  typeof window !== "undefined" ? window.location.href : `https://linkforge-demo.vercel.app/${profile.slug || ""}`
+                )}`}
+                alt="QR Code"
+                width={160}
+                height={160}
+                className="rounded-lg"
+              />
+              <p className="text-[11px] font-medium text-zinc-600 mt-2">Scan with camera to open on mobile</p>
+            </div>
+
+            {/* 1-Click Social Shares */}
+            <div className="grid grid-cols-3 gap-2">
+              <a
+                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out ${profile.displayName}'s bio:`)}&url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`}
+                target="_blank"
+                rel="noreferrer"
+                className="py-2 text-center text-xs font-semibold rounded-xl border border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10 hover:text-white transition-all"
+              >
+                Twitter / X
+              </a>
+              <a
+                href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`}
+                target="_blank"
+                rel="noreferrer"
+                className="py-2 text-center text-xs font-semibold rounded-xl border border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10 hover:text-white transition-all"
+              >
+                LinkedIn
+              </a>
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent(`${profile.displayName}'s bio: ${typeof window !== "undefined" ? window.location.href : ""}`)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="py-2 text-center text-xs font-semibold rounded-xl border border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10 hover:text-white transition-all"
+              >
+                WhatsApp
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

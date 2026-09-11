@@ -16,16 +16,25 @@
 // =============================================================================
 import {
   Check,
+  Columns,
+  Globe,
   Layers,
   LayoutGrid,
   List,
   Loader2,
+  Maximize2,
   Palette,
+  PanelRight,
   RotateCcw,
+  Search,
+  Share2,
   Sliders,
   Smartphone,
   Sparkles,
+  Square,
   Type,
+  UserPlus,
+  Volume2,
   Wand2,
   Zap,
 } from "lucide-react";
@@ -503,6 +512,17 @@ export function AppearanceEditor({
   const [saving, setSaving] = useState(false);
   const [viewMode, setViewMode] = useState<"editor" | "preview">("editor");
 
+  // 📱 Live Preview Docking & Alignment Mode
+  const [dockMode, setDockMode] = useState<"right" | "center" | "pip">("right");
+
+  // 🌐 Elite Public Bio Website Features
+  const [statusBadge, setStatusBadge] = useState(initialDesign.statusBadge ?? "");
+  const [showSearch, setShowSearch] = useState(initialDesign.showSearch ?? true);
+  const [showCategories, setShowCategories] = useState(initialDesign.showCategories ?? true);
+  const [showFloatingBar, setShowFloatingBar] = useState(initialDesign.showFloatingBar ?? true);
+  const [showSaveContact, setShowSaveContact] = useState(initialDesign.showSaveContact ?? true);
+  const [audioFeedback, setAudioFeedback] = useState(initialDesign.audioFeedback ?? false);
+
   const themeDirty = theme !== initialProfile.theme || layout !== initialProfile.layout;
   const designDirty =
     accent !== (initialDesign.accent ?? "") ||
@@ -551,6 +571,12 @@ export function AppearanceEditor({
     avatarAuraBlur !== (initialDesign.avatarAuraBlur ?? "subtle") ||
     nameAnimation !== (initialDesign.nameAnimation ?? "none") ||
     nameGradient !== (initialDesign.nameGradient ?? "") ||
+    statusBadge !== (initialDesign.statusBadge ?? "") ||
+    showSearch !== (initialDesign.showSearch ?? true) ||
+    showCategories !== (initialDesign.showCategories ?? true) ||
+    showFloatingBar !== (initialDesign.showFloatingBar ?? true) ||
+    showSaveContact !== (initialDesign.showSaveContact ?? true) ||
+    audioFeedback !== (initialDesign.audioFeedback ?? false) ||
     customCss !== (initialDesign.customCss ?? "") ||
     extraBodyClass !== (initialDesign.extraBodyClass ?? "");
 
@@ -588,6 +614,12 @@ export function AppearanceEditor({
       avatarAuraBlur: avatarAuraBlur !== "subtle" ? avatarAuraBlur : undefined,
       nameAnimation: nameAnimation !== "none" ? nameAnimation : undefined,
       nameGradient: nameGradient || undefined,
+      statusBadge: statusBadge || undefined,
+      showSearch,
+      showCategories,
+      showFloatingBar,
+      showSaveContact,
+      audioFeedback,
       customFontName: customFontName || undefined,
       letterSpacing: letterSpacing !== 0 ? letterSpacing : undefined,
       lineHeight: lineHeight !== 1.5 ? lineHeight : undefined,
@@ -655,6 +687,12 @@ export function AppearanceEditor({
     setAvatarAuraBlur("subtle");
     setNameAnimation("none");
     setNameGradient("");
+    setStatusBadge("");
+    setShowSearch(true);
+    setShowCategories(true);
+    setShowFloatingBar(true);
+    setShowSaveContact(true);
+    setAudioFeedback(false);
     toast.success(`Applied "${p.name}" preset! Look at the preview.`);
   }
 
@@ -705,6 +743,12 @@ export function AppearanceEditor({
             avatarAuraBlur: avatarAuraBlur !== "subtle" ? avatarAuraBlur : undefined,
             nameAnimation: nameAnimation !== "none" ? nameAnimation : undefined,
             nameGradient: nameGradient || undefined,
+            statusBadge: statusBadge || undefined,
+            showSearch,
+            showCategories,
+            showFloatingBar,
+            showSaveContact,
+            audioFeedback,
             customFontName: customFontName || undefined,
             letterSpacing: letterSpacing !== 0 ? letterSpacing : undefined,
             lineHeight: lineHeight !== 1.5 ? lineHeight : undefined,
@@ -770,6 +814,12 @@ export function AppearanceEditor({
     setAvatarAuraBlur("subtle");
     setNameAnimation("none");
     setNameGradient("");
+    setStatusBadge("");
+    setShowSearch(true);
+    setShowCategories(true);
+    setShowFloatingBar(true);
+    setShowSaveContact(true);
+    setAudioFeedback(false);
     setCustomFontName("");
     setLetterSpacing(0);
     setLineHeight(1.5);
@@ -818,6 +868,46 @@ export function AppearanceEditor({
         </div>
 
         <div className="flex items-center gap-2 self-end sm:self-auto">
+          {/* Desktop Preview Placement / Docking Mode Switcher */}
+          <div className="hidden xl:flex items-center p-1 rounded-xl bg-white/5 border border-white/10 gap-0.5">
+            <button
+              type="button"
+              onClick={() => setDockMode("right")}
+              title="Docked Right (Split Screen)"
+              className={cn(
+                "flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all",
+                dockMode === "right" ? "bg-violet-600 text-white shadow-sm" : "text-zinc-400 hover:text-white",
+              )}
+            >
+              <PanelRight className="w-3.5 h-3.5" />
+              <span>Split</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setDockMode("center")}
+              title="Center Focus View"
+              className={cn(
+                "flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all",
+                dockMode === "center" ? "bg-violet-600 text-white shadow-sm" : "text-zinc-400 hover:text-white",
+              )}
+            >
+              <Maximize2 className="w-3.5 h-3.5" />
+              <span>Center</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setDockMode("pip")}
+              title="Floating Picture-in-Picture Preview"
+              className={cn(
+                "flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all",
+                dockMode === "pip" ? "bg-violet-600 text-white shadow-sm" : "text-zinc-400 hover:text-white",
+              )}
+            >
+              <Square className="w-3.5 h-3.5" />
+              <span>Floating</span>
+            </button>
+          </div>
+
           {/* Mobile view toggle (only on screens < xl) */}
           <div className="xl:hidden flex items-center p-1 rounded-xl bg-white/5 border border-white/10">
             <button
@@ -872,9 +962,24 @@ export function AppearanceEditor({
       </div>
 
       {/* Main Studio Grid: Editor controls on Left, Live Phone on Right */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+      <div
+        className={cn(
+          "gap-8 items-start",
+          dockMode === "center"
+            ? "flex flex-col xl:flex-row xl:justify-center items-center gap-10"
+            : dockMode === "pip"
+              ? "grid grid-cols-1 max-w-4xl mx-auto"
+              : "grid grid-cols-1 xl:grid-cols-12",
+        )}
+      >
         {/* Left Column: Studio Tabs & Panels */}
-        <div className={cn("space-y-6 xl:col-span-7", viewMode === "preview" ? "hidden xl:block" : "block")}>
+        <div
+          className={cn(
+            "space-y-6",
+            dockMode === "right" ? "xl:col-span-7" : "w-full max-w-3xl",
+            viewMode === "preview" ? "hidden xl:block" : "block",
+          )}
+        >
           {/* Segmented Navigation Tabs */}
           <div className="flex flex-wrap gap-1.5 p-1.5 rounded-2xl bg-zinc-900/80 border border-white/10 backdrop-blur-md">
             {[
@@ -2355,6 +2460,201 @@ export function AppearanceEditor({
                 </p>
               </div>
 
+              {/* 🌐 Public Web Experience & Portfolio Features */}
+              <div className="p-5 rounded-xl border border-violet-500/20 bg-violet-500/[0.04] space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-violet-400" />
+                    <h3 className="text-xs font-semibold text-zinc-200">Public Web Experience & Portfolio Tools</h3>
+                  </div>
+                  <span className="text-[10px] font-semibold text-violet-400 bg-violet-500/10 border border-violet-500/20 px-2 py-0.5 rounded-full">
+                    Agency Grade
+                  </span>
+                </div>
+                <p className="text-[11px] text-zinc-400">
+                  Transform your bio link into an interactive web app with quick link search, category tabs, vCard contact download, and real-time status.
+                </p>
+
+                {/* Status Badge */}
+                <div className="space-y-2 pt-2 border-t border-white/5">
+                  <label className="text-xs font-semibold text-zinc-300 block">Live Status / Availability Badge</label>
+                  <p className="text-[11px] text-zinc-500">Shows a pulsating status indicator in your floating action bar.</p>
+                  <input
+                    type="text"
+                    value={statusBadge}
+                    placeholder="e.g. 🚀 Shipping LinkForge v2, ⚡ Open for Work"
+                    onChange={(e) => setStatusBadge(e.target.value.slice(0, 60))}
+                    className="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-200 outline-none placeholder:text-zinc-600 focus:border-violet-400/50"
+                  />
+                  {/* Preset quick pills */}
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {[
+                      "🚀 Shipping LinkForge v2",
+                      "⚡ Open for Work",
+                      "🔥 Building in Public",
+                      "🎙️ Streaming Today",
+                      "💼 Open for Freelance",
+                    ].map((pill) => (
+                      <button
+                        key={pill}
+                        type="button"
+                        onClick={() => setStatusBadge(pill)}
+                        className={cn(
+                          "px-2 py-1 rounded-lg text-[10px] border transition-all",
+                          statusBadge === pill
+                            ? "border-violet-400 bg-violet-500/20 text-white"
+                            : "border-white/5 bg-white/5 text-zinc-400 hover:text-zinc-200 hover:bg-white/10",
+                        )}
+                      >
+                        {pill}
+                      </button>
+                    ))}
+                    {statusBadge && (
+                      <button
+                        type="button"
+                        onClick={() => setStatusBadge("")}
+                        className="px-2 py-1 rounded-lg text-[10px] border border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Toggles Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-white/5">
+                  {/* Floating Action Bar */}
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-zinc-900/60">
+                    <div className="space-y-0.5">
+                      <p className="text-xs font-semibold text-zinc-200 flex items-center gap-1.5">
+                        <Share2 className="w-3.5 h-3.5 text-violet-400" />
+                        Floating Action Bar
+                      </p>
+                      <p className="text-[10px] text-zinc-500">Top glass bar with 1-click share & contact</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowFloatingBar(!showFloatingBar)}
+                      className={cn(
+                        "w-10 h-5 rounded-full transition-colors relative shrink-0",
+                        showFloatingBar ? "bg-violet-600" : "bg-zinc-800",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform",
+                          showFloatingBar ? "left-5" : "left-0.5",
+                        )}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Save Contact vCard */}
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-zinc-900/60">
+                    <div className="space-y-0.5">
+                      <p className="text-xs font-semibold text-zinc-200 flex items-center gap-1.5">
+                        <UserPlus className="w-3.5 h-3.5 text-violet-400" />
+                        vCard Save Contact
+                      </p>
+                      <p className="text-[10px] text-zinc-500">1-click .vcf address book download</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowSaveContact(!showSaveContact)}
+                      className={cn(
+                        "w-10 h-5 rounded-full transition-colors relative shrink-0",
+                        showSaveContact ? "bg-violet-600" : "bg-zinc-800",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform",
+                          showSaveContact ? "left-5" : "left-0.5",
+                        )}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Live Link Search */}
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-zinc-900/60">
+                    <div className="space-y-0.5">
+                      <p className="text-xs font-semibold text-zinc-200 flex items-center gap-1.5">
+                        <Search className="w-3.5 h-3.5 text-violet-400" />
+                        Live Link Search Bar
+                      </p>
+                      <p className="text-[10px] text-zinc-500">Fast filter input for links & products</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowSearch(!showSearch)}
+                      className={cn(
+                        "w-10 h-5 rounded-full transition-colors relative shrink-0",
+                        showSearch ? "bg-violet-600" : "bg-zinc-800",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform",
+                          showSearch ? "left-5" : "left-0.5",
+                        )}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Category Filter Tabs */}
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-zinc-900/60">
+                    <div className="space-y-0.5">
+                      <p className="text-xs font-semibold text-zinc-200 flex items-center gap-1.5">
+                        <Layers className="w-3.5 h-3.5 text-violet-400" />
+                        Category Filter Tabs
+                      </p>
+                      <p className="text-[10px] text-zinc-500">Auto-pills: All, Featured, Socials, Store</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowCategories(!showCategories)}
+                      className={cn(
+                        "w-10 h-5 rounded-full transition-colors relative shrink-0",
+                        showCategories ? "bg-violet-600" : "bg-zinc-800",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform",
+                          showCategories ? "left-5" : "left-0.5",
+                        )}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Tactile Audio Feedback */}
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-zinc-900/60 sm:col-span-2">
+                    <div className="space-y-0.5">
+                      <p className="text-xs font-semibold text-zinc-200 flex items-center gap-1.5">
+                        <Volume2 className="w-3.5 h-3.5 text-violet-400" />
+                        Tactile Web Audio Click Chime
+                      </p>
+                      <p className="text-[10px] text-zinc-500">Synthesized micro-click feedback on tap (0KB audio files, Web Audio API)</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setAudioFeedback(!audioFeedback)}
+                      className={cn(
+                        "w-10 h-5 rounded-full transition-colors relative shrink-0",
+                        audioFeedback ? "bg-violet-600" : "bg-zinc-800",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform",
+                          audioFeedback ? "left-5" : "left-0.5",
+                        )}
+                      />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               {/* Custom CSS Injection */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -2431,19 +2731,36 @@ export function AppearanceEditor({
           )}
         </div>
 
-        {/* Right Column: Live Phone Preview Frame (Sticky on Desktop) */}
+        {/* Right Column: Live Phone Preview Frame (Sticky on Desktop, Adapts to Docking Mode) */}
         <div
           className={cn(
-            "xl:col-span-5 xl:sticky xl:top-6 self-start flex flex-col items-center z-20",
             viewMode === "editor" ? "hidden xl:flex" : "flex",
+            dockMode === "right" && "xl:col-span-5 xl:sticky xl:top-6 self-start flex-col items-center z-20",
+            dockMode === "center" && "w-full max-w-sm xl:sticky xl:top-6 self-start flex-col items-center z-20 mx-auto",
+            dockMode === "pip" && "fixed bottom-6 right-6 z-50 p-3 rounded-3xl bg-zinc-950/95 border border-white/20 shadow-2xl shadow-black/80 backdrop-blur-xl max-h-[85vh] overflow-y-auto hidden xl:flex flex-col items-center scale-90 origin-bottom-right transition-all",
           )}
         >
           <div className="w-full flex items-center justify-between px-2 mb-3">
             <span className="text-xs font-semibold text-zinc-400 flex items-center gap-1.5">
               <Smartphone className="w-3.5 h-3.5 text-violet-400" />
               Live Phone Preview
+              {dockMode === "pip" && (
+                <span className="text-[10px] text-violet-400 bg-violet-500/15 px-1.5 py-0.2 rounded font-mono">PiP</span>
+              )}
             </span>
-            <span className="text-[11px] text-zinc-500 font-mono">Real-time sync</span>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-zinc-500 font-mono">Real-time sync</span>
+              {dockMode === "pip" && (
+                <button
+                  type="button"
+                  onClick={() => setDockMode("right")}
+                  className="text-zinc-400 hover:text-white text-xs px-1.5 py-0.5 rounded bg-white/5"
+                  title="Dock to side"
+                >
+                  Dock
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="w-full flex justify-center">

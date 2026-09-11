@@ -110,6 +110,20 @@ export interface DesignPrefs {
   /** Gradient color preset for name text: "violet-cyan" | "sunset" | "neon-matrix" | "golden-fire" | "cyberpunk" */
   nameGradient?: string;
 
+  // ── Elite Public Bio Website Features ───────────────────────────────────────
+  /** Optional creator status text badge (e.g. "🟢 Available for work", "🚀 Building LinkForge") */
+  statusBadge?: string;
+  /** Enable live search bar on public bio page */
+  showSearch?: boolean;
+  /** Enable category filter tabs on public bio page */
+  showCategories?: boolean;
+  /** Enable top floating glass action bar (Share, QR, Contact) */
+  showFloatingBar?: boolean;
+  /** Enable 1-click vCard download button */
+  showSaveContact?: boolean;
+  /** Enable tactile Web Audio click micro-interactions */
+  audioFeedback?: boolean;
+
   // ── Advanced / Custom Code ───────────────────────────────────────────────────
   /** Raw CSS injected into bio page <style> tag (max 4000 chars, sanitized). */
   customCss?: string;
@@ -272,6 +286,16 @@ export function clampDesign(prefs: DesignPrefs): DesignPrefs {
   // ── Display Name Animation ───────────────────────────────────────────────────
   if (str40(prefs.nameAnimation)) out.nameAnimation = str40(prefs.nameAnimation)!;
   if (str40(prefs.nameGradient)) out.nameGradient = str40(prefs.nameGradient)!;
+
+  // ── Elite Public Bio Website Features ───────────────────────────────────────
+  if (prefs.statusBadge && typeof prefs.statusBadge === "string") {
+    out.statusBadge = prefs.statusBadge.trim().slice(0, 60);
+  }
+  if (typeof prefs.showSearch === "boolean") out.showSearch = prefs.showSearch;
+  if (typeof prefs.showCategories === "boolean") out.showCategories = prefs.showCategories;
+  if (typeof prefs.showFloatingBar === "boolean") out.showFloatingBar = prefs.showFloatingBar;
+  if (typeof prefs.showSaveContact === "boolean") out.showSaveContact = prefs.showSaveContact;
+  if (typeof prefs.audioFeedback === "boolean") out.audioFeedback = prefs.audioFeedback;
 
   // ── Advanced Code ────────────────────────────────────────────────────────────
   if (prefs.customCss && typeof prefs.customCss === "string") {

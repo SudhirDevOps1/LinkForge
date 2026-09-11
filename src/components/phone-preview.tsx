@@ -79,7 +79,7 @@ export function PhonePreview({
   const scaledHeightPx = Math.round(baseHeightPx * (zoom / 100));
 
   return (
-    <div className={cn("sticky top-4 mx-auto flex w-full max-w-[360px] flex-col items-center min-w-0", className)}>
+    <div className={cn("mx-auto flex w-full max-w-[360px] flex-col items-center min-w-0", className)}>
       {/* Device & Viewport Toolbar */}
       <div className="mb-2.5 flex w-full items-center justify-between gap-1 rounded-2xl border border-white/10 bg-white/[0.04] p-1.5 backdrop-blur-xl">
         {/* Device Mode Switcher */}
