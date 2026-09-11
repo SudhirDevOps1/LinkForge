@@ -11,7 +11,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { autoMigrate } from "@/db/auto-migrate";
 import { profiles, subscribers } from "@/db/schema";
-import { ApiError, guardRateLimit, handle, json, parseOrThrow } from "@/lib/api";
+import { ApiError, guardRateLimitDual, handle, json, parseOrThrow } from "@/lib/api";
 import { verifyEmailMx } from "@/lib/email-verifier";
 import { verifyAltchaSolution } from "@/lib/altcha";
 
@@ -22,9 +22,6 @@ const subscribeSchema = z.object({
 });
 
 export const POST = handle(async (req: Request) => {
-  // Rate limit: 10 subscriptions per minute per IP
-  await guardRateLimit(req, "subscribe:rate", 10);
-
   // Auto-migrate ensures subscribers table exists on Neon / Postgres / SQLite
   await autoMigrate();
 
@@ -32,6 +29,9 @@ export const POST = handle(async (req: Request) => {
     subscribeSchema,
     await req.json().catch(() => ({}))
   );
+
+  // Dual-bucket rate limit: max 10 per 15min per IP, max 5 per 15min per target email/creator
+  await guardRateLimitDual(req, "subscribe:rate", `${slug}:${email}`, 10, 5, 15 * 60_000);
 
   // 0. Proof-of-Work anti-bot protection (ALTCHA)
   if (altcha) {

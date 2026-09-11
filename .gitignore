@@ -88,6 +88,3 @@ Desktop.ini
 !.vscode/extensions.json
 *.swp
 *.swo
-
-# GitHub private config / local workflows
-.github/

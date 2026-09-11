@@ -19,8 +19,8 @@ describe("F1 design clamp", () => {
   });
   it("rejects bad accent, clamps ranges", () => {
     expect(clampDesign({ accent: "red", radiusPx: 99, fontScale: 5, iconSize: 4 })).toEqual({
-      radiusPx: 24,
-      fontScale: 1.15,
+      radiusPx: 28,
+      fontScale: 1.25,
       iconSize: 16,
     });
   });

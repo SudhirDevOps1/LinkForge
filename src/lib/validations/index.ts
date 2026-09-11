@@ -3,6 +3,33 @@
 // =============================================================================
 import { z } from "zod";
 
+// ---- Security & Sanitization Helpers ----------------------------------------
+/**
+ * Strips script tags, javascript: pseudo-protocols, and inline event handlers (onerror=, onload=)
+ * to prevent Stored Cross-Site Scripting (XSS).
+ */
+export function sanitizeText(str?: string | null): string {
+  if (!str || typeof str !== "string") return "";
+  return str
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+    .replace(/javascript\s*:/gi, "")
+    .replace(/\bon\w+\s*=/gi, "")
+    .trim();
+}
+
+/**
+ * Strips dangerous CSS patterns: @import, javascript:, expression(), and unclosed tags.
+ */
+export function sanitizeCss(css?: string | null): string {
+  if (!css || typeof css !== "string") return "";
+  return css
+    .replace(/@import\b[^;]*;/gi, "")
+    .replace(/javascript\s*:/gi, "")
+    .replace(/expression\s*\([^)]*\)/gi, "")
+    .replace(/<\/style>/gi, "")
+    .trim();
+}
+
 // ---- Shared primitives ------------------------------------------------------
 export const slugSchema = z
   .string()
@@ -118,8 +145,8 @@ export const announcementSchema = z
 
 export const profileUpdateSchema = z.object({
   slug: slugSchema.optional(),
-  displayName: z.string().trim().min(1).max(80).optional(),
-  bio: z.string().trim().max(300).optional(),
+  displayName: z.string().trim().min(1).max(80).transform((v) => sanitizeText(v)).optional(),
+  bio: z.string().trim().max(300).transform((v) => sanitizeText(v)).optional(),
   avatarUrl: z.union([urlSchema, z.literal("")]).optional(),
   theme: z.string().max(40).optional(),
   layout: z.enum(["list", "bento"]).optional(),
@@ -153,9 +180,9 @@ export const profileUpdateSchema = z.object({
 
 // ---- Links ------------------------------------------------------------------
 export const linkCreateSchema = z.object({
-  title: z.string().trim().min(1, "Title is required").max(120),
+  title: z.string().trim().min(1, "Title is required").max(120).transform((v) => sanitizeText(v)),
   url: urlSchema,
-  description: z.string().trim().max(200).optional().default(""),
+  description: z.string().trim().max(200).transform((v) => sanitizeText(v)).optional().default(""),
   icon: z.string().trim().max(100).optional().default("link"),
   type: z.enum(LINK_TYPES).optional().default("link"),
   size: z.enum(LINK_SIZES).optional().default("standard"),
@@ -291,7 +318,7 @@ export const designPrefsSchema = z.object({
   showSaveContact: z.boolean().optional(),
   audioFeedback: z.boolean().optional(),
   // Advanced code injection
-  customCss: z.string().max(4000).optional(),
+  customCss: z.string().max(4000).transform((v) => sanitizeCss(v)).optional(),
   extraBodyClass: z.string().max(80).optional(),
 });
 

@@ -5,7 +5,22 @@ import type { NextConfig } from "next";
 // Railway / Render / Docker). Helmet-style security headers har route par.
 // =============================================================================
 
+const cspHeader = `
+  default-src 'self';
+  script-src 'self' 'unsafe-eval' 'unsafe-inline' https://challenges.cloudflare.com https://cdn.jsdelivr.net;
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+  img-src 'self' blob: data: https:;
+  font-src 'self' https://fonts.gstatic.com data:;
+  object-src 'none';
+  base-uri 'self';
+  form-action 'self';
+  frame-src 'self' https://calendly.com https://cal.com https://www.youtube.com https://open.spotify.com https://challenges.cloudflare.com https:;
+  frame-ancestors 'self';
+  connect-src 'self' https: wss:;
+`.replace(/\s{2,}/g, " ").trim();
+
 const securityHeaders = [
+  { key: "Content-Security-Policy", value: cspHeader },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "SAMEORIGIN" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
