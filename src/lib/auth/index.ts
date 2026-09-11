@@ -368,11 +368,38 @@ export async function getSessionUser(): Promise<SessionContext | null> {
     await db.delete(sessions).where(or(eq(sessions.id, token), eq(sessions.token, token)));
     return null;
   }
-  let [profile] = await db
-    .select()
-    .from(profiles)
-    .where(eq(profiles.userId, row.user.id))
-    .limit(1);
+  let profile: Profile | undefined;
+  try {
+    const [p] = await db
+      .select()
+      .from(profiles)
+      .where(eq(profiles.userId, row.user.id))
+      .limit(1);
+    profile = p;
+  } catch (err: unknown) {
+    const msg = ((err as Error)?.message || "").toLowerCase();
+    if (
+      msg.includes("does not exist") ||
+      msg.includes("no such column") ||
+      msg.includes("column") ||
+      msg.includes("relation")
+    ) {
+      try {
+        const { autoMigrate } = await import("@/db/auto-migrate");
+        await autoMigrate(true);
+        const [p] = await db
+          .select()
+          .from(profiles)
+          .where(eq(profiles.userId, row.user.id))
+          .limit(1);
+        profile = p;
+      } catch (retryErr) {
+        console.warn("[auth] auto-migrate retry error:", (retryErr as Error).message);
+      }
+    } else {
+      throw err;
+    }
+  }
 
   // Auto-heal: agar user ka profile kisi wajah se create nahi hua tha, auto-create
   if (!profile) {
