@@ -10,7 +10,7 @@ import { hmacSha256Hex } from "@/lib/crypto";
 import { safeFetch } from "@/lib/outbound";
 
 export interface WebhookPayload {
-  event: "click" | "view" | "test" | "inquiry";
+  event: "click" | "view" | "test" | "inquiry" | "subscribe";
   timestamp: string;
   data: Record<string, unknown>;
 }
@@ -50,28 +50,49 @@ function formatPayloadForUrl(
   const isGoogleAppsScript = targetUrl.includes("script.google.com");
   const isStoat = targetUrl.includes("stoat.chat") || targetUrl.includes("revolt.chat");
 
+  const timeStr = new Date(payload.timestamp).toUTCString();
+
   if (isDiscord) {
+    let title = `🔔 Event: ${payload.event.toUpperCase()}`;
+    let desc = "LinkForge Webhook Event";
+    let color = 9133302; // #8b5cf6 Violet
+
+    if (payload.event === "click") {
+      title = "🔗 Link Clicked!";
+      desc = `Visitor clicked **${payload.data.title || "link"}**`;
+      color = 9133302; // Violet
+    } else if (payload.event === "subscribe") {
+      title = "🎉 New Newsletter Subscriber!";
+      desc = `**${payload.data.subscriberEmail}** joined your audience!`;
+      color = 5763719; // Emerald
+    } else if (payload.event === "inquiry") {
+      title = "💼 New Brand Deal Inquiry!";
+      desc = `New proposal received from **${payload.data.brandName || payload.data.name || "Sponsor"}**`;
+      color = 15105570; // Amber
+    } else if (payload.event === "test") {
+      title = "⚡ Webhook Verified & Active!";
+      desc = "LinkForge webhook test dispatched successfully. Real-time events are ready!";
+      color = 1752220; // Cyan
+    }
+
+    const fields = Object.entries(payload.data)
+      .filter(([k]) => k !== "linkId" && k !== "webhookId")
+      .map(([key, val]) => ({
+        name: key.replace(/([A-Z])/g, " $1").toUpperCase(),
+        value: String(val || "N/A"),
+        inline: true,
+      }));
+
     const discordBody = JSON.stringify({
       username: "LinkForge Alerts",
       avatar_url: "https://linkforge.dev/icon.svg",
       embeds: [
         {
-          title: `🔔 Event: ${payload.event.toUpperCase()}`,
-          description:
-            payload.event === "click"
-              ? `A visitor clicked a link on your profile.`
-              : payload.event === "view"
-                ? `New visitor view recorded on your LinkForge profile!`
-                : payload.event === "inquiry"
-                  ? `New brand sponsorship proposal received via your Media Kit!`
-                  : `LinkForge Webhook Test Dispatched Successfully!`,
-          color: 9133302, // #8b5cf6 (LinkForge Violet)
+          title,
+          description: desc,
+          color,
           timestamp: payload.timestamp,
-          fields: Object.entries(payload.data).slice(0, 8).map(([key, val]) => ({
-            name: key.replace(/([A-Z])/g, " $1").toUpperCase(),
-            value: String(val || "N/A"),
-            inline: true,
-          })),
+          fields,
           footer: { text: "LinkForge Webhooks" },
         },
       ],
@@ -84,11 +105,18 @@ function formatPayloadForUrl(
   }
 
   if (isSlack) {
-    const slackBody = JSON.stringify({
-      text: `🔔 *LinkForge Event: ${payload.event.toUpperCase()}*\n${Object.entries(payload.data)
-        .map(([k, v]) => `• *${k}*: ${v}`)
-        .join("\n")}`,
-    });
+    let text = `🔔 *LinkForge Event: ${payload.event.toUpperCase()}*`;
+    if (payload.event === "click") {
+      text = `🔗 *Link Clicked:* <${payload.data.url}|${payload.data.title || "Link"}> on @${payload.data.profileSlug || "profile"}\n• Source: ${payload.data.referrer || "Direct"} • Device: ${payload.data.device || "Desktop"}`;
+    } else if (payload.event === "subscribe") {
+      text = `🎉 *New Subscriber:* ${payload.data.subscriberEmail} joined @${payload.data.profileSlug || "profile"} newsletter!`;
+    } else if (payload.event === "inquiry") {
+      text = `💼 *Brand Deal Proposal:* ${payload.data.brandName || payload.data.name} (${payload.data.email}) — Budget: ${payload.data.budget || "Negotiable"}`;
+    } else if (payload.event === "test") {
+      text = `⚡ *LinkForge Webhook Verified & Active!* (Live events connected)`;
+    }
+
+    const slackBody = JSON.stringify({ text });
     return {
       targetUrl,
       body: slackBody,
@@ -101,6 +129,7 @@ function formatPayloadForUrl(
     const gasBody = JSON.stringify({
       event: payload.event,
       timestamp: payload.timestamp,
+      profileUsername: payload.data.profileSlug || "",
       ...payload.data,
     });
     return {
@@ -112,14 +141,54 @@ function formatPayloadForUrl(
   }
 
   if (isStoat) {
-    // Stoat / Revolt expects a channel message payload with "content"
-    const lines = [
-      `🔔 **LinkForge Event: ${payload.event.toUpperCase()}**`,
-      ...Object.entries(payload.data).map(([k, v]) => `• **${k}**: ${v}`),
-      `🕒 *${payload.timestamp}*`
-    ];
+    // Stoat / Revolt expects a channel message payload with formatted markdown "content"
+    let message = "";
+    if (payload.event === "click") {
+      message = [
+        `🔗 **Link Clicked!**`,
+        `• **Title**: ${payload.data.title || "Custom Link"}`,
+        `• **Target**: ${payload.data.url || "N/A"}`,
+        payload.data.profileSlug ? `• **Profile**: @${payload.data.profileSlug}` : null,
+        payload.data.referrer ? `• **Source**: ${payload.data.referrer}` : null,
+        payload.data.device ? `• **Device**: ${payload.data.device}` : null,
+        `🕒 *${timeStr}*`,
+      ].filter(Boolean).join("\n");
+    } else if (payload.event === "subscribe") {
+      message = [
+        `🎉 **New Newsletter Subscriber!**`,
+        `• **Subscriber**: ${payload.data.subscriberEmail || "N/A"}`,
+        payload.data.profileSlug ? `• **Profile**: @${payload.data.profileSlug}` : null,
+        `• **Status**: Active Member`,
+        `🕒 *${timeStr}*`,
+      ].filter(Boolean).join("\n");
+    } else if (payload.event === "inquiry") {
+      message = [
+        `💼 **New Brand Sponsorship Inquiry!**`,
+        `• **Brand**: ${payload.data.brandName || payload.data.name || "Partner"}`,
+        `• **Contact**: ${payload.data.email || "N/A"}`,
+        `• **Budget**: ${payload.data.budget || "Negotiable"}`,
+        payload.data.message ? `• **Message**: ${payload.data.message}` : null,
+        `🕒 *${timeStr}*`,
+      ].filter(Boolean).join("\n");
+    } else if (payload.event === "test") {
+      message = [
+        `⚡ **LinkForge Webhook Verified & Active!**`,
+        `• **Status**: Operational (HTTP 200)`,
+        `• **Integration**: Live notifications connected`,
+        `🕒 *${timeStr}*`,
+      ].join("\n");
+    } else {
+      message = [
+        `🔔 **LinkForge Event: ${payload.event.toUpperCase()}**`,
+        ...Object.entries(payload.data)
+          .filter(([k]) => k !== "linkId" && k !== "webhookId")
+          .map(([k, v]) => `• **${k}**: ${v}`),
+        `🕒 *${timeStr}*`,
+      ].join("\n");
+    }
+
     const stoatBody = JSON.stringify({
-      content: lines.join("\n"),
+      content: message,
     });
     return {
       targetUrl,
@@ -184,7 +253,7 @@ async function deliver(url: string, secret: string, payload: WebhookPayload) {
 /** Profile ke saare active webhooks ko event bhejo (non-blocking). */
 export async function triggerWebhooks(
   profileId: string,
-  event: "click" | "view" | "test" | "inquiry",
+  event: "click" | "view" | "test" | "inquiry" | "subscribe",
   data: Record<string, unknown>,
 ): Promise<void> {
   try {

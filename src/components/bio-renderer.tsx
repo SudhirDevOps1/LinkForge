@@ -876,19 +876,8 @@ export function BioRenderer({
     URL.revokeObjectURL(u);
   };
 
-  const handleShare = async () => {
+  const handleShare = () => {
     playClick();
-    const shareUrl = typeof window !== "undefined" ? window.location.href : `https://linkforge-demo.vercel.app/${profile.slug || ""}`;
-    if (typeof navigator !== "undefined" && navigator.share) {
-      try {
-        await navigator.share({
-          title: `${profile.displayName} | LinkForge`,
-          text: profile.bio || `Check out ${profile.displayName}'s official bio`,
-          url: shareUrl,
-        });
-        return;
-      } catch {}
-    }
     setShareModalOpen(true);
   };
 
@@ -1077,6 +1066,19 @@ export function BioRenderer({
                   <span className="hidden sm:inline">Save Contact</span>
                 </button>
               )}
+
+              <button
+                type="button"
+                onClick={() => {
+                  playClick();
+                  setShareModalOpen(true);
+                }}
+                title="View QR Code"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-white/10 bg-white/5 text-zinc-300 hover:text-white hover:bg-white/10 transition-all text-xs font-medium"
+              >
+                <QrCode className="h-3.5 w-3.5 text-violet-400" />
+                <span className="hidden sm:inline">QR Code</span>
+              </button>
 
               <button
                 type="button"
@@ -2150,47 +2152,104 @@ export function BioRenderer({
               </button>
             </div>
 
-            {/* QR Code */}
-            <div className="flex flex-col items-center justify-center p-4 rounded-2xl bg-white text-black shadow-inner">
+            {/* QR Code Studio */}
+            <div className="flex flex-col items-center justify-center p-4 rounded-2xl bg-white text-black shadow-inner space-y-2.5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
                   typeof window !== "undefined" ? window.location.href : `https://linkforge-demo.vercel.app/${profile.slug || ""}`
                 )}`}
-                alt="QR Code"
+                alt="Profile QR Code"
                 width={160}
                 height={160}
-                className="rounded-lg"
+                className="rounded-lg shadow-sm"
               />
-              <p className="text-[11px] font-medium text-zinc-600 mt-2">Scan with camera to open on mobile</p>
+              <div className="flex items-center justify-between w-full pt-1">
+                <p className="text-[11px] font-medium text-zinc-600">Scan to open on mobile</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currentUrl = typeof window !== "undefined" ? window.location.href : `https://linkforge-demo.vercel.app/${profile.slug || ""}`;
+                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&format=png&data=${encodeURIComponent(currentUrl)}`;
+                    fetch(qrUrl)
+                      .then((res) => res.blob())
+                      .then((blob) => {
+                        const blobUrl = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = blobUrl;
+                        a.download = `${profile.slug || "linkforge"}-qr.png`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(blobUrl);
+                      })
+                      .catch(() => {
+                        window.open(qrUrl, "_blank");
+                      });
+                  }}
+                  className="flex items-center gap-1 text-[11px] font-semibold text-violet-700 hover:text-violet-900 transition-colors"
+                >
+                  <Download className="w-3 h-3" />
+                  <span>Download PNG</span>
+                </button>
+              </div>
             </div>
 
             {/* 1-Click Social Shares */}
-            <div className="grid grid-cols-3 gap-2">
-              <a
-                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out ${profile.displayName}'s bio:`)}&url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`}
-                target="_blank"
-                rel="noreferrer"
-                className="py-2 text-center text-xs font-semibold rounded-xl border border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10 hover:text-white transition-all"
-              >
-                Twitter / X
-              </a>
-              <a
-                href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`}
-                target="_blank"
-                rel="noreferrer"
-                className="py-2 text-center text-xs font-semibold rounded-xl border border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10 hover:text-white transition-all"
-              >
-                LinkedIn
-              </a>
-              <a
-                href={`https://wa.me/?text=${encodeURIComponent(`${profile.displayName}'s bio: ${typeof window !== "undefined" ? window.location.href : ""}`)}`}
-                target="_blank"
-                rel="noreferrer"
-                className="py-2 text-center text-xs font-semibold rounded-xl border border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10 hover:text-white transition-all"
-              >
-                WhatsApp
-              </a>
+            <div className="space-y-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(`${profile.displayName}'s bio: ${typeof window !== "undefined" ? window.location.href : ""}`)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="py-2 text-center text-xs font-semibold rounded-xl border border-white/10 bg-white/5 text-zinc-300 hover:bg-emerald-500/20 hover:border-emerald-500/40 hover:text-emerald-300 transition-all"
+                >
+                  WhatsApp
+                </a>
+                <a
+                  href={`https://t.me/share/url?url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}&text=${encodeURIComponent(`Check out ${profile.displayName}'s bio on LinkForge:`)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="py-2 text-center text-xs font-semibold rounded-xl border border-white/10 bg-white/5 text-zinc-300 hover:bg-sky-500/20 hover:border-sky-500/40 hover:text-sky-300 transition-all"
+                >
+                  Telegram
+                </a>
+                <a
+                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out ${profile.displayName}'s bio:`)}&url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="py-2 text-center text-xs font-semibold rounded-xl border border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10 hover:text-white transition-all"
+                >
+                  X / Twitter
+                </a>
+                <a
+                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="py-2 text-center text-xs font-semibold rounded-xl border border-white/10 bg-white/5 text-zinc-300 hover:bg-blue-500/20 hover:border-blue-500/40 hover:text-blue-300 transition-all"
+                >
+                  LinkedIn
+                </a>
+              </div>
+
+              {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await navigator.share({
+                        title: `${profile.displayName} | LinkForge`,
+                        text: profile.bio || `Check out ${profile.displayName}'s official bio`,
+                        url: typeof window !== "undefined" ? window.location.href : "",
+                      });
+                    } catch {}
+                  }}
+                  className="w-full py-2 text-center text-xs font-semibold rounded-xl border border-violet-500/30 bg-violet-500/10 text-violet-200 hover:bg-violet-500/20 transition-all flex items-center justify-center gap-1.5"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span>More Sharing Options (System Sheet)</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

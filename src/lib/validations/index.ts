@@ -215,10 +215,10 @@ export const webhookSchema = z.object({
       }
     }, "Please provide a valid webhook URL"),
   events: z
-    .array(z.enum(["click", "view"]))
+    .array(z.enum(["click", "view", "subscribe", "inquiry"]))
     .min(1)
     .optional()
-    .default(["click"]),
+    .default(["click", "subscribe", "inquiry"]),
   isActive: z.boolean().optional().default(true),
 });
 

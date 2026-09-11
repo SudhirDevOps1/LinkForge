@@ -32,6 +32,7 @@ import {
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Badge, Button, Card, Field, Input, Select, Switch, Tabs, Textarea } from "@/components/ui";
+import { cn } from "@/lib/cn";
 import { PasskeySettings } from "@/components/dashboard/PasskeySettings";
 import { TwoFactorSettings } from "@/components/dashboard/TwoFactorSettings";
 
@@ -811,7 +812,7 @@ function DataTab() {
 function WebhooksTab({ initialHooks }: { initialHooks: WebhookRow[] }) {
   const [hooks, setHooks] = useState(initialHooks);
   const [url, setUrl] = useState("");
-  const [events, setEvents] = useState("click");
+  const [selectedEvents, setSelectedEvents] = useState<string[]>(["click", "subscribe", "inquiry"]);
   const [busy, setBusy] = useState(false);
   const [newSecret, setNewSecret] = useState<string | null>(null);
   const [showGuide, setShowGuide] = useState(false);
@@ -819,15 +820,16 @@ function WebhooksTab({ initialHooks }: { initialHooks: WebhookRow[] }) {
   async function add() {
     setBusy(true);
     try {
+      const eventsToSend = selectedEvents.length > 0 ? selectedEvents : ["click"];
       const data = await api<{ webhook: { id: string; url: string; secret: string; events: string; isActive: boolean } }>(
         "/api/webhooks",
-        { method: "POST", body: JSON.stringify({ url, events: [events] }) },
+        { method: "POST", body: JSON.stringify({ url, events: eventsToSend }) },
       );
       setHooks((prev) => [
         {
           id: data.webhook.id,
           url: data.webhook.url,
-          events: [events],
+          events: eventsToSend,
           isActive: true,
           secretPreview: `${data.webhook.secret.slice(0, 6)}…`,
           createdAt: new Date().toISOString(),
@@ -954,13 +956,47 @@ function WebhooksTab({ initialHooks }: { initialHooks: WebhookRow[] }) {
         </p>
         <div className="flex flex-col gap-2.5 sm:flex-row">
           <Input placeholder="https://discord.com/api/webhooks/... or https://script.google.com/..." value={url} onChange={(e) => setUrl(e.target.value)} />
-          <Select value={events} onChange={(e) => setEvents(e.target.value)} className="sm:w-44">
-            <option value="click">On click</option>
-            <option value="view">On view</option>
-          </Select>
           <Button onClick={add} loading={busy} disabled={!url.trim()} className="sm:w-32">
             <Plug className="h-4 w-4" /> Add
           </Button>
+        </div>
+
+        {/* Multi-event trigger selection pills */}
+        <div className="flex flex-wrap items-center gap-2 pt-0.5">
+          <span className="text-xs text-zinc-400 font-medium">Trigger events:</span>
+          {[
+            { id: "click", label: "🖱️ Clicks", desc: "Link clicks" },
+            { id: "subscribe", label: "📬 Subscribers", desc: "New newsletter signups" },
+            { id: "inquiry", label: "💼 Inquiries", desc: "Brand inquiries" },
+            { id: "view", label: "👀 Views", desc: "Profile page visits" },
+          ].map((ev) => {
+            const active = selectedEvents.includes(ev.id);
+            return (
+              <button
+                key={ev.id}
+                type="button"
+                onClick={() => {
+                  setSelectedEvents((prev) =>
+                    active
+                      ? prev.length > 1
+                        ? prev.filter((x) => x !== ev.id)
+                        : prev
+                      : [...prev, ev.id],
+                  );
+                }}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg text-xs font-medium border transition-all flex items-center gap-1.5",
+                  active
+                    ? "border-violet-500/80 bg-violet-500/20 text-white shadow-sm shadow-violet-500/10"
+                    : "border-white/10 bg-white/5 text-zinc-400 hover:text-zinc-200 hover:bg-white/10",
+                )}
+                title={ev.desc}
+              >
+                <span>{ev.label}</span>
+                {active && <Check className="w-3 h-3 text-violet-300" />}
+              </button>
+            );
+          })}
         </div>
 
         {/* 📖 Platform Quickstart & Deployment Guide */}

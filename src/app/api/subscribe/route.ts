@@ -14,6 +14,7 @@ import { profiles, subscribers } from "@/db/schema";
 import { ApiError, guardRateLimitDual, handle, json, parseOrThrow } from "@/lib/api";
 import { verifyEmailMx } from "@/lib/email-verifier";
 import { verifyAltchaSolution } from "@/lib/altcha";
+import { triggerWebhooks } from "@/lib/webhooks";
 
 const subscribeSchema = z.object({
   slug: z.string().trim().min(1).max(100),
@@ -109,6 +110,14 @@ export const POST = handle(async (req: Request) => {
     ipHash,
     userAgent,
   });
+
+  // 5.1 Trigger Webhook notification to Stoat, Discord, Slack, and Google Sheets
+  triggerWebhooks(profile.id, "subscribe", {
+    subscriberEmail: verification.email,
+    profileSlug: slug,
+    profileName: profile.displayName,
+    subscribedAt: new Date().toISOString(),
+  }).catch(() => {});
 
   // 6. Automatic Mailchimp Audience Sync if configured by creator
   if (profile.mailchimpApiKey && profile.mailchimpApiKey.includes("-")) {

@@ -52,11 +52,25 @@ export async function GET(req: Request, ctx: Ctx) {
       headers,
       analyticsEnabled: row.profile.analyticsEnabled,
     });
+    const referer = req.headers.get("referer");
+    let referrerDomain = "Direct";
+    if (referer) {
+      try {
+        referrerDomain = new URL(referer).hostname.replace(/^www\./, "");
+      } catch {
+        referrerDomain = referer.slice(0, 50);
+      }
+    }
+    const ua = req.headers.get("user-agent") || "";
+    const device = /mobile|iphone|android|ipad/i.test(ua) ? "Mobile" : "Desktop";
+
     await triggerWebhooks(row.profile.id, "click", {
       linkId: row.link.id,
       title: row.link.title,
       url: row.link.url,
       profileSlug: row.profile.slug,
+      referrer: referrerDomain,
+      device,
     });
   });
 
