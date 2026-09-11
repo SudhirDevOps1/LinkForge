@@ -267,6 +267,14 @@ export const designPrefsSchema = z.object({
   scrollReveal: z.boolean().optional(),
   cursorEffect: z.string().max(40).optional(),
   cardHover3D: z.boolean().optional(),
+  // Avatar Aura & Halo
+  avatarAuraStyle: z.string().max(40).optional(),
+  avatarAuraColor: z.string().max(40).optional(),
+  avatarAuraSpeed: z.string().max(40).optional(),
+  avatarAuraBlur: z.string().max(40).optional(),
+  // Display Name Animation
+  nameAnimation: z.string().max(40).optional(),
+  nameGradient: z.string().max(40).optional(),
   // Advanced code injection
   customCss: z.string().max(4000).optional(),
   extraBodyClass: z.string().max(80).optional(),

@@ -496,6 +496,107 @@ export function BioRenderer({
   else if (d?.avatarShape === "hexagon") avatarShapeClass = "rounded-3xl";
   const hasAvatarRing = d?.avatarRing ?? false;
 
+  // ── Avatar Aura & Halo Customization ─────────────────────────────────────────
+  const auraStyle = d?.avatarAuraStyle || (hasAvatarRing ? "spin" : "none");
+  const showAura = auraStyle !== "none";
+  const auraColor = d?.avatarAuraColor || accent;
+  const auraSpeed = d?.avatarAuraSpeed || "normal";
+  const auraBlur = d?.avatarAuraBlur || "subtle";
+
+  const auraDuration =
+    auraSpeed === "fast" ? "1.8s" : auraSpeed === "slow" ? "8s" : "3.6s";
+
+  const auraBlurPx =
+    auraBlur === "intense" ? "16px" : auraBlur === "medium" ? "8px" : "2px";
+
+  const auraRadius =
+    d?.avatarShape === "squircle" ? "32px" : d?.avatarShape === "rounded" ? "22px" : "9999px";
+
+  let auraBackground = `conic-gradient(from 0deg, ${auraColor}, #ec4899, #38bdf8, ${auraColor})`;
+  let auraAnimation = `spinSlow ${auraDuration} linear infinite`;
+  let auraInset = "-inset-1.5";
+
+  if (auraStyle === "pulse") {
+    auraBackground = `radial-gradient(circle, ${auraColor}, ${auraColor}40, transparent 75%)`;
+    auraAnimation = `auraPulse ${auraDuration} ease-in-out infinite`;
+    auraInset = "-inset-2.5";
+  } else if (auraStyle === "ripple") {
+    auraBackground = `radial-gradient(circle, transparent 55%, ${auraColor}88 70%, ${auraColor} 90%, transparent 100%)`;
+    auraAnimation = `auraRipple ${auraDuration} cubic-bezier(0.1, 0.8, 0.3, 1) infinite`;
+    auraInset = "-inset-3";
+  } else if (auraStyle === "neon") {
+    auraBackground = auraColor;
+    auraAnimation = `neonBreathe ${auraDuration} ease-in-out infinite`;
+    auraInset = "-inset-1.5";
+  } else if (auraStyle === "fire") {
+    auraBackground = "conic-gradient(from 0deg, #ff4500, #ff8c00, #ffd700, #ff0055, #ff4500)";
+    auraAnimation = `spinSlow ${auraDuration} linear infinite`;
+    auraInset = "-inset-2";
+  } else if (auraStyle === "cyber") {
+    auraBackground = "conic-gradient(from 0deg, #00f0ff, #7000ff, #ff007b, #00f0ff)";
+    auraAnimation = `spinSlow ${auraDuration} linear infinite`;
+    auraInset = "-inset-2";
+  } else if (auraStyle === "static") {
+    auraBackground = `radial-gradient(circle, ${auraColor}99, ${auraColor}33, transparent 75%)`;
+    auraAnimation = "none";
+    auraInset = "-inset-2";
+  }
+
+  // ── Display Name Typography & Animation ─────────────────────────────────────
+  const nameAnim = d?.nameAnimation || "none";
+  const nameGrad = d?.nameGradient;
+
+  const gradientPalettes: Record<string, string> = {
+    "violet-cyan": "linear-gradient(135deg, #c084fc 0%, #22d3ee 50%, #f472b6 100%)",
+    sunset: "linear-gradient(135deg, #fb923c 0%, #f43f5e 50%, #facc15 100%)",
+    "neon-matrix": "linear-gradient(135deg, #34d399 0%, #22d3ee 50%, #60a5fa 100%)",
+    "golden-fire": "linear-gradient(135deg, #fbbf24 0%, #f87171 50%, #f59e0b 100%)",
+    cyberpunk: "linear-gradient(135deg, #f43f5e 0%, #a855f7 50%, #06b6d4 100%)",
+  };
+
+  const activeGradient = nameGrad && gradientPalettes[nameGrad] ? gradientPalettes[nameGrad] : null;
+  const isGradientName = Boolean(activeGradient) || nameAnim === "gradient-flow";
+  const nameBgGradient = activeGradient || "linear-gradient(135deg, #a855f7 0%, #06b6d4 50%, #ec4899 100%)";
+
+  let nameAnimStyle: React.CSSProperties = {};
+  if (nameAnim === "gradient-flow") {
+    nameAnimStyle = {
+      backgroundImage: nameBgGradient,
+      backgroundSize: "200% auto",
+      WebkitBackgroundClip: "text",
+      backgroundClip: "text",
+      color: "transparent",
+      animation: "gradientFlow 4s ease infinite",
+    };
+  } else if (nameAnim === "neon-pulse") {
+    nameAnimStyle = {
+      animation: "neonBreathe 3s ease-in-out infinite",
+      color: effectiveNameColor || accent,
+    };
+  } else if (nameAnim === "shimmer") {
+    nameAnimStyle = {
+      backgroundImage: `linear-gradient(90deg, ${effectiveNameColor || "#ffffff"} 0%, ${accent} 50%, ${effectiveNameColor || "#ffffff"} 100%)`,
+      backgroundSize: "200% 100%",
+      WebkitBackgroundClip: "text",
+      backgroundClip: "text",
+      color: "transparent",
+      animation: "shimmer 2.5s infinite",
+    };
+  } else if (nameAnim === "float") {
+    nameAnimStyle = {
+      display: "inline-block",
+      animation: "float 3s ease-in-out infinite",
+      color: effectiveNameColor,
+    };
+  } else if (isGradientName) {
+    nameAnimStyle = {
+      backgroundImage: nameBgGradient,
+      WebkitBackgroundClip: "text",
+      backgroundClip: "text",
+      color: "transparent",
+    };
+  }
+
   // In-App Modal State
   const [activeModal, setActiveModal] = useState<ActiveMediaModal | null>(null);
   const [docContent, setDocContent] = useState<string | null>(null);
@@ -687,14 +788,16 @@ export function BioRenderer({
               : ""
           }`}
         >
-        {/* Avatar + identity with optional animated gradient halo ring */}
+        {/* Avatar + identity with optional customizable aura halo ring */}
         <div className="relative">
-          {hasAvatarRing && (
+          {showAura && (
             <div
-              className="absolute -inset-1.5 animate-spin-slow opacity-80 blur-[2px]"
+              className={`absolute ${auraInset} opacity-85 transition-all`}
               style={{
-                background: `conic-gradient(from 0deg, ${accent}, #ec4899, #38bdf8, ${accent})`,
-                borderRadius: d?.avatarShape === "squircle" ? "32px" : d?.avatarShape === "rounded" ? "22px" : "9999px",
+                background: auraBackground,
+                borderRadius: auraRadius,
+                filter: `blur(${auraBlurPx})`,
+                animation: auraAnimation,
               }}
             />
           )}
@@ -726,7 +829,8 @@ export function BioRenderer({
             fontSize: fontScale !== 1 ? `calc(1.5rem * ${fontScale})` : undefined,
             textTransform: textTransform as React.CSSProperties["textTransform"],
             textShadow: textShadowStyle,
-            color: effectiveNameColor,
+            color: isGradientName ? "transparent" : effectiveNameColor,
+            ...nameAnimStyle,
           }}
         >
           {profile.displayName}

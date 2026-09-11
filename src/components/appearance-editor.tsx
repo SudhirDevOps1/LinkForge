@@ -478,6 +478,18 @@ export function AppearanceEditor({
   const [cursorEffect, setCursorEffect] = useState(initialDesign.cursorEffect ?? "none");
   const [cardHover3D, setCardHover3D] = useState(initialDesign.cardHover3D ?? false);
 
+  // Avatar Aura & Halo
+  const [avatarAuraStyle, setAvatarAuraStyle] = useState(
+    initialDesign.avatarAuraStyle ?? (initialDesign.avatarRing ? "spin" : "none")
+  );
+  const [avatarAuraColor, setAvatarAuraColor] = useState(initialDesign.avatarAuraColor ?? "");
+  const [avatarAuraSpeed, setAvatarAuraSpeed] = useState(initialDesign.avatarAuraSpeed ?? "normal");
+  const [avatarAuraBlur, setAvatarAuraBlur] = useState(initialDesign.avatarAuraBlur ?? "subtle");
+
+  // Display Name Animation & Gradients
+  const [nameAnimation, setNameAnimation] = useState(initialDesign.nameAnimation ?? "none");
+  const [nameGradient, setNameGradient] = useState(initialDesign.nameGradient ?? "");
+
   // Advanced code
   const [customCss, setCustomCss] = useState(initialDesign.customCss ?? "");
   const [extraBodyClass, setExtraBodyClass] = useState(initialDesign.extraBodyClass ?? "");
@@ -533,6 +545,12 @@ export function AppearanceEditor({
     scrollReveal !== (initialDesign.scrollReveal ?? false) ||
     cursorEffect !== (initialDesign.cursorEffect ?? "none") ||
     cardHover3D !== (initialDesign.cardHover3D ?? false) ||
+    avatarAuraStyle !== (initialDesign.avatarAuraStyle ?? (initialDesign.avatarRing ? "spin" : "none")) ||
+    avatarAuraColor !== (initialDesign.avatarAuraColor ?? "") ||
+    avatarAuraSpeed !== (initialDesign.avatarAuraSpeed ?? "normal") ||
+    avatarAuraBlur !== (initialDesign.avatarAuraBlur ?? "subtle") ||
+    nameAnimation !== (initialDesign.nameAnimation ?? "none") ||
+    nameGradient !== (initialDesign.nameGradient ?? "") ||
     customCss !== (initialDesign.customCss ?? "") ||
     extraBodyClass !== (initialDesign.extraBodyClass ?? "");
 
@@ -563,7 +581,13 @@ export function AppearanceEditor({
       entranceAnimation,
       attentionEffect,
       avatarShape,
-      avatarRing,
+      avatarRing: avatarAuraStyle !== "none",
+      avatarAuraStyle: avatarAuraStyle !== "none" ? avatarAuraStyle : undefined,
+      avatarAuraColor: avatarAuraColor || undefined,
+      avatarAuraSpeed: avatarAuraSpeed !== "normal" ? avatarAuraSpeed : undefined,
+      avatarAuraBlur: avatarAuraBlur !== "subtle" ? avatarAuraBlur : undefined,
+      nameAnimation: nameAnimation !== "none" ? nameAnimation : undefined,
+      nameGradient: nameGradient || undefined,
       customFontName: customFontName || undefined,
       letterSpacing: letterSpacing !== 0 ? letterSpacing : undefined,
       lineHeight: lineHeight !== 1.5 ? lineHeight : undefined,
@@ -625,6 +649,12 @@ export function AppearanceEditor({
     setIconBgStyle("transparent");
     setCursorEffect("none");
     setCardHover3D(false);
+    setAvatarAuraStyle(p.avatarRing ? "spin" : "none");
+    setAvatarAuraColor("");
+    setAvatarAuraSpeed("normal");
+    setAvatarAuraBlur("subtle");
+    setNameAnimation("none");
+    setNameGradient("");
     toast.success(`Applied "${p.name}" preset! Look at the preview.`);
   }
 
@@ -668,7 +698,13 @@ export function AppearanceEditor({
             entranceAnimation,
             attentionEffect,
             avatarShape,
-            avatarRing,
+            avatarRing: avatarAuraStyle !== "none",
+            avatarAuraStyle: avatarAuraStyle !== "none" ? avatarAuraStyle : undefined,
+            avatarAuraColor: avatarAuraColor || undefined,
+            avatarAuraSpeed: avatarAuraSpeed !== "normal" ? avatarAuraSpeed : undefined,
+            avatarAuraBlur: avatarAuraBlur !== "subtle" ? avatarAuraBlur : undefined,
+            nameAnimation: nameAnimation !== "none" ? nameAnimation : undefined,
+            nameGradient: nameGradient || undefined,
             customFontName: customFontName || undefined,
             letterSpacing: letterSpacing !== 0 ? letterSpacing : undefined,
             lineHeight: lineHeight !== 1.5 ? lineHeight : undefined,
@@ -728,6 +764,12 @@ export function AppearanceEditor({
     setAttentionEffect("none");
     setAvatarShape("circle");
     setAvatarRing(false);
+    setAvatarAuraStyle("none");
+    setAvatarAuraColor("");
+    setAvatarAuraSpeed("normal");
+    setAvatarAuraBlur("subtle");
+    setNameAnimation("none");
+    setNameGradient("");
     setCustomFontName("");
     setLetterSpacing(0);
     setLineHeight(1.5);
@@ -1066,6 +1108,75 @@ export function AppearanceEditor({
                   onChange={(e) => setFontScale(Number.parseFloat(e.target.value))}
                   className="w-full accent-violet-500"
                 />
+              </div>
+
+              {/* ✨ Display Name Animation & Dynamic Gradient Effects */}
+              <div className="pt-4 border-t border-white/5 space-y-4">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-violet-400" />
+                      Display Name Animation
+                    </label>
+                    <span className="text-[10px] text-zinc-500 uppercase tracking-wider font-mono">Live effect</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-500 mt-0.5">Choose real-time motion and lighting for your name heading.</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-2.5">
+                    {[
+                      { id: "none", label: "Static", desc: "Clean" },
+                      { id: "gradient-flow", label: "Gradient Flow", desc: "Flowing colors" },
+                      { id: "neon-pulse", label: "Neon Pulse", desc: "Luminous glow" },
+                      { id: "shimmer", label: "Light Shimmer", desc: "Light sweep" },
+                      { id: "float", label: "Subtle Float", desc: "Levitation" },
+                    ].map((anim) => (
+                      <button
+                        key={anim.id}
+                        type="button"
+                        onClick={() => setNameAnimation(anim.id)}
+                        className={cn(
+                          "p-2 rounded-xl border text-center transition-all",
+                          nameAnimation === anim.id
+                            ? "border-violet-400 bg-violet-500/20 text-white ring-1 ring-violet-400"
+                            : "border-white/10 text-zinc-400 hover:text-zinc-200 hover:bg-white/5",
+                        )}
+                      >
+                        <p className="text-xs font-semibold">{anim.label}</p>
+                        <p className="text-[10px] text-zinc-500">{anim.desc}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Display Name Gradient Preset */}
+                <div>
+                  <label className="text-xs font-semibold text-zinc-300 block mb-1.5">Display Name Gradient Palette</label>
+                  <p className="text-[11px] text-zinc-500 mb-2.5">Color palette applied when using Gradient Flow or stylized gradient text.</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {[
+                      { id: "", label: "Default Accent", gradient: "from-zinc-400 to-white" },
+                      { id: "violet-cyan", label: "Aurora Violet", gradient: "from-purple-500 via-cyan-400 to-pink-500" },
+                      { id: "sunset", label: "Sunset Blaze", gradient: "from-orange-500 via-rose-500 to-yellow-400" },
+                      { id: "neon-matrix", label: "Neon Matrix", gradient: "from-emerald-400 via-cyan-400 to-blue-500" },
+                      { id: "golden-fire", label: "Golden Fire", gradient: "from-amber-400 via-red-500 to-yellow-300" },
+                      { id: "cyberpunk", label: "Cyberpunk", gradient: "from-pink-500 via-purple-500 to-cyan-400" },
+                    ].map((pal) => (
+                      <button
+                        key={pal.id}
+                        type="button"
+                        onClick={() => setNameGradient(pal.id)}
+                        className={cn(
+                          "flex items-center gap-2 p-2 rounded-xl border text-left transition-all",
+                          nameGradient === pal.id
+                            ? "border-violet-400 bg-violet-500/20 text-white ring-1 ring-violet-400"
+                            : "border-white/10 text-zinc-400 hover:text-zinc-200 hover:bg-white/5",
+                        )}
+                      >
+                        <span className={cn("w-4 h-4 rounded-full bg-gradient-to-tr shrink-0", pal.gradient)} />
+                        <span className="text-xs font-medium truncate">{pal.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               {/* Custom Google Font Loader */}
@@ -1820,24 +1931,185 @@ export function AppearanceEditor({
                 <div className="flex items-center justify-between p-3 rounded-xl border border-white/10 bg-zinc-900/60">
                   <div>
                     <p className="text-xs font-semibold text-zinc-200">Animated Gradient Aura Ring</p>
-                    <p className="text-[11px] text-zinc-400">Adds an active spinning multi-color gradient halo behind avatar</p>
+                    <p className="text-[11px] text-zinc-400">Adds an active glowing or animated halo ring around avatar</p>
                   </div>
                   <button
                     type="button"
-                    onClick={() => setAvatarRing(!avatarRing)}
+                    onClick={() => {
+                      const next = !avatarRing && avatarAuraStyle === "none";
+                      if (next) {
+                        setAvatarRing(true);
+                        setAvatarAuraStyle("spin");
+                      } else {
+                        setAvatarRing(false);
+                        setAvatarAuraStyle("none");
+                      }
+                    }}
                     className={cn(
                       "w-11 h-6 rounded-full transition-colors relative",
-                      avatarRing ? "bg-violet-600" : "bg-zinc-800",
+                      avatarRing || avatarAuraStyle !== "none" ? "bg-violet-600" : "bg-zinc-800",
                     )}
                   >
                     <span
                       className={cn(
                         "absolute top-1 w-4 h-4 rounded-full bg-white transition-transform",
-                        avatarRing ? "left-6" : "left-1",
+                        avatarRing || avatarAuraStyle !== "none" ? "left-6" : "left-1",
                       )}
                     />
                   </button>
                 </div>
+
+                {/* Extended Avatar Aura Customizer */}
+                {(avatarRing || avatarAuraStyle !== "none") && (
+                  <div className="p-3.5 rounded-xl border border-violet-500/20 bg-violet-950/10 space-y-3.5">
+                    {/* Aura Animation Style */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-xs font-semibold text-zinc-300">Aura Halo Style</label>
+                        <span className="text-[10px] text-violet-400 font-mono uppercase">{avatarAuraStyle}</span>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                        {[
+                          { id: "spin", label: "Conic Spin", desc: "Multi-color rotate" },
+                          { id: "pulse", label: "Pulsing Glow", desc: "Breathing aura" },
+                          { id: "ripple", label: "Radar Ripple", desc: "Expanding wave" },
+                          { id: "neon", label: "Neon Breathe", desc: "Luminous neon" },
+                          { id: "fire", label: "Solar Flare", desc: "Blazing ember" },
+                          { id: "cyber", label: "Cyber Vortex", desc: "Cyan & purple" },
+                          { id: "static", label: "Steady Glow", desc: "Soft back-glow" },
+                        ].map((st) => (
+                          <button
+                            key={st.id}
+                            type="button"
+                            onClick={() => {
+                              setAvatarAuraStyle(st.id);
+                              setAvatarRing(true);
+                            }}
+                            className={cn(
+                              "p-2 rounded-lg border text-left transition-all",
+                              avatarAuraStyle === st.id
+                                ? "border-violet-400 bg-violet-500/20 text-white ring-1 ring-violet-400"
+                                : "border-white/10 text-zinc-400 hover:text-zinc-200 hover:bg-white/5",
+                            )}
+                          >
+                            <p className="text-xs font-semibold">{st.label}</p>
+                            <p className="text-[10px] text-zinc-500">{st.desc}</p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Aura Speed & Blur Radius */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-white/5">
+                      <div>
+                        <label className="text-[11px] font-semibold text-zinc-400 block mb-1.5">Animation Speed</label>
+                        <div className="grid grid-cols-3 gap-1.5">
+                          {[
+                            { id: "slow", label: "Slow", desc: "8s" },
+                            { id: "normal", label: "Normal", desc: "3.6s" },
+                            { id: "fast", label: "Fast", desc: "1.8s" },
+                          ].map((sp) => (
+                            <button
+                              key={sp.id}
+                              type="button"
+                              onClick={() => setAvatarAuraSpeed(sp.id)}
+                              className={cn(
+                                "py-1.5 px-2 rounded-lg border text-center transition-all",
+                                avatarAuraSpeed === sp.id
+                                  ? "border-violet-400 bg-violet-500/20 text-white"
+                                  : "border-white/10 text-zinc-400 hover:text-zinc-200 hover:bg-white/5",
+                              )}
+                            >
+                              <p className="text-xs font-medium">{sp.label}</p>
+                              <p className="text-[10px] text-zinc-500">{sp.desc}</p>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-[11px] font-semibold text-zinc-400 block mb-1.5">Glow Blur Radius</label>
+                        <div className="grid grid-cols-3 gap-1.5">
+                          {[
+                            { id: "subtle", label: "Subtle", desc: "2px" },
+                            { id: "medium", label: "Medium", desc: "8px" },
+                            { id: "intense", label: "Intense", desc: "16px" },
+                          ].map((bl) => (
+                            <button
+                              key={bl.id}
+                              type="button"
+                              onClick={() => setAvatarAuraBlur(bl.id)}
+                              className={cn(
+                                "py-1.5 px-2 rounded-lg border text-center transition-all",
+                                avatarAuraBlur === bl.id
+                                  ? "border-violet-400 bg-violet-500/20 text-white"
+                                  : "border-white/10 text-zinc-400 hover:text-zinc-200 hover:bg-white/5",
+                              )}
+                            >
+                              <p className="text-xs font-medium">{bl.label}</p>
+                              <p className="text-[10px] text-zinc-500">{bl.desc}</p>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Custom Aura Color */}
+                    <div className="pt-2 border-t border-white/5">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-[11px] font-semibold text-zinc-400">Aura Glow Color</label>
+                        <span className="text-[10px] text-zinc-500 font-mono">
+                          {avatarAuraColor || "Default (Accent)"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 p-2 rounded-xl border border-white/10 bg-zinc-900/60">
+                        <input
+                          type="color"
+                          value={avatarAuraColor || accent || "#8b5cf6"}
+                          onChange={(e) => setAvatarAuraColor(e.target.value)}
+                          className="w-8 h-8 rounded-lg border-0 cursor-pointer bg-transparent shrink-0"
+                        />
+                        <input
+                          type="text"
+                          value={avatarAuraColor}
+                          placeholder="Accent (Auto)"
+                          onChange={(e) => setAvatarAuraColor(e.target.value)}
+                          className="flex-1 bg-transparent text-xs font-mono text-zinc-200 outline-none uppercase"
+                        />
+                        {avatarAuraColor && (
+                          <button
+                            type="button"
+                            onClick={() => setAvatarAuraColor("")}
+                            className="text-zinc-500 hover:text-zinc-200 text-xs px-2 py-1 rounded bg-white/5"
+                          >
+                            Reset
+                          </button>
+                        )}
+                      </div>
+                      {/* Quick Palette Pills */}
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {[
+                          { label: "Pink", color: "#ec4899" },
+                          { label: "Cyan", color: "#06b6d4" },
+                          { label: "Violet", color: "#8b5cf6" },
+                          { label: "Emerald", color: "#10b981" },
+                          { label: "Gold", color: "#f59e0b" },
+                          { label: "Fire", color: "#ff4500" },
+                        ].map((c) => (
+                          <button
+                            key={c.color}
+                            type="button"
+                            onClick={() => setAvatarAuraColor(c.color)}
+                            className="flex items-center gap-1.5 px-2 py-1 rounded-md border border-white/10 bg-zinc-900 text-[11px] text-zinc-300 hover:border-white/25"
+                          >
+                            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: c.color }} />
+                            <span>{c.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Transition Speed */}

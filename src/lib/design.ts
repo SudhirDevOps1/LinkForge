@@ -94,6 +94,22 @@ export interface DesignPrefs {
   /** Interactive 3D perspective mouse tilt on link cards */
   cardHover3D?: boolean;
 
+  // ── Avatar Aura & Halo Customization ──────────────────────────────────────────
+  /** Avatar halo aura animation style: "spin" | "pulse" | "ripple" | "neon" | "fire" | "cyber" | "static" */
+  avatarAuraStyle?: string;
+  /** Custom aura halo glow color or preset ("accent", "#ec4899", etc.) */
+  avatarAuraColor?: string;
+  /** Aura animation speed: "slow" | "normal" | "fast" */
+  avatarAuraSpeed?: string;
+  /** Aura glow blur radius: "subtle" | "medium" | "intense" */
+  avatarAuraBlur?: string;
+
+  // ── Display Name Typography & Animation ────────────────────────────────────────
+  /** Display name animation style: "none" | "gradient-flow" | "neon-pulse" | "shimmer" | "float" */
+  nameAnimation?: string;
+  /** Gradient color preset for name text: "violet-cyan" | "sunset" | "neon-matrix" | "golden-fire" | "cyberpunk" */
+  nameGradient?: string;
+
   // ── Advanced / Custom Code ───────────────────────────────────────────────────
   /** Raw CSS injected into bio page <style> tag (max 4000 chars, sanitized). */
   customCss?: string;
@@ -246,6 +262,16 @@ export function clampDesign(prefs: DesignPrefs): DesignPrefs {
   if (typeof prefs.scrollReveal === "boolean") out.scrollReveal = prefs.scrollReveal;
   if (str40(prefs.cursorEffect)) out.cursorEffect = str40(prefs.cursorEffect)!;
   if (typeof prefs.cardHover3D === "boolean") out.cardHover3D = prefs.cardHover3D;
+
+  // ── Avatar Aura & Halo ───────────────────────────────────────────────────────
+  if (str40(prefs.avatarAuraStyle)) out.avatarAuraStyle = str40(prefs.avatarAuraStyle)!;
+  if (str40(prefs.avatarAuraColor)) out.avatarAuraColor = str40(prefs.avatarAuraColor)!;
+  if (str40(prefs.avatarAuraSpeed)) out.avatarAuraSpeed = str40(prefs.avatarAuraSpeed)!;
+  if (str40(prefs.avatarAuraBlur)) out.avatarAuraBlur = str40(prefs.avatarAuraBlur)!;
+
+  // ── Display Name Animation ───────────────────────────────────────────────────
+  if (str40(prefs.nameAnimation)) out.nameAnimation = str40(prefs.nameAnimation)!;
+  if (str40(prefs.nameGradient)) out.nameGradient = str40(prefs.nameGradient)!;
 
   // ── Advanced Code ────────────────────────────────────────────────────────────
   if (prefs.customCss && typeof prefs.customCss === "string") {

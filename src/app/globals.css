@@ -24,6 +24,10 @@
   --animate-pulse-subtle: pulseSubtle 3s ease-in-out infinite;
   --animate-shimmer: shimmer 2.5s infinite;
   --animate-spin-slow: spinSlow 8s linear infinite;
+  --animate-gradient-flow: gradientFlow 4s ease infinite;
+  --animate-aura-pulse: auraPulse 2.8s ease-in-out infinite;
+  --animate-aura-ripple: auraRipple 2.4s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
+  --animate-neon-breathe: neonBreathe 3s ease-in-out infinite;
 
   @keyframes float {
     0%, 100% { transform: translateY(0px); }
@@ -49,6 +53,23 @@
   @keyframes spinSlow {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
+  }
+  @keyframes gradientFlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes auraPulse {
+    0%, 100% { transform: scale(1); opacity: 0.75; }
+    50% { transform: scale(1.1); opacity: 1; }
+  }
+  @keyframes auraRipple {
+    0% { transform: scale(0.95); opacity: 0.9; }
+    100% { transform: scale(1.25); opacity: 0; }
+  }
+  @keyframes neonBreathe {
+    0%, 100% { filter: drop-shadow(0 0 4px var(--lf-accent, #8b5cf6)); }
+    50% { filter: drop-shadow(0 0 16px var(--lf-accent, #8b5cf6)) drop-shadow(0 0 28px var(--lf-accent, #8b5cf6)); }
   }
 }
 
