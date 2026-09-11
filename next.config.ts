@@ -33,7 +33,15 @@ const nextConfig: NextConfig = {
     "**/*": ["./node_modules/pg-cloudflare/dist/**/*", "./node_modules/pg-cloudflare/esm/**/*"],
   },
   outputFileTracingExcludes: {
-    "**/*": ["./uploads/**/*"],
+    "**/*": [
+      "./uploads/**/*",
+      "./node_modules/@swc/core-linux-x64-gnu/**/*",
+      "./node_modules/@swc/core-linux-x64-musl/**/*",
+      "./node_modules/@esbuild/**/*",
+    ],
+  },
+  experimental: {
+    optimizePackageImports: ["lucide-react", "@dnd-kit/core", "@dnd-kit/sortable", "drizzle-orm"],
   },
   // Avatars/logos kisi bhi HTTPS host se aa sakte hain (B2, R2, Supabase, ...)
   images: {
