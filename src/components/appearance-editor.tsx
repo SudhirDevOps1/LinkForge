@@ -397,11 +397,28 @@ const BUTTON_SHAPES = [
 ];
 
 const BACKGROUND_EFFECTS = [
-  { id: "glow", label: "Ambient Aura", desc: "Luminous radial glow behind avatar" },
-  { id: "mesh", label: "Mesh Gradient", desc: "Floating atmospheric gradient blobs" },
-  { id: "dots", label: "Cyber Dots", desc: "Subtle cybernetic matrix dot grid" },
-  { id: "aurora", label: "Northern Aurora", desc: "Multi-color cosmic ethereal lights" },
-  { id: "none", label: "Flat Minimal", desc: "Pure solid background tone" },
+  { id: "glow", label: "Ambient Aura", category: "classic", desc: "Luminous radial glow behind avatar" },
+  { id: "mesh", label: "Cosmic Mesh", category: "modern", desc: "Floating atmospheric gradient blobs" },
+  { id: "dots", label: "Cyber Dots", category: "tech", desc: "Subtle cybernetic matrix dot grid" },
+  { id: "aurora", label: "Northern Aurora", category: "cosmic", desc: "Multi-color cosmic ethereal lights" },
+  { id: "matrix", label: "Digital Rain", category: "tech", desc: "Cyber terminal neon code matrix" },
+  { id: "synthwave", label: "80s Synthwave", category: "retro", desc: "Retro neon horizon perspective grid" },
+  { id: "constellation", label: "Constellations", category: "cosmic", desc: "Deep space glowing star clusters" },
+  { id: "bokeh", label: "Bio Bokeh", category: "cosmic", desc: "Floating soft luminous orbs" },
+  { id: "waves", label: "Oceanic Waves", category: "modern", desc: "Minimalist undulating contour curves" },
+  { id: "circuit", label: "Cyber Circuit", category: "tech", desc: "High-tech PCB traces & board lines" },
+  { id: "carbon", label: "Carbon Fiber", category: "texture", desc: "Textured 3D diagonal woven weave" },
+  { id: "isometric", label: "Isometric Cube", category: "tech", desc: "3D architectural isometric grid" },
+  { id: "particles", label: "Cosmic Stardust", category: "cosmic", desc: "Drifting stellar particles & dust" },
+  { id: "honeycomb", label: "Hex Honeycomb", category: "tech", desc: "Futuristic geometric hex matrix" },
+  { id: "stripes", label: "Velocity Warp", category: "modern", desc: "Dynamic angled speed stripes" },
+  { id: "topography", label: "Topographic Map", category: "texture", desc: "Luxury elevation contour curves" },
+  { id: "scanlines", label: "CRT Scanlines", category: "retro", desc: "Vintage cathode-ray monitor glow" },
+  { id: "sunset", label: "Cyber Sunset", category: "retro", desc: "Warm dusk horizon with neon glow" },
+  { id: "spotlight", label: "Studio Spotlight", category: "modern", desc: "Cinematic angled stage spotlights" },
+  { id: "nebula", label: "Deep Nebula", category: "cosmic", desc: "Interstellar violet & cyan gas cloud" },
+  { id: "noise", label: "Analog Film Grain", category: "texture", desc: "Frosted luxury velvet texture" },
+  { id: "none", label: "Flat Minimal", category: "classic", desc: "Pure solid background tone" },
 ];
 
 const HOVER_EFFECTS = [
@@ -451,6 +468,7 @@ export function AppearanceEditor({
 
   // Visual effects & animations
   const [backgroundEffect, setBackgroundEffect] = useState(initialDesign.backgroundEffect ?? "glow");
+  const [effectCategory, setEffectCategory] = useState<string>("all");
   const [hoverEffect, setHoverEffect] = useState(initialDesign.hoverEffect ?? "lift");
   const [entranceAnimation, setEntranceAnimation] = useState(initialDesign.entranceAnimation ?? "fade");
   const [attentionEffect, setAttentionEffect] = useState(initialDesign.attentionEffect ?? "none");
@@ -1463,24 +1481,65 @@ export function AppearanceEditor({
                 </div>
               </div>
 
-              {/* Atmosphere Background Effects */}
-              <div className="pt-4 border-t border-white/5 space-y-2.5">
-                <label className="text-xs font-semibold text-zinc-300 block">Canvas Atmosphere Effect</label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                  {BACKGROUND_EFFECTS.map((eff) => (
+              {/* Atmosphere Background Effects (22 Rich Styles) */}
+              <div className="pt-4 border-t border-white/5 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
+                    Canvas Atmosphere Effect
+                    <span className="px-1.5 py-0.5 rounded-full bg-violet-500/20 text-violet-300 font-mono text-[10px]">
+                      {BACKGROUND_EFFECTS.length} styles
+                    </span>
+                  </label>
+                  {/* Category Filter Pills */}
+                  <div className="flex items-center gap-1 overflow-x-auto pb-1 text-[11px]">
+                    {[
+                      { id: "all", label: "All (22)" },
+                      { id: "tech", label: "⚡ Tech" },
+                      { id: "cosmic", label: "🌌 Cosmic" },
+                      { id: "retro", label: "🕹️ Retro" },
+                      { id: "modern", label: "🎨 Modern" },
+                      { id: "texture", label: "📐 Texture" },
+                      { id: "classic", label: "✨ Classic" },
+                    ].map((cat) => (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setEffectCategory(cat.id)}
+                        className={cn(
+                          "px-2 py-0.5 rounded-full border transition-all shrink-0 text-[10px]",
+                          effectCategory === cat.id
+                            ? "border-violet-400 bg-violet-500/25 text-white font-medium"
+                            : "border-white/10 text-zinc-400 hover:text-zinc-200 hover:bg-white/5",
+                        )}
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 max-h-[380px] overflow-y-auto pr-1">
+                  {BACKGROUND_EFFECTS.filter(
+                    (eff) => effectCategory === "all" || eff.category === effectCategory,
+                  ).map((eff) => (
                     <button
                       key={eff.id}
                       type="button"
                       onClick={() => setBackgroundEffect(eff.id)}
                       className={cn(
-                        "p-3 rounded-xl border text-left transition-all",
+                        "p-3 rounded-xl border text-left transition-all relative overflow-hidden group",
                         backgroundEffect === eff.id
                           ? "border-violet-400 bg-violet-500/15 ring-1 ring-violet-400"
                           : "border-white/10 hover:border-white/20 bg-zinc-900/60",
                       )}
                     >
-                      <p className="text-xs font-semibold text-zinc-200">{eff.label}</p>
-                      <p className="text-[10px] text-zinc-400 mt-0.5">{eff.desc}</p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-semibold text-zinc-200">{eff.label}</p>
+                        {backgroundEffect === eff.id && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+                        )}
+                      </div>
+                      <p className="text-[10px] text-zinc-400 mt-0.5 leading-snug">{eff.desc}</p>
                     </button>
                   ))}
                 </div>

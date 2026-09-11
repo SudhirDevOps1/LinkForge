@@ -411,17 +411,90 @@ export function BioRenderer({
   // Custom Card Surface Style
   const effectiveCardStyle = d?.cardStyle || v.cardStyle;
 
-  // Background Atmosphere Effect
+  // Background Atmosphere Effect (22 distinct styles)
   const bgEffect = d?.backgroundEffect || "glow";
-  let backgroundStyle = `radial-gradient(ellipse 80% 50% at 50% -20%, ${accent}25, transparent), ${customBg || v.bg}`;
-  if (bgEffect === "mesh") {
-    backgroundStyle = `radial-gradient(at 0% 0%, ${accent}30 0px, transparent 50%), radial-gradient(at 100% 100%, #d946ef25 0px, transparent 50%), ${customBg || v.bg}`;
-  } else if (bgEffect === "dots") {
-    backgroundStyle = `radial-gradient(${accent}20 1px, transparent 1px), ${customBg || v.bg}`;
-  } else if (bgEffect === "aurora") {
-    backgroundStyle = `radial-gradient(ellipse at 20% 0%, ${accent}35 0%, transparent 60%), radial-gradient(ellipse at 80% 30%, #38bdf830 0%, transparent 60%), radial-gradient(ellipse at 50% 80%, #f43f5e25 0%, transparent 50%), ${customBg || v.bg}`;
-  } else if (bgEffect === "none") {
-    backgroundStyle = customBg || v.bg;
+  const baseBg = customBg || v.bg;
+  let backgroundStyle = `radial-gradient(ellipse 80% 50% at 50% -20%, ${accent}25, transparent), ${baseBg}`;
+  let backgroundSizeStyle: string | undefined = undefined;
+
+  switch (bgEffect) {
+    case "glow":
+      backgroundStyle = `radial-gradient(ellipse 80% 50% at 50% -20%, ${accent}28, transparent), ${baseBg}`;
+      break;
+    case "mesh":
+      backgroundStyle = `radial-gradient(at 0% 0%, ${accent}30 0px, transparent 50%), radial-gradient(at 100% 100%, #d946ef25 0px, transparent 50%), radial-gradient(at 50% 50%, #38bdf820 0px, transparent 50%), ${baseBg}`;
+      break;
+    case "dots":
+      backgroundStyle = `radial-gradient(${accent}25 1.5px, transparent 1.5px), ${baseBg}`;
+      backgroundSizeStyle = "24px 24px";
+      break;
+    case "aurora":
+      backgroundStyle = `radial-gradient(ellipse at 20% 0%, ${accent}35 0%, transparent 60%), radial-gradient(ellipse at 80% 30%, #38bdf830 0%, transparent 60%), radial-gradient(ellipse at 50% 80%, #f43f5e25 0%, transparent 50%), ${baseBg}`;
+      break;
+    case "matrix":
+      backgroundStyle = `linear-gradient(180deg, rgba(34, 197, 94, 0.09) 1px, transparent 1px), linear-gradient(90deg, rgba(34, 197, 94, 0.04) 1px, transparent 1px), radial-gradient(circle at 50% 0%, rgba(34, 197, 94, 0.15), transparent 70%), ${baseBg}`;
+      backgroundSizeStyle = "18px 24px, 18px 24px, 100% 100%, 100% 100%";
+      break;
+    case "synthwave":
+      backgroundStyle = `linear-gradient(to top, rgba(236, 72, 153, 0.3) 0%, transparent 40%), linear-gradient(rgba(168, 85, 247, 0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(168, 85, 247, 0.18) 1px, transparent 1px), ${baseBg}`;
+      backgroundSizeStyle = "100% 100%, 40px 40px, 40px 40px, 100% 100%";
+      break;
+    case "constellation":
+      backgroundStyle = `radial-gradient(1.5px 1.5px at 20px 30px, #ffffff 100%, transparent), radial-gradient(1.5px 1.5px at 140px 80px, ${accent} 100%, transparent), radial-gradient(1px 1px at 80px 170px, #ffffff88 100%, transparent), radial-gradient(1.5px 1.5px at 210px 140px, ${accent}88 100%, transparent), ${baseBg}`;
+      backgroundSizeStyle = "260px 260px";
+      break;
+    case "bokeh":
+      backgroundStyle = `radial-gradient(circle at 18% 22%, ${accent}35 0%, transparent 35%), radial-gradient(circle at 82% 60%, #38bdf825 0%, transparent 40%), radial-gradient(circle at 50% 88%, #ec489922 0%, transparent 35%), ${baseBg}`;
+      break;
+    case "waves":
+      backgroundStyle = `repeating-radial-gradient(circle at 50% -25%, transparent 0, transparent 40px, ${accent}14 41px, transparent 43px), ${baseBg}`;
+      break;
+    case "circuit":
+      backgroundStyle = `linear-gradient(90deg, ${accent}15 1px, transparent 1px), linear-gradient(0deg, ${accent}15 1px, transparent 1px), radial-gradient(circle at 50% 50%, ${accent}30 2px, transparent 2px), ${baseBg}`;
+      backgroundSizeStyle = "36px 36px, 36px 36px, 36px 36px, 100% 100%";
+      break;
+    case "carbon":
+      backgroundStyle = `radial-gradient(black 15%, transparent 16%) 0 0, radial-gradient(black 15%, transparent 16%) 8px 8px, radial-gradient(rgba(255,255,255,0.08) 15%, transparent 20%) 0 1px, radial-gradient(rgba(255,255,255,0.08) 15%, transparent 20%) 8px 9px, ${baseBg}`;
+      backgroundSizeStyle = "16px 16px";
+      break;
+    case "isometric":
+      backgroundStyle = `linear-gradient(30deg, ${accent}16 12%, transparent 12.5%, transparent 87%, ${accent}16 87.5%, ${accent}16), linear-gradient(150deg, ${accent}16 12%, transparent 12.5%, transparent 87%, ${accent}16 87.5%, ${accent}16), linear-gradient(30deg, ${accent}16 12%, transparent 12.5%, transparent 87%, ${accent}16 87.5%, ${accent}16), linear-gradient(150deg, ${accent}16 12%, transparent 12.5%, transparent 87%, ${accent}16 87.5%, ${accent}16), ${baseBg}`;
+      backgroundSizeStyle = "40px 70px";
+      break;
+    case "particles":
+      backgroundStyle = `radial-gradient(1px 1px at 25px 25px, white 100%, transparent), radial-gradient(1px 1px at 75px 85px, ${accent} 100%, transparent), radial-gradient(1.5px 1.5px at 150px 110px, #a78bfa 100%, transparent), radial-gradient(1px 1px at 220px 190px, white 100%, transparent), ${baseBg}`;
+      backgroundSizeStyle = "240px 240px";
+      break;
+    case "honeycomb":
+      backgroundStyle = `radial-gradient(circle at 100% 50%, transparent 20%, ${accent}18 21%, ${accent}18 34%, transparent 35%, transparent), radial-gradient(circle at 0% 50%, transparent 20%, ${accent}18 21%, ${accent}18 34%, transparent 35%, transparent) 0 25px, ${baseBg}`;
+      backgroundSizeStyle = "50px 50px";
+      break;
+    case "stripes":
+      backgroundStyle = `repeating-linear-gradient(45deg, ${accent}10, ${accent}10 10px, transparent 10px, transparent 20px), ${baseBg}`;
+      break;
+    case "topography":
+      backgroundStyle = `repeating-radial-gradient(circle at 50% 120%, transparent 0, transparent 28px, ${accent}16 29px, transparent 31px), repeating-radial-gradient(circle at 20% 10%, transparent 0, transparent 40px, ${accent}12 41px, transparent 43px), ${baseBg}`;
+      break;
+    case "scanlines":
+      backgroundStyle = `repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.35) 0px, rgba(0, 0, 0, 0.35) 1px, transparent 1px, transparent 3px), radial-gradient(ellipse at 50% 50%, ${accent}25 0%, transparent 80%), ${baseBg}`;
+      break;
+    case "sunset":
+      backgroundStyle = `linear-gradient(180deg, ${baseBg} 0%, #3b0764 45%, #831843 70%, #f97316 92%, #facc15 100%)`;
+      break;
+    case "spotlight":
+      backgroundStyle = `radial-gradient(ellipse 55% 75% at 20% -10%, ${accent}45 0%, transparent 60%), radial-gradient(ellipse 55% 75% at 80% -10%, #38bdf835 0%, transparent 60%), ${baseBg}`;
+      break;
+    case "nebula":
+      backgroundStyle = `radial-gradient(ellipse at top left, #9333ea40 0%, transparent 50%), radial-gradient(ellipse at top right, #06b6d440 0%, transparent 50%), radial-gradient(ellipse at bottom, #ec489930 0%, transparent 60%), ${baseBg}`;
+      break;
+    case "noise":
+      backgroundStyle = `radial-gradient(circle at 50% 50%, ${accent}20 0%, transparent 80%), repeating-radial-gradient(circle at 50% 50%, rgba(255,255,255,0.035) 0, rgba(255,255,255,0.035) 1px, transparent 1px, transparent 3px), ${baseBg}`;
+      break;
+    case "none":
+      backgroundStyle = baseBg;
+      break;
+    default:
+      backgroundStyle = `radial-gradient(ellipse 80% 50% at 50% -20%, ${accent}25, transparent), ${baseBg}`;
   }
 
   // Card Border Width & Blur Filter
@@ -884,7 +957,7 @@ export function BioRenderer({
       className={`theme-font-${v.font} relative min-h-screen w-full transition-colors duration-300 overflow-x-hidden${d?.extraBodyClass ? ` ${d.extraBodyClass}` : ""}`}
       style={{
         background: backgroundStyle,
-        backgroundSize: bgEffect === "dots" ? "24px 24px" : undefined,
+        backgroundSize: backgroundSizeStyle,
         color: v.text,
         fontFamily: activeFontFamily,
         letterSpacing: letterSpacingValue,
@@ -934,19 +1007,21 @@ export function BioRenderer({
         </div>
       )}
       {/* Ambient background light orbs for balanced widescreen and desktop presentation */}
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
-      >
+      {bgEffect !== "none" && bgEffect !== "scanlines" && bgEffect !== "carbon" && (
         <div
-          className="absolute -top-32 left-1/2 h-[500px] w-[900px] -translate-x-1/2 rounded-full blur-[140px] opacity-25"
-          style={{ background: `radial-gradient(circle, ${accent}, transparent 70%)` }}
-        />
-        <div
-          className="hidden md:block absolute -bottom-32 left-1/2 h-[450px] w-[800px] -translate-x-1/2 rounded-full blur-[160px] opacity-20"
-          style={{ background: `radial-gradient(circle, ${accent}, transparent 70%)` }}
-        />
-      </div>
+          aria-hidden
+          className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
+        >
+          <div
+            className="absolute -top-32 left-1/2 h-[500px] w-[900px] -translate-x-1/2 rounded-full blur-[140px] opacity-25"
+            style={{ background: `radial-gradient(circle, ${accent}, transparent 70%)` }}
+          />
+          <div
+            className="hidden md:block absolute -bottom-32 left-1/2 h-[450px] w-[800px] -translate-x-1/2 rounded-full blur-[160px] opacity-20"
+            style={{ background: `radial-gradient(circle, ${accent}, transparent 70%)` }}
+          />
+        </div>
+      )}
 
       <div
         className={`relative z-[1] mx-auto flex min-h-screen w-full flex-col items-center px-4 sm:px-6 py-8 sm:py-12 transition-all ${

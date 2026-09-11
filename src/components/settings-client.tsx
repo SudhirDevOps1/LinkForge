@@ -6,9 +6,14 @@
 import {
   AlertTriangle,
   Camera,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Code,
   Copy,
   Database,
   Download,
+  ExternalLink,
   Globe,
   KeyRound,
   Loader2,
@@ -18,6 +23,7 @@ import {
   Plug,
   Shield,
   Sparkles,
+  Terminal,
   Trash2,
   Upload,
   UserRound,
@@ -799,6 +805,7 @@ function WebhooksTab({ initialHooks }: { initialHooks: WebhookRow[] }) {
   const [events, setEvents] = useState("click");
   const [busy, setBusy] = useState(false);
   const [newSecret, setNewSecret] = useState<string | null>(null);
+  const [showGuide, setShowGuide] = useState(false);
 
   async function add() {
     setBusy(true);
@@ -958,6 +965,61 @@ function WebhooksTab({ initialHooks }: { initialHooks: WebhookRow[] }) {
           </p>
         ) : null}
       </div>
+
+      {/* 💡 Webhook Practical Guide & Value Proposition */}
+      <Card className="border border-violet-500/20 bg-violet-500/[0.03] space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-500/20 text-violet-300">
+              <Sparkles className="h-4 w-4" />
+            </span>
+            <div>
+              <h3 className="text-sm font-semibold text-white">Why use Webhooks? (Webhook lagane se kya fayada?)</h3>
+              <p className="text-xs text-zinc-400">Zero polling, instant push notifications to your favorite tools</p>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowGuide(!showGuide)}
+            className="text-xs text-zinc-400 hover:text-white"
+          >
+            {showGuide ? <ChevronUp className="h-4 w-4 mr-1" /> : <ChevronDown className="h-4 w-4 mr-1" />}
+            {showGuide ? "Hide Guide" : "Show Guide"}
+          </Button>
+        </div>
+
+        {showGuide && (
+          <div className="pt-3 border-t border-white/5 space-y-3 text-xs text-zinc-300">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1.5">
+                <p className="font-semibold text-white flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-[#5865F2]" /> Discord Instant Alerts
+                </p>
+                <p className="text-zinc-400 leading-relaxed text-[11px]">
+                  Jab koi visitor aapke course, product ya media kit link par click karta hai, LinkForge Discord channel mein rich embed notification bhejta hai.
+                </p>
+              </div>
+              <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1.5">
+                <p className="font-semibold text-white flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" /> Google Sheets Auto-Sync
+                </p>
+                <p className="text-zinc-400 leading-relaxed text-[11px]">
+                  Google Apps Script webhook se har lead download, visitor click aur brand deal inquiry automatically ek Google Sheet spreadsheet mein sync ho jati hai.
+                </p>
+              </div>
+              <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1.5">
+                <p className="font-semibold text-white flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-[#E01E5A]" /> Slack / CRM Automation
+                </p>
+                <p className="text-zinc-400 leading-relaxed text-[11px]">
+                  Zapier, Make ya Slack se connect karke instant leads alert aur automatic welcome email sequence trigger kar sakte hain.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </Card>
     </div>
   );
 }
@@ -968,6 +1030,7 @@ function ApiKeysTab({ initialKeys }: { initialKeys: ApiKeyRow[] }) {
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [newKey, setNewKey] = useState<string | null>(null);
+  const [showKeyGuide, setShowKeyGuide] = useState(false);
 
   async function create() {
     setBusy(true);
@@ -1062,6 +1125,89 @@ function ApiKeysTab({ initialKeys }: { initialKeys: ApiKeyRow[] }) {
           </p>
         ) : null}
       </div>
+
+      {/* 💡 API Key Practical Guide & Ready Snippets */}
+      <Card className="border border-violet-500/20 bg-violet-500/[0.03] space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-500/20 text-violet-300">
+              <Terminal className="h-4 w-4" />
+            </span>
+            <div>
+              <h3 className="text-sm font-semibold text-white">What can you do with an API Key? (API Key se kya karein?)</h3>
+              <p className="text-xs text-zinc-400">Automate your bio links programmatically without browser login</p>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowKeyGuide(!showKeyGuide)}
+            className="text-xs text-zinc-400 hover:text-white"
+          >
+            {showKeyGuide ? <ChevronUp className="h-4 w-4 mr-1" /> : <ChevronDown className="h-4 w-4 mr-1" />}
+            {showKeyGuide ? "Hide Guide" : "Show Guide"}
+          </Button>
+        </div>
+
+        {showKeyGuide && (
+          <div className="pt-3 border-t border-white/5 space-y-3 text-xs text-zinc-300">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="font-semibold text-white">1. Add Link via cURL (Terminal)</p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-[10px]"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(`curl -X POST https://linkforge-demo.vercel.app/api/v1/links \\\n  -H "Authorization: Bearer YOUR_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '{"title": "Latest Video", "url": "https://youtube.com/watch?v=xyz", "type": "youtube"}'`);
+                      toast.success("cURL example copied!");
+                    }}
+                  >
+                    <Copy className="h-3 w-3 mr-1" /> Copy
+                  </Button>
+                </div>
+                <pre className="p-2 rounded bg-black/60 font-mono text-[10px] text-violet-300 overflow-x-auto">
+{`curl -X POST /api/v1/links \\
+  -H "Authorization: Bearer YOUR_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{"title":"Latest Video","url":"https://...","type":"youtube"}'`}
+                </pre>
+              </div>
+
+              <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="font-semibold text-white">2. Fetch Profile & Links (Node/Python)</p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-[10px]"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(`const res = await fetch("https://linkforge-demo.vercel.app/api/v1/profile", {\n  headers: { Authorization: "Bearer YOUR_API_KEY" },\n});\nconst data = await res.json();\nconsole.log(data);`);
+                      toast.success("JS fetch snippet copied!");
+                    }}
+                  >
+                    <Copy className="h-3 w-3 mr-1" /> Copy
+                  </Button>
+                </div>
+                <pre className="p-2 rounded bg-black/60 font-mono text-[10px] text-emerald-300 overflow-x-auto">
+{`fetch("/api/v1/profile", {
+  headers: { Authorization: "Bearer YOUR_KEY" }
+}).then(r => r.json()).then(console.log);`}
+                </pre>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-black/30 border border-white/5 flex items-start gap-2.5">
+              <Sparkles className="h-4 w-4 text-violet-400 shrink-0 mt-0.5" />
+              <p className="text-[11px] text-zinc-400 leading-relaxed">
+                <strong className="text-zinc-200">GitHub Actions & Cron Jobs:</strong> Roz subah automatically naye blog posts ya YouTube videos LinkForge bio par add/update karne ke liye aap GitHub Actions workflow mein ye API call chala sakte hain.
+              </p>
+            </div>
+          </div>
+        )}
+      </Card>
+
       <p className="flex items-center gap-2 text-xs text-zinc-600">
         <Loader2 className="h-3 w-3" /> API keys are stored as salted SHA-256 hashes — raw keys cannot be recovered.
       </p>
