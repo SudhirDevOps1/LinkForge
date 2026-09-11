@@ -1,4 +1,4 @@
-import { ApiError, assertSameOrigin, guardRateLimit, handle, json, parseOrThrow } from "@/lib/api";
+import { ApiError, assertSameOrigin, guardRateLimitDual, handle, json, parseOrThrow } from "@/lib/api";
 import { createSession, setSessionCookie, signUp } from "@/lib/auth";
 import { autoMigrate } from "@/db/auto-migrate";
 import { clientIp } from "@/lib/rate-limit";
@@ -7,10 +7,11 @@ import { verifyAltchaSolution } from "@/lib/altcha";
 
 export const POST = handle(async (req: Request) => {
   assertSameOrigin(req);
-  // Strict signup rate limit: max 5 accounts per 15 minutes per IP
-  await guardRateLimit(req, "auth:signup", 5, 15 * 60_000);
-  await autoMigrate(); // Guarantees tables exist before running query
   const input = parseOrThrow(signupSchema, await req.json().catch(() => ({})));
+
+  // Strict dual-bucket signup rate limit: max 10 per 15min per IP, max 5 per 15min per target email
+  await guardRateLimitDual(req, "auth:signup", input.email, 10, 5, 15 * 60_000);
+  await autoMigrate(); // Guarantees tables exist before running query
 
   // Verify Proof-of-Work anti-bot protection
   const altchaRes = verifyAltchaSolution(input.altcha);

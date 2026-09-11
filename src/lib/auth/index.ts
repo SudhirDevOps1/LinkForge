@@ -190,7 +190,7 @@ export async function signIn(input: {
   password: string;
   ip?: string;
   userAgent?: string;
-}): Promise<{ user: User; session: Session }> {
+}): Promise<{ user: User; session: Session | null; twoFactorRedirect?: boolean }> {
   if (authProvider !== "builtin") {
     const { signInExternal } = await import("./external");
     return signInExternal(input);
@@ -229,6 +229,34 @@ export async function signIn(input: {
   if (!ok) {
     throw new ApiError(401, "Invalid email or password");
   }
+
+  if (user.banned) {
+    throw new ApiError(403, "Account suspended: " + (user.banReason || "Please contact administrator."));
+  }
+
+  // Ensure accounts row is synced for Better Auth plugins
+  try {
+    const existingAcc = await db.select({ id: accounts.id }).from(accounts).where(eq(accounts.userId, user.id)).limit(1);
+    if (existingAcc.length === 0) {
+      await db.insert(accounts).values({
+        id: crypto.randomUUID(),
+        userId: user.id,
+        accountId: user.id,
+        providerId: "credential",
+        password: user.passwordHash,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    }
+  } catch {
+    // Non-fatal account sync
+  }
+
+  // Two-Factor gatekeeper
+  if (user.twoFactorEnabled) {
+    return { user, session: null, twoFactorRedirect: true };
+  }
+
   const session = await createSession(user.id, {
     ip: input.ip,
     userAgent: input.userAgent,

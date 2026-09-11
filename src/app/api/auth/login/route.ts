@@ -19,11 +19,16 @@ export const POST = handle(async (req: Request) => {
     throw new ApiError(400, altchaRes.error || "Security verification failed. Please complete the challenge.");
   }
 
-  const { user } = await signIn({
+  const res = await signIn({
     email: input.email,
     password: input.password,
     ip: clientIp(req),
     userAgent: req.headers.get("user-agent") ?? undefined,
   });
-  return json({ user: { id: user.id, email: user.email, name: user.name } });
+
+  if (res.twoFactorRedirect) {
+    return json({ twoFactorRedirect: true, email: res.user.email });
+  }
+
+  return json({ user: { id: res.user.id, email: res.user.email, name: res.user.name } });
 });

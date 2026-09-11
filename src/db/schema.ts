@@ -36,6 +36,8 @@ export const users = pgTable(
     role: text("role").notNull().default("user"),
     twoFactorEnabled: boolean("two_factor_enabled").notNull().default(false),
     isAnonymous: boolean("is_anonymous").notNull().default(false),
+    phoneNumber: text("phone_number"),
+    phoneNumberVerified: boolean("phone_number_verified").notNull().default(false),
     banned: boolean("banned").notNull().default(false),
     banReason: text("ban_reason"),
     banExpires: timestamp("ban_expires", { withTimezone: true }),

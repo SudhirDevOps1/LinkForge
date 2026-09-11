@@ -56,6 +56,8 @@ CREATE TABLE "users" (
   "role" text NOT NULL DEFAULT 'user',
   "two_factor_enabled" boolean NOT NULL DEFAULT false,
   "is_anonymous" boolean NOT NULL DEFAULT false,
+  "phone_number" text,
+  "phone_number_verified" boolean NOT NULL DEFAULT false,
   "banned" boolean NOT NULL DEFAULT false,
   "ban_reason" text,
   "ban_expires" timestamp with time zone,

@@ -6,7 +6,7 @@
 // =============================================================================
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
-import { admin, anonymous, organization, twoFactor } from "better-auth/plugins";
+import { admin, anonymous, organization, phoneNumber, twoFactor } from "better-auth/plugins";
 import { passkey } from "@better-auth/passkey";
 import { db } from "@/db";
 import {
@@ -77,6 +77,24 @@ export const auth = betterAuth({
     }),
     twoFactor({
       issuer: "LinkForge",
+    }),
+    phoneNumber({
+      sendOTP: async ({ phoneNumber: phone, code }) => {
+        // Free messaging channel dispatcher (WhatsApp webhook, Telegram bot, or console outbox)
+        console.log(`[Better Auth OTP] Sending code ${code} to ${phone} via free messaging channel`);
+        const webhookUrl = process.env.OTP_WEBHOOK_URL;
+        if (webhookUrl) {
+          try {
+            await fetch(webhookUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ phoneNumber: phone, code, app: "LinkForge" }),
+            });
+          } catch (err) {
+            console.error("[OTP Webhook Error]", (err as Error).message);
+          }
+        }
+      },
     }),
     admin({
       defaultRole: "user",

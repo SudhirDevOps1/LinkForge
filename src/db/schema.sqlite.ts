@@ -51,6 +51,8 @@ export const users = sqliteTable(
     role: text("role").notNull().default("user"),
     twoFactorEnabled: integer("two_factor_enabled", { mode: "boolean" }).notNull().default(false),
     isAnonymous: integer("is_anonymous", { mode: "boolean" }).notNull().default(false),
+    phoneNumber: text("phone_number"),
+    phoneNumberVerified: integer("phone_number_verified", { mode: "boolean" }).notNull().default(false),
     banned: integer("banned", { mode: "boolean" }).notNull().default(false),
     banReason: text("ban_reason"),
     banExpires: integer("ban_expires", { mode: "timestamp_ms" }),
