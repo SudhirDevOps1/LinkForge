@@ -356,7 +356,7 @@ export function BioRenderer({
 
   // Custom Google Font URL injected into the page head at runtime
   const customFontLinkHref = d?.customFontName
-    ? `https://fonts.googleapis.com/css2?family=${encodeURIComponent(d.customFontName.trim())}:wght@300;400;500;600;700;900&display=swap`
+    ? `https://fonts.googleapis.com/css2?family=${d.customFontName.trim().replace(/\s+/g, "+")}:wght@300;400;500;600;700;900&display=swap`
     : null;
 
   // Text Casing
@@ -1033,7 +1033,7 @@ export function BioRenderer({
                 <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: accent }} />
               </span>
               <span className="text-[11px] sm:text-xs font-semibold text-zinc-300 truncate">
-                {d?.statusBadge || "🟢 Available for projects"}
+                {d?.statusBadge || (profile.displayName ? `@${profile.slug || profile.displayName}` : "LinkForge")}
               </span>
             </div>
 
@@ -1139,18 +1139,91 @@ export function BioRenderer({
           style={{
             fontSize: fontScale !== 1 ? `calc(1.5rem * ${fontScale})` : undefined,
             textTransform: textTransform as React.CSSProperties["textTransform"],
-            textShadow: textShadowStyle,
-            color: isGradientName ? "transparent" : effectiveNameColor,
-            ...nameAnimStyle,
+            textShadow: isGradientName ? undefined : textShadowStyle,
+            color: isGradientName ? undefined : (effectiveNameColor || v.text),
           }}
         >
-          {profile.displayName}
+          {isGradientName ? (
+            <span
+              className="inline-block"
+              style={{
+                backgroundImage: nameBgGradient,
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+                color: "transparent",
+                ...(nameAnim === "gradient-flow"
+                  ? {
+                      backgroundSize: "200% auto",
+                      animation: "gradientFlow 4s ease infinite",
+                    }
+                  : {}),
+              }}
+            >
+              {profile.displayName}
+            </span>
+          ) : nameAnim === "neon-pulse" ? (
+            <span
+              className="inline-block"
+              style={{
+                animation: "neonBreathe 3s ease-in-out infinite",
+                color: effectiveNameColor || accent,
+              }}
+            >
+              {profile.displayName}
+            </span>
+          ) : nameAnim === "shimmer" ? (
+            <span
+              className="inline-block"
+              style={{
+                backgroundImage: `linear-gradient(90deg, ${effectiveNameColor || "#ffffff"} 0%, ${accent} 50%, ${effectiveNameColor || "#ffffff"} 100%)`,
+                backgroundSize: "200% 100%",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+                color: "transparent",
+                animation: "shimmer 2.5s infinite",
+              }}
+            >
+              {profile.displayName}
+            </span>
+          ) : nameAnim === "float" ? (
+            <span
+              className="inline-block"
+              style={{
+                animation: "float 3s ease-in-out infinite",
+                color: effectiveNameColor || v.text,
+              }}
+            >
+              {profile.displayName}
+            </span>
+          ) : (
+            <span>{profile.displayName}</span>
+          )}
         </h1>
         {profile.bio ? (
           <p className="mt-2 max-w-md text-center text-sm sm:text-base leading-relaxed transition-all" style={{ color: effectiveBioColor }}>
             {profile.bio}
           </p>
         ) : null}
+
+        {/* 🟢 Optional Creator Status Pill Badge */}
+        {d?.statusBadge && (
+          <div
+            className="mt-3 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-medium border backdrop-blur-md transition-all shadow-sm"
+            style={{
+              borderColor: `${accent}40`,
+              background: `${accent}15`,
+              color: accent,
+            }}
+          >
+            <span className="relative flex h-2 w-2 shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: accent }} />
+              <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: accent }} />
+            </span>
+            <span>{d.statusBadge}</span>
+          </div>
+        )}
 
 
         {/* ✍️ Daily Blog / Journal Link */}
@@ -1282,13 +1355,16 @@ export function BioRenderer({
                 : "";
             const isShimmer = d?.attentionEffect === "shimmer";
 
+            const activeHoverClass = d?.cardHover3D ? "" : hoverClass;
             return (
               <div
                 key={link.id}
-                className={`group relative overflow-hidden flex flex-col justify-center border p-4 ${hoverClass} ${spanClass(link.size)} ${entranceClass} ${attentionClass}`}
+                className={`group relative overflow-hidden flex flex-col justify-center border p-4 ${activeHoverClass} ${spanClass(link.size)} ${entranceClass} ${attentionClass}`}
                 style={{
                   ...cardStyleFor(false),
                   animationDelay: `${idx * staggerMs}ms`,
+                  transformStyle: d?.cardHover3D ? "preserve-3d" : undefined,
+                  willChange: d?.cardHover3D ? "transform" : undefined,
                 }}
                 onMouseEnter={(e) => Object.assign(e.currentTarget.style, cardStyleFor(true))}
                 onMouseMove={(e) => {
@@ -1296,12 +1372,14 @@ export function BioRenderer({
                   const rect = e.currentTarget.getBoundingClientRect();
                   const x = (e.clientX - rect.left) / rect.width - 0.5;
                   const y = (e.clientY - rect.top) / rect.height - 0.5;
-                  e.currentTarget.style.transform = `perspective(800px) rotateX(${-y * 10}deg) rotateY(${x * 10}deg) translateZ(6px)`;
+                  e.currentTarget.style.transition = "transform 60ms ease-out";
+                  e.currentTarget.style.transform = `perspective(800px) rotateX(${-y * 14}deg) rotateY(${x * 14}deg) translateZ(8px)`;
                 }}
                 onMouseLeave={(e) => {
                   Object.assign(e.currentTarget.style, cardStyleFor(false));
                   if (d?.cardHover3D) {
-                    e.currentTarget.style.transform = "";
+                    e.currentTarget.style.transition = transitionValue;
+                    e.currentTarget.style.transform = "perspective(800px) rotateX(0deg) rotateY(0deg) translateZ(0px)";
                   }
                 }}
               >
@@ -1375,7 +1453,7 @@ export function BioRenderer({
                       {linkIcon(link, undefined, iconSize)}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold text-sm" style={{ color: v.text }}>{link.title}</p>
+                      <p className="truncate font-semibold text-sm" style={{ color: effectiveLinkTextColor || v.text }}>{link.title}</p>
                       {link.description && <p className="mt-0.5 text-xs" style={{ color: v.muted }}>{link.description}</p>}
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
@@ -1405,7 +1483,7 @@ export function BioRenderer({
                       {linkIcon(link, undefined, iconSize)}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold text-sm" style={{ color: v.text }}>{link.title}</p>
+                      <p className="truncate font-semibold text-sm" style={{ color: effectiveLinkTextColor || v.text }}>{link.title}</p>
                       {link.description && <p className="mt-0.5 text-xs" style={{ color: v.muted }}>{link.description}</p>}
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
@@ -1489,7 +1567,7 @@ export function BioRenderer({
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="truncate font-semibold text-sm" style={{ color: v.text }}>
+                        <p className="truncate font-semibold text-sm" style={{ color: effectiveLinkTextColor || v.text }}>
                           {link.title}
                         </p>
                         <span className="rounded-md bg-fuchsia-500/20 px-1.5 py-0.5 text-[10px] font-bold text-fuchsia-300 border border-fuchsia-500/30">
