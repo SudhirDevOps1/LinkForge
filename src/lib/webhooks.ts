@@ -18,10 +18,37 @@ export interface WebhookPayload {
 /**
  * Format payload according to target platform (Discord, Slack, Google Apps Script, Stoat/Custom)
  */
-function formatPayloadForUrl(url: string, payload: WebhookPayload): { body: string; headers: Record<string, string>; followSafeRedirects?: boolean } {
-  const isDiscord = url.includes("discord.com/api/webhooks") || url.includes("discordapp.com/api/webhooks");
-  const isSlack = url.includes("hooks.slack.com");
-  const isGoogleAppsScript = url.includes("script.google.com");
+/**
+ * Auto-normalizes URLs for known platforms (e.g. Stoat / Revolt web frontend -> backend API)
+ */
+export function normalizeWebhookUrl(rawUrl: string): string {
+  let url = rawUrl.trim();
+  // Stoat / Revolt: Web frontend is hosted at stoat.chat/webhooks/..., but backend API is at api.stoat.chat/webhooks/...
+  if (url.startsWith("https://stoat.chat/webhooks/") || url.startsWith("http://stoat.chat/webhooks/")) {
+    url = url.replace(/https?:\/\/stoat\.chat\/webhooks\//, "https://api.stoat.chat/webhooks/");
+  } else if (url.startsWith("https://revolt.chat/webhooks/") || url.startsWith("http://revolt.chat/webhooks/")) {
+    url = url.replace(/https?:\/\/revolt\.chat\/webhooks\//, "https://api.revolt.chat/webhooks/");
+  }
+  return url;
+}
+
+/**
+ * Platform ke mutabiq payload format karo:
+ * - Discord: Rich embed JSON
+ * - Slack: Block text JSON
+ * - Google Apps Script: Flat JSON (taaki Google Sheets direct appendRow kar sake)
+ * - Stoat / Revolt: Channel markdown message content
+ * - Generic: Full JSON payload + HMAC header
+ */
+function formatPayloadForUrl(
+  rawUrl: string,
+  payload: WebhookPayload
+): { targetUrl: string; body: string; headers: Record<string, string>; followSafeRedirects?: boolean } {
+  const targetUrl = normalizeWebhookUrl(rawUrl);
+  const isDiscord = targetUrl.includes("discord.com/api/webhooks") || targetUrl.includes("discordapp.com/api/webhooks");
+  const isSlack = targetUrl.includes("hooks.slack.com");
+  const isGoogleAppsScript = targetUrl.includes("script.google.com");
+  const isStoat = targetUrl.includes("stoat.chat") || targetUrl.includes("revolt.chat");
 
   if (isDiscord) {
     const discordBody = JSON.stringify({
@@ -50,6 +77,7 @@ function formatPayloadForUrl(url: string, payload: WebhookPayload): { body: stri
       ],
     });
     return {
+      targetUrl,
       body: discordBody,
       headers: { "Content-Type": "application/json" },
     };
@@ -62,6 +90,7 @@ function formatPayloadForUrl(url: string, payload: WebhookPayload): { body: stri
         .join("\n")}`,
     });
     return {
+      targetUrl,
       body: slackBody,
       headers: { "Content-Type": "application/json" },
     };
@@ -75,15 +104,34 @@ function formatPayloadForUrl(url: string, payload: WebhookPayload): { body: stri
       ...payload.data,
     });
     return {
+      targetUrl,
       body: gasBody,
       headers: { "Content-Type": "application/json" },
       followSafeRedirects: true,
     };
   }
 
-  // Default LinkForge signed payload (Stoat / custom endpoints)
+  if (isStoat) {
+    // Stoat / Revolt expects a channel message payload with "content"
+    const lines = [
+      `🔔 **LinkForge Event: ${payload.event.toUpperCase()}**`,
+      ...Object.entries(payload.data).map(([k, v]) => `• **${k}**: ${v}`),
+      `🕒 *${payload.timestamp}*`
+    ];
+    const stoatBody = JSON.stringify({
+      content: lines.join("\n"),
+    });
+    return {
+      targetUrl,
+      body: stoatBody,
+      headers: { "Content-Type": "application/json" },
+    };
+  }
+
+  // Default LinkForge signed payload (Custom endpoints)
   const defaultBody = JSON.stringify(payload);
   return {
+    targetUrl,
     body: defaultBody,
     headers: {
       "Content-Type": "application/json",
@@ -98,14 +146,14 @@ function formatPayloadForUrl(url: string, payload: WebhookPayload): { body: stri
  * Returns true on 2xx, false otherwise.
  */
 async function attempt(url: string, secret: string, payload: WebhookPayload): Promise<boolean> {
-  const { body, headers, followSafeRedirects } = formatPayloadForUrl(url, payload);
+  const { targetUrl, body, headers, followSafeRedirects } = formatPayloadForUrl(url, payload);
   const finalHeaders: Record<string, string> = {
     ...headers,
     "X-LinkForge-Signature": hmacSha256Hex(secret, body),
   };
 
   try {
-    const res = await safeFetch(url, {
+    const res = await safeFetch(targetUrl, {
       method: "POST",
       headers: finalHeaders,
       body,
@@ -116,7 +164,7 @@ async function attempt(url: string, secret: string, payload: WebhookPayload): Pr
     await res.arrayBuffer().catch(() => undefined);
     return res.ok;
   } catch (err) {
-    console.warn(`[webhooks] attempt failed → ${url}:`, (err as Error).message);
+    console.warn(`[webhooks] attempt failed → ${targetUrl}:`, (err as Error).message);
     return false;
   }
 }
@@ -185,14 +233,14 @@ export async function sendTestWebhook(webhookId: string, profileId: string): Pro
     data: { message: "LinkForge webhook test event", webhookId },
   };
 
-  const { body, headers, followSafeRedirects } = formatPayloadForUrl(hook.url, payload);
+  const { targetUrl, body, headers, followSafeRedirects } = formatPayloadForUrl(hook.url, payload);
   const finalHeaders: Record<string, string> = {
     ...headers,
     "X-LinkForge-Signature": hmacSha256Hex(hook.secret, body),
   };
 
   try {
-    const res = await safeFetch(hook.url, {
+    const res = await safeFetch(targetUrl, {
       method: "POST",
       headers: finalHeaders,
       body,

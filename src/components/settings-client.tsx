@@ -1048,12 +1048,16 @@ function WebhooksTab({ initialHooks }: { initialHooks: WebhookRow[] }) {
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-violet-400" />
-                  <h3 className="text-xs font-semibold text-white uppercase tracking-wider">Stoat / Custom REST Webhook</h3>
+                  <h3 className="text-xs font-semibold text-white uppercase tracking-wider">Stoat / Revolt Webhook Guide</h3>
                 </div>
                 <p className="text-xs text-zinc-300 leading-relaxed">
-                  LinkForge standard JSON POST bhejta hai with header: <code className="bg-white/10 px-1 py-0.5 rounded font-mono text-[11px]">X-LinkForge-Signature: hmac-sha256(secret, body)</code>.
-                  Aap receiver server par signature verify karke secure automated actions trigger kar sakte hain.
+                  Stoat (Revolt) channel settings mein jakar <strong>Integrations ➔ Webhooks</strong> se webhook URL generate karein. LinkForge automatically markdown alert format karke chat channel mein post karta hai.
                 </p>
+                <div className="p-2.5 rounded-lg bg-black/40 border border-white/5 space-y-1">
+                  <p className="text-[11px] text-zinc-400">
+                    💡 <strong>Endpoint Tip:</strong> Stoat Webhook API URL <code className="text-violet-300 font-mono">https://api.stoat.chat/webhooks/&lt;id&gt;/&lt;token&gt;</code> hota hai. Agar aapne <code className="text-zinc-400 font-mono">https://stoat.chat/webhooks/...</code> copy kiya hai, toh LinkForge use automatically <code className="text-emerald-400 font-mono">api.stoat.chat</code> par route karke channel message deliver karega!
+                  </p>
+                </div>
               </div>
             )}
           </div>
@@ -1088,6 +1092,7 @@ function WebhooksTab({ initialHooks }: { initialHooks: WebhookRow[] }) {
           const isDiscord = hook.url.includes("discord.com");
           const isGAS = hook.url.includes("script.google.com");
           const isSlack = hook.url.includes("hooks.slack.com");
+          const isStoat = hook.url.includes("stoat.chat") || hook.url.includes("revolt.chat");
           return (
             <Card key={hook.id} className="flex flex-wrap items-center gap-3 py-4">
               <div className="min-w-0 flex-1">
@@ -1096,6 +1101,7 @@ function WebhooksTab({ initialHooks }: { initialHooks: WebhookRow[] }) {
                   {isDiscord && <span className="rounded bg-[#5865F2]/20 border border-[#5865F2]/40 px-1.5 py-0.5 text-[10px] font-bold text-[#5865F2]">Discord</span>}
                   {isGAS && <span className="rounded bg-emerald-500/20 border border-emerald-500/40 px-1.5 py-0.5 text-[10px] font-bold text-emerald-300">Google Sheets</span>}
                   {isSlack && <span className="rounded bg-[#E01E5A]/20 border border-[#E01E5A]/40 px-1.5 py-0.5 text-[10px] font-bold text-[#E01E5A]">Slack</span>}
+                  {isStoat && <span className="rounded bg-violet-500/20 border border-violet-500/40 px-1.5 py-0.5 text-[10px] font-bold text-violet-300">Stoat</span>}
                 </div>
                 <div className="mt-1 flex flex-wrap items-center gap-2">
                   {hook.events.map((e) => (
