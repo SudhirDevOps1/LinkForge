@@ -1,13 +1,24 @@
 "use client";
 
 // =============================================================================
-// 📱 HeroPhone3D + CursorGlow + ParticleField — landing hero visuals
-// - 3D tilt (lerped rAF) + idle sway + moving glare + depth layers
-// - ParticleField: halka canvas starfield (zero dependency, DPR-capped,
-//   offscreen pause, reduced-motion respect) — three.js ka weight nahi
-// - Touch par tilt off; content same (kuch hataya nahi)
+// 📱 HeroPhone3D + CursorGlow + ParticleField — Futuristic Landing Visuals
+// - Interactive 3D phone canvas with dynamic tilt and moving glare
+// - Concentric rotating cybernetic halo rings
+// - Holographic floating HUD panels showcasing core enterprise features
+// - ParticleField: Lightweight starfield canvas (zero-dependency, DPR-capped)
 // =============================================================================
-import { Cloud, Database, Globe, HardDrive, Link2 } from "lucide-react";
+import {
+  CheckCircle2,
+  Cloud,
+  Database,
+  Fingerprint,
+  Globe,
+  HardDrive,
+  Link2,
+  ShieldCheck,
+  Sparkles,
+  Zap,
+} from "lucide-react";
 import { useEffect, useRef } from "react";
 import { BrandIcon } from "../icons";
 
@@ -53,7 +64,7 @@ export function CursorGlow() {
   );
 }
 
-/** Halka interactive starfield — hero background depth ke liye */
+/** Lightweight interactive starfield for deep hero background */
 export function ParticleField() {
   const ref = useRef<HTMLCanvasElement>(null);
 
@@ -144,23 +155,50 @@ export function ParticleField() {
   );
 }
 
-const MINI_LINKS = [
-  { t: "GitHub — @SudhirDevOps1", brand: "github", tile: "bg-white/10 text-white" },
-  { t: "LinkForge", brand: null, tile: "bg-violet-500/25 text-violet-200" },
-  { t: "Blog & Portfolio", brand: "globe", tile: "bg-sky-500/20 text-sky-300" },
-  { t: "FormForge", brand: null, tile: "bg-emerald-500/20 text-emerald-300" },
+const PHONE_LINKS = [
+  {
+    title: "GitHub — @SudhirDevOps1",
+    subtitle: "Open Source • 142★",
+    brand: "github",
+    tile: "bg-white/10 text-white",
+    tag: "Active",
+    tagColor: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+  },
+  {
+    title: "WebAuthn Passkey Login",
+    subtitle: "Biometric FIDO2 • Touch ID",
+    brand: "passkey",
+    tile: "bg-violet-500/20 text-violet-300",
+    tag: "Hardware 2FA",
+    tagColor: "text-violet-300 bg-violet-500/10 border-violet-500/20",
+  },
+  {
+    title: "Daily Engineering Notes",
+    subtitle: "Serverless S3 Blog • Zero DB",
+    brand: "globe",
+    tile: "bg-sky-500/20 text-sky-300",
+    tag: "Live Post",
+    tagColor: "text-sky-300 bg-sky-500/10 border-sky-500/20",
+  },
+  {
+    title: "1:1 System Design Mentorship",
+    subtitle: "Creator Store • Direct UPI",
+    brand: "store",
+    tile: "bg-emerald-500/20 text-emerald-300",
+    tag: "0% Commission",
+    tagColor: "text-amber-300 bg-amber-500/10 border-amber-500/20",
+  },
 ] as const;
 
-/** Orbit providers — teeno category chips ka content (koi naam hata nahi) */
-const ORBIT_PILLS = [
-  { name: "Neon", icon: Database, color: "text-violet-300" },
-  { name: "Turso", icon: Database, color: "text-violet-300" },
-  { name: "D1", icon: Database, color: "text-violet-300" },
-  { name: "Supabase", icon: Database, color: "text-emerald-300" },
-  { name: "B2", icon: HardDrive, color: "text-fuchsia-300" },
-  { name: "R2", icon: HardDrive, color: "text-fuchsia-300" },
-  { name: "S3", icon: HardDrive, color: "text-amber-300" },
-  { name: "Vercel", icon: Cloud, color: "text-indigo-300" },
+const TECH_PILLS = [
+  { name: "Neon", icon: Database, color: "text-violet-400" },
+  { name: "Turso", icon: Database, color: "text-cyan-400" },
+  { name: "D1", icon: Database, color: "text-indigo-400" },
+  { name: "Supabase", icon: Database, color: "text-emerald-400" },
+  { name: "Backblaze B2", icon: HardDrive, color: "text-fuchsia-400" },
+  { name: "Cloudflare R2", icon: HardDrive, color: "text-amber-400" },
+  { name: "AWS S3", icon: HardDrive, color: "text-orange-400" },
+  { name: "Vercel", icon: Cloud, color: "text-white" },
 ] as const;
 
 export function HeroPhone3D() {
@@ -187,8 +225,8 @@ export function HeroPhone3D() {
       if (r.width === 0) return;
       const px = (e.clientX - r.left) / r.width - 0.5;
       const py = (e.clientY - r.top) / r.height - 0.5;
-      tryy = Math.max(-0.6, Math.min(0.6, px)) * 16;
-      trx = Math.max(-0.6, Math.min(0.6, -py)) * 12;
+      tryy = Math.max(-0.6, Math.min(0.6, px)) * 14;
+      trx = Math.max(-0.6, Math.min(0.6, -py)) * 10;
       active = true;
     };
     const onLeave = () => {
@@ -198,15 +236,15 @@ export function HeroPhone3D() {
     };
     const tick = () => {
       t += 0.022;
-      const swayX = active ? 0 : Math.sin(t) * 2.2;
-      const swayY = active ? 0 : Math.cos(t * 0.75) * 3;
+      const swayX = active ? 0 : Math.sin(t) * 1.8;
+      const swayY = active ? 0 : Math.cos(t * 0.75) * 2.4;
       rx += (trx + swayX - rx) * 0.075;
       ry += (tryy + swayY - ry) * 0.075;
       if (cardRef.current) {
         cardRef.current.style.transform = `rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
       }
       if (glareRef.current) {
-        const heat = Math.min(0.15, Math.abs(ry) * 0.008 + 0.05);
+        const heat = Math.min(0.18, Math.abs(ry) * 0.009 + 0.06);
         glareRef.current.style.background = `linear-gradient(${118 + ry * 5}deg, transparent 32%, rgba(255,255,255,${heat.toFixed(3)}) 48%, transparent 66%)`;
       }
       raf = requestAnimationFrame(tick);
@@ -222,144 +260,304 @@ export function HeroPhone3D() {
   }, []);
 
   return (
-    <div ref={wrapRef} className="relative mx-auto w-fit" style={{ perspective: "1300px" }}>
+    <div className="relative mx-auto w-full max-w-5xl py-8">
+      {/* Dynamic keyframe styles for high-tech HUD float and cyber rotations */}
+      <style>{`
+        @keyframes lf-cyber-spin-slow {
+          from { transform: translate(-50%, -50%) rotate(0deg); }
+          to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        @keyframes lf-cyber-spin-reverse {
+          from { transform: translate(-50%, -50%) rotate(360deg); }
+          to { transform: translate(-50%, -50%) rotate(0deg); }
+        }
+        @keyframes lf-hud-float-a {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-8px); }
+        }
+        @keyframes lf-hud-float-b {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(8px); }
+        }
+      `}</style>
+
+      {/* Futuristic Concentric Cybernetic Rings (Behind phone) */}
       <div
-        ref={cardRef}
-        className="relative"
-        style={{ transformStyle: "preserve-3d", willChange: "transform" }}
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 top-1/2 h-[580px] w-[580px] -translate-x-1/2 -translate-y-1/2 opacity-35 sm:h-[680px] sm:w-[680px]"
       >
-        {/* Phone frame */}
+        {/* Outer dashed ring */}
         <div
-          role="img"
-          aria-label="LinkForge bio page running on a phone"
-          className="relative z-[2] mx-auto w-[300px] rounded-[52px] border border-zinc-600/60 bg-gradient-to-b from-zinc-700 via-[#14141c] to-black p-[11px] shadow-[0_60px_130px_-30px_rgba(139,92,246,.65)] sm:w-[320px]"
-          style={{ transform: "translateZ(46px)" }}
+          className="absolute left-1/2 top-1/2 h-[520px] w-[520px] rounded-full border border-dashed border-violet-500/30"
+          style={{ animation: "lf-cyber-spin-slow 60s linear infinite" }}
+        />
+        {/* Inner high-contrast tech ring */}
+        <div
+          className="absolute left-1/2 top-1/2 h-[380px] w-[380px] rounded-full border border-cyan-500/20 shadow-[0_0_50px_rgba(6,182,212,0.12)]"
+          style={{ animation: "lf-cyber-spin-reverse 45s linear infinite" }}
+        />
+        {/* Ambient reactor core glow */}
+        <div className="absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-violet-600/30 to-fuchsia-600/30 blur-[100px]" />
+      </div>
+
+      {/* Floating Holographic HUD Panels (Left Side on Desktop) */}
+      <div className="pointer-events-none absolute left-2 top-16 z-20 hidden w-64 lg:block xl:left-8">
+        {/* HUD Card 1: ALTCHA PoW Defense */}
+        <div
+          className="group rounded-2xl border border-white/10 bg-[#0c0c14]/80 p-4 shadow-[0_20px_40px_rgba(0,0,0,0.6)] backdrop-blur-xl transition-all"
+          style={{ animation: "lf-hud-float-a 6s ease-in-out infinite" }}
         >
-          {/* Side buttons */}
-          <span aria-hidden className="absolute -left-[2px] top-28 h-8 w-[3px] rounded-l-md bg-zinc-600" />
-          <span aria-hidden className="absolute -left-[2px] top-44 h-12 w-[3px] rounded-l-md bg-zinc-600" />
-          <span aria-hidden className="absolute -left-[2px] top-60 h-12 w-[3px] rounded-l-md bg-zinc-600" />
-          <span aria-hidden className="absolute -right-[2px] top-52 h-20 w-[3px] rounded-r-md bg-zinc-600" />
-          {/* Screen */}
-          <div className="overflow-hidden rounded-[42px] bg-gradient-to-b from-violet-950/70 via-[#101019] to-[#0b0b14] px-4 pb-4 pt-3">
-            {/* Status bar + Dynamic Island */}
-            <div className="relative flex items-center justify-between px-2 text-[11px] font-semibold text-zinc-200">
-              <span>9:41</span>
-              <span className="absolute left-1/2 top-1/2 h-[22px] w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black shadow-[inset_0_0_0_1px_rgba(255,255,255,.06)]" />
-              <span className="flex items-center gap-1.5">
-                <span className="flex items-end gap-[2px]">
-                  <span className="h-[4px] w-[3px] rounded-sm bg-zinc-200" />
-                  <span className="h-[6px] w-[3px] rounded-sm bg-zinc-200" />
-                  <span className="h-[8px] w-[3px] rounded-sm bg-zinc-200" />
-                  <span className="h-[10px] w-[3px] rounded-sm bg-zinc-400/50" />
-                </span>
-                <span className="h-3 w-6 rounded-[4px] border border-zinc-400/70 p-[1.5px]">
-                  <span className="block h-full w-3/4 rounded-[2px] bg-emerald-400" />
-                </span>
-              </span>
+          <div className="flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
+              <ShieldCheck className="h-4 w-4" />
+            </span>
+            <div className="flex-1">
+              <div className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
+                <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">ALTCHA PoW Shield</p>
+              </div>
+              <p className="text-xs font-semibold text-white">Bot Attack Neutralized</p>
             </div>
-            <div
-              className="mx-auto mt-4 flex h-[72px] w-[72px] items-center justify-center rounded-full border-[3px] text-[26px] font-bold"
-              style={{
-                borderColor: "rgba(167,139,250,.85)",
-                background: "rgba(139,92,246,.15)",
-                color: "#ddd6fe",
-                boxShadow: "0 0 34px rgba(139,92,246,.5)",
-              }}
-            >
-              S
-            </div>
-            <p className="mt-2.5 text-center text-[17px] font-bold text-white">Sudhir Singh</p>
-            <p className="mx-auto mt-1 max-w-[220px] text-center text-[11px] leading-snug text-zinc-400">
-              BCA Student · Full-Stack Developer
-            </p>
-            <div className="mt-4 space-y-2.5">
-              {MINI_LINKS.map((l) => (
-                <div
-                  key={l.t}
-                  className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.06] px-3.5 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,.06)]"
-                >
-                  <span
-                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${l.tile}`}
-                  >
-                    {l.brand === "github" ? (
-                      <BrandIcon id="github" className="h-[18px] w-[18px]" />
-                    ) : l.brand === "globe" ? (
-                      <Globe className="h-[18px] w-[18px]" />
-                    ) : (
-                      <Link2 className="h-[18px] w-[18px]" />
-                    )}
-                  </span>
-                  <span className="truncate text-xs font-semibold text-zinc-100">{l.t}</span>
-                  <span className="ml-auto text-xs text-violet-300">→</span>
-                </div>
-              ))}
-            </div>
-            <div className="mx-auto mt-4 flex items-center justify-center gap-2">
-              <span className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] font-medium text-zinc-300">
-                Share
-              </span>
-              <span className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] font-medium text-zinc-300">
-                QR
-              </span>
-            </div>
-            <div className="mx-auto mt-4 h-1 w-28 rounded-full bg-white/25" />
+          </div>
+          <p className="mt-2 text-[11px] leading-relaxed text-zinc-400">
+            SHA-256 cryptographic verification. Zero tracking cookies.
+          </p>
+          <div className="mt-2.5 flex items-center justify-between border-t border-white/5 pt-2 text-[10px] text-zinc-500 font-mono">
+            <span>Latency: 110ms</span>
+            <span className="text-emerald-400 font-medium">100% Verified</span>
           </div>
         </div>
-        {/* Moving glare */}
+
+        {/* HUD Card 2: Multi-Dialect DB */}
         <div
-          aria-hidden
-          ref={glareRef}
-          className="pointer-events-none absolute inset-0 z-[3] rounded-[52px]"
-          style={{ transform: "translateZ(47px)" }}
-        />
-      </div>
-      {/* Ground shadow — grounds the phone component */}
-      <div
-        aria-hidden
-        className="absolute -bottom-8 left-1/2 h-10 w-72 -translate-x-1/2 rounded-full bg-violet-600/25 blur-2xl"
-      />
-      {/* Provider orbit — structured 3D ring on large viewports */}
-      <style>{`@keyframes lf-orbit { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }`}</style>
-      <div
-        aria-hidden
-        className="pointer-events-none absolute left-1/2 top-1/2 hidden h-0 w-0 lg:block"
-        style={{ transformStyle: "preserve-3d" }}
-      >
-        <div
-          className="relative h-0 w-0"
-          style={{
-            transformStyle: "preserve-3d",
-            animation: "lf-orbit 32s linear infinite",
-          }}
+          className="mt-6 rounded-2xl border border-white/10 bg-[#0c0c14]/80 p-4 shadow-[0_20px_40px_rgba(0,0,0,0.6)] backdrop-blur-xl"
+          style={{ animation: "lf-hud-float-b 7s ease-in-out infinite" }}
         >
-          {ORBIT_PILLS.map((p, i) => (
-            <div
-              key={p.name}
-              className="absolute left-0 top-0"
-              style={{
-                transform: `rotateY(${i * (360 / ORBIT_PILLS.length)}deg) translateZ(300px)`,
-              }}
-            >
-              <div className="glass -ml-14 -mt-5 flex w-28 items-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-semibold [backface-visibility:hidden]">
-                <p.icon className={`h-3.5 w-3.5 shrink-0 ${p.color}`} />
-                <span className="truncate">{p.name}</span>
-              </div>
+          <div className="flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-500/15 border border-violet-500/30 text-violet-400">
+              <Database className="h-4 w-4" />
+            </span>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-violet-400">Multi-Dialect Drizzle</p>
+              <p className="text-xs font-semibold text-white">Neon & Turso Edge</p>
             </div>
-          ))}
+          </div>
+          <div className="mt-2.5 flex flex-wrap gap-1">
+            <span className="rounded-md bg-white/5 px-2 py-0.5 font-mono text-[9px] text-zinc-300">21 Tables</span>
+            <span className="rounded-md bg-white/5 px-2 py-0.5 font-mono text-[9px] text-zinc-300">Auto-Migrate</span>
+            <span className="rounded-md bg-emerald-500/10 text-emerald-300 px-2 py-0.5 font-mono text-[9px]">98% Saved</span>
+          </div>
         </div>
       </div>
-      {/* Mobile / tablet: compact wrapped row */}
-      <div className="mt-10 flex flex-wrap items-center justify-center gap-2 lg:hidden">
-        {ORBIT_PILLS.map((p) => (
-          <span
-            key={p.name}
-            className="glass inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-semibold"
+
+      {/* Floating Holographic HUD Panels (Right Side on Desktop) */}
+      <div className="pointer-events-none absolute right-2 top-16 z-20 hidden w-64 lg:block xl:right-8">
+        {/* HUD Card 3: Hardware Passkeys */}
+        <div
+          className="rounded-2xl border border-white/10 bg-[#0c0c14]/80 p-4 shadow-[0_20px_40px_rgba(0,0,0,0.6)] backdrop-blur-xl"
+          style={{ animation: "lf-hud-float-b 6.5s ease-in-out infinite" }}
+        >
+          <div className="flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-400">
+              <Fingerprint className="h-4 w-4" />
+            </span>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-cyan-400">FIDO2 / WebAuthn</p>
+              <p className="text-xs font-semibold text-white">Biometric Passkey</p>
+            </div>
+          </div>
+          <p className="mt-2 text-[11px] leading-relaxed text-zinc-400">
+            Touch ID • Face ID • Windows Hello. Phishing-resistant zero-password login.
+          </p>
+          <div className="mt-2.5 flex items-center justify-between border-t border-white/5 pt-2 text-[10px] text-zinc-500 font-mono">
+            <span>Standard: RFC 6238</span>
+            <span className="text-cyan-400 font-medium">Encrypted</span>
+          </div>
+        </div>
+
+        {/* HUD Card 4: Object Storage Blog */}
+        <div
+          className="mt-6 rounded-2xl border border-white/10 bg-[#0c0c14]/80 p-4 shadow-[0_20px_40px_rgba(0,0,0,0.6)] backdrop-blur-xl"
+          style={{ animation: "lf-hud-float-a 7.5s ease-in-out infinite" }}
+        >
+          <div className="flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-fuchsia-500/15 border border-fuchsia-500/30 text-fuchsia-400">
+              <HardDrive className="h-4 w-4" />
+            </span>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-fuchsia-400">Object Storage Vault</p>
+              <p className="text-xs font-semibold text-white">Serverless Daily Blog</p>
+            </div>
+          </div>
+          <p className="mt-2 text-[11px] leading-relaxed text-zinc-400">
+            Posts written to Backblaze B2 & Cloudflare R2 with dual-manifest auto-healing.
+          </p>
+          <div className="mt-2.5 flex items-center justify-between border-t border-white/5 pt-2 text-[10px] text-zinc-500 font-mono">
+            <span>TTFB: 38ms</span>
+            <span className="text-fuchsia-400 font-medium">Zero-Cache Stall</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 3D Interactive Phone Wrapper */}
+      <div ref={wrapRef} className="relative mx-auto w-fit" style={{ perspective: "1400px" }}>
+        <div
+          ref={cardRef}
+          className="relative transition-transform duration-75"
+          style={{ transformStyle: "preserve-3d", willChange: "transform" }}
+        >
+          {/* Phone Frame Chassis */}
+          <div
+            role="img"
+            aria-label="LinkForge bio page running on an interactive smartphone"
+            className="relative z-[2] mx-auto w-[310px] rounded-[52px] border border-zinc-500/50 bg-gradient-to-b from-zinc-700 via-[#12121a] to-[#07070b] p-[10px] shadow-[0_50px_140px_-20px_rgba(139,92,246,0.65)] sm:w-[335px]"
+            style={{ transform: "translateZ(46px)" }}
           >
-            <p.icon className={`h-3.5 w-3.5 ${p.color}`} />
-            {p.name}
-          </span>
-        ))}
+            {/* Side Metallic Hardware Buttons */}
+            <span aria-hidden className="absolute -left-[2px] top-28 h-8 w-[3px] rounded-l-md bg-zinc-500 shadow-sm" />
+            <span aria-hidden className="absolute -left-[2px] top-42 h-12 w-[3px] rounded-l-md bg-zinc-500 shadow-sm" />
+            <span aria-hidden className="absolute -left-[2px] top-58 h-12 w-[3px] rounded-l-md bg-zinc-500 shadow-sm" />
+            <span aria-hidden className="absolute -right-[2px] top-50 h-20 w-[3px] rounded-r-md bg-zinc-500 shadow-sm" />
+
+            {/* High-Contrast Screen Display */}
+            <div className="overflow-hidden rounded-[43px] bg-gradient-to-b from-[#120e24] via-[#0d0d16] to-[#07070d] px-4 pb-5 pt-3">
+              {/* Status Bar + Interactive Dynamic Island */}
+              <div className="relative flex items-center justify-between px-2 text-[11px] font-semibold text-zinc-300">
+                <span className="tracking-tight">9:41</span>
+                
+                {/* Dynamic Island with status indicator */}
+                <div className="absolute left-1/2 top-1/2 flex h-[24px] w-28 -translate-x-1/2 -translate-y-1/2 items-center justify-between rounded-full bg-black px-2.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse" />
+                  <span className="text-[9px] font-mono tracking-wider text-zinc-300">LINKFORGE</span>
+                  <span className="h-1.5 w-1.5 rounded-full bg-violet-400" />
+                </div>
+
+                {/* Cellular & Battery */}
+                <span className="flex items-center gap-1.5">
+                  <span className="flex items-end gap-[1.5px]">
+                    <span className="h-[3px] w-[2.5px] rounded-sm bg-zinc-300" />
+                    <span className="h-[5px] w-[2.5px] rounded-sm bg-zinc-300" />
+                    <span className="h-[7px] w-[2.5px] rounded-sm bg-zinc-300" />
+                    <span className="h-[9px] w-[2.5px] rounded-sm bg-zinc-300" />
+                  </span>
+                  <span className="h-3 w-6 rounded-[4px] border border-zinc-400/80 p-[1.5px]">
+                    <span className="block h-full w-4/5 rounded-[2px] bg-emerald-400" />
+                  </span>
+                </span>
+              </div>
+
+              {/* Creator Avatar & Verified Checkmark */}
+              <div className="relative mx-auto mt-4 h-[74px] w-[74px]">
+                <div
+                  className="flex h-full w-full items-center justify-center rounded-full border-[3px] text-[26px] font-extrabold text-violet-100 shadow-[0_0_35px_rgba(139,92,246,0.6)]"
+                  style={{
+                    borderColor: "rgba(167,139,250,0.9)",
+                    background: "radial-gradient(circle, rgba(139,92,246,0.3) 0%, rgba(15,15,25,0.9) 100%)",
+                  }}
+                >
+                  S
+                </div>
+                <span
+                  title="Verified Creator"
+                  className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full bg-violet-600 text-white shadow-md border-2 border-[#120e24]"
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5 fill-violet-600 text-white" />
+                </span>
+              </div>
+
+              {/* Name & Bio */}
+              <p className="mt-2.5 text-center text-[17px] font-bold text-white tracking-tight">Sudhir Singh</p>
+              <p className="mx-auto mt-0.5 max-w-[220px] text-center text-[11px] leading-snug text-zinc-400">
+                BCA Student · Full-Stack Developer
+              </p>
+
+              {/* Status Pill */}
+              <div className="mx-auto mt-2 flex w-fit items-center gap-1.5 rounded-full border border-violet-500/20 bg-violet-500/10 px-2.5 py-0.5 text-[10px] font-medium text-violet-300">
+                <Sparkles className="h-3 w-3 text-violet-400" />
+                <span>Open for Collaborations</span>
+              </div>
+
+              {/* Interactive Phone Link Cards */}
+              <div className="mt-4 space-y-2.5">
+                {PHONE_LINKS.map((l) => (
+                  <div
+                    key={l.title}
+                    className="group flex items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.05] p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-all hover:border-violet-400/30 hover:bg-white/[0.08]"
+                  >
+                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${l.tile} shadow-sm`}>
+                      {l.brand === "github" ? (
+                        <BrandIcon id="github" className="h-[18px] w-[18px]" />
+                      ) : l.brand === "passkey" ? (
+                        <Fingerprint className="h-[18px] w-[18px]" />
+                      ) : l.brand === "store" ? (
+                        <Zap className="h-[18px] w-[18px]" />
+                      ) : (
+                        <Globe className="h-[18px] w-[18px]" />
+                      )}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-semibold text-zinc-100">{l.title}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[10px] text-zinc-400 truncate">{l.subtitle}</span>
+                      </div>
+                    </div>
+                    <span className={`rounded-md border px-1.5 py-0.5 text-[9px] font-semibold ${l.tagColor}`}>
+                      {l.tag}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Bottom Quick Action Buttons */}
+              <div className="mx-auto mt-4 flex items-center justify-center gap-2">
+                <span className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-1.5 text-[11px] font-medium text-zinc-300 shadow-sm hover:text-white">
+                  Share
+                </span>
+                <span className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-1.5 text-[11px] font-medium text-zinc-300 shadow-sm hover:text-white">
+                  QR Code
+                </span>
+                <span className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-1.5 text-[11px] font-medium text-zinc-300 shadow-sm hover:text-white">
+                  vCard
+                </span>
+              </div>
+
+              {/* Home Indicator Bar */}
+              <div className="mx-auto mt-4 h-1 w-28 rounded-full bg-white/25" />
+            </div>
+          </div>
+
+          {/* Dynamic Moving Glare Overlay */}
+          <div
+            aria-hidden
+            ref={glareRef}
+            className="pointer-events-none absolute inset-0 z-[3] rounded-[52px]"
+            style={{ transform: "translateZ(47px)" }}
+          />
+        </div>
+
+        {/* Ambient Ground Shadow */}
+        <div
+          aria-hidden
+          className="absolute -bottom-8 left-1/2 h-12 w-80 -translate-x-1/2 rounded-full bg-violet-600/30 blur-2xl"
+        />
+      </div>
+
+      {/* Clean Technology Badge Strip (Below Phone) */}
+      <div className="mt-12 text-center">
+        <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-3.5">
+          Enterprise Cloud & Database Stack
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-2 max-w-2xl mx-auto">
+          {TECH_PILLS.map((p) => (
+            <span
+              key={p.name}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-zinc-300 shadow-sm hover:border-violet-500/30 hover:bg-white/[0.06] transition-all"
+            >
+              <p.icon className={`h-3.5 w-3.5 ${p.color}`} />
+              {p.name}
+            </span>
+          ))}
+        </div>
       </div>
     </div>
   );
