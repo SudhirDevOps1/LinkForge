@@ -124,8 +124,7 @@ function LoginForm() {
       setFailedAttempts(0);
       setCooldownSeconds(0);
       toast.success("Welcome back!");
-      router.push(params.get("next") ?? "/dashboard");
-      router.refresh();
+      window.location.href = params.get("next") ?? "/dashboard";
     } catch {
       toast.error("Network error. Please check your connection and try again.");
     } finally {
@@ -149,8 +148,7 @@ function LoginForm() {
         return;
       }
       toast.success("Identity confirmed. Welcome back!");
-      router.push(params.get("next") ?? "/dashboard");
-      router.refresh();
+      window.location.href = params.get("next") ?? "/dashboard";
     } catch (err) {
       toast.error((err as Error).message || "Verification failed.");
     } finally {
@@ -168,8 +166,7 @@ function LoginForm() {
         return;
       }
       toast.success("Welcome back via biometric authentication!");
-      router.push(params.get("next") ?? "/dashboard");
-      router.refresh();
+      window.location.href = params.get("next") ?? "/dashboard";
     } catch (err) {
       toast.error((err as Error).message || "Passkey sign-in was cancelled.");
     } finally {
@@ -187,8 +184,7 @@ function LoginForm() {
         return;
       }
       toast.success("Welcome, Guest Creator! You can explore and test features.");
-      router.push("/dashboard");
-      router.refresh();
+      window.location.href = "/dashboard";
     } catch (err) {
       toast.error((err as Error).message || "Could not start guest session.");
     } finally {

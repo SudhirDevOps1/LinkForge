@@ -374,17 +374,26 @@ export async function getSessionUser(): Promise<SessionContext | null> {
     jar.get("better-auth.session_token")?.value ||
     jar.get("__Secure-better-auth.session_token")?.value;
   if (!rawToken) return null;
-  const token = rawToken.includes(".") ? rawToken.split(".")[0] : rawToken;
+
+  let decoded = rawToken;
+  try {
+    decoded = decodeURIComponent(rawToken);
+  } catch {}
+  if (decoded.startsWith("s:")) {
+    decoded = decoded.slice(2);
+  }
+  const token = decoded.includes(".") ? decoded.split(".")[0] : decoded;
+  const rawPartsToken = rawToken.includes(".") ? rawToken.split(".")[0] : rawToken;
+  const candidates = Array.from(new Set([rawToken, decoded, token, rawPartsToken])).filter(Boolean);
+
   const [row] = await db
     .select({ session: sessions, user: users })
     .from(sessions)
     .innerJoin(users, eq(users.id, sessions.userId))
     .where(
       or(
-        eq(sessions.id, token),
-        eq(sessions.token, token),
-        eq(sessions.id, rawToken),
-        eq(sessions.token, rawToken),
+        ...candidates.map((c) => eq(sessions.id, c)),
+        ...candidates.map((c) => eq(sessions.token, c)),
       ),
     )
     .limit(1);
@@ -394,13 +403,24 @@ export async function getSessionUser(): Promise<SessionContext | null> {
       .delete(sessions)
       .where(
         or(
-          eq(sessions.id, token),
-          eq(sessions.token, token),
-          eq(sessions.id, rawToken),
-          eq(sessions.token, rawToken),
+          ...candidates.map((c) => eq(sessions.id, c)),
+          ...candidates.map((c) => eq(sessions.token, c)),
         ),
       );
     return null;
+  }
+
+  // Seamless cookie bridge: ensure lf_session is populated for edge middleware
+  if (!jar.get(SESSION_COOKIE)?.value) {
+    try {
+      jar.set(SESSION_COOKIE, row.session.token || row.session.id, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        expires: row.session.expiresAt,
+      });
+    } catch {}
   }
   let profile: Profile | undefined;
   try {

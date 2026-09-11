@@ -42,7 +42,10 @@ export function proxy(req: NextRequest) {
 
   // --- Dashboard auth gate (cookie presence only) ----------------------------
   if (req.nextUrl.pathname.startsWith("/dashboard")) {
-    const token = req.cookies.get(SESSION_COOKIE)?.value;
+    const token =
+      req.cookies.get(SESSION_COOKIE)?.value ||
+      req.cookies.get("better-auth.session_token")?.value ||
+      req.cookies.get("__Secure-better-auth.session_token")?.value;
     if (!token) {
       const loginUrl = new URL("/login", req.url);
       loginUrl.searchParams.set("next", req.nextUrl.pathname);
