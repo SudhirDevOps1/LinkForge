@@ -109,7 +109,7 @@ export function GithubIntegration({ defaultUsername = "SudhirDevOps1" }: { defau
 
       {ghProfile ? (
         <div className="flex items-center gap-3.5 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+          { }
           <img src={ghProfile.avatarUrl} alt={ghProfile.login} className="h-12 w-12 rounded-full" />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold">

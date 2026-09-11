@@ -25,10 +25,26 @@ export function SocialAuthButtons({ mode = "signin" }: SocialAuthButtonsProps) {
         callbackURL: "/dashboard",
       });
       if (res?.error) {
-        toast.error(res.error.message || `Failed to authenticate with ${provider}.`);
+        const msg = res.error.message || "";
+        if (msg.toLowerCase().includes("provider not found") || (res.error as any).status === 404) {
+          toast.error(
+            `${provider.charAt(0).toUpperCase() + provider.slice(1)} OAuth is not configured yet. Add ${provider.toUpperCase()}_CLIENT_ID & ${provider.toUpperCase()}_CLIENT_SECRET to your .env file, or sign in with Email / Passkey.`,
+            { duration: 6000 }
+          );
+        } else {
+          toast.error(res.error.message || `Failed to authenticate with ${provider}.`);
+        }
       }
     } catch (err) {
-      toast.error((err as Error).message || `Social sign-in with ${provider} failed.`);
+      const msg = (err as Error).message || "";
+      if (msg.toLowerCase().includes("provider not found") || msg.includes("404")) {
+        toast.error(
+          `${provider.charAt(0).toUpperCase() + provider.slice(1)} OAuth requires ${provider.toUpperCase()}_CLIENT_ID in your .env file.`,
+          { duration: 6000 }
+        );
+      } else {
+        toast.error(msg || `Social sign-in with ${provider} failed.`);
+      }
     } finally {
       setActiveProvider(null);
     }

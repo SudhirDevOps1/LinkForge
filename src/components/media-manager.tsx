@@ -76,7 +76,7 @@ function Preview({ file }: { file: MediaFileUI }) {
   const category = fileCategory(file.mimeType);
   if (category === "image") {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
+       
       <img src={file.url} alt={file.fileName} loading="lazy" className="h-full w-full object-cover" />
     );
   }

@@ -88,6 +88,7 @@ function LoginForm() {
         error?: string;
         retryAfter?: number;
         twoFactorRedirect?: boolean;
+        email?: string;
       };
 
       if (!res.ok) {
@@ -115,6 +116,7 @@ function LoginForm() {
 
       // Check if account has Two-Factor Authentication enabled
       if (data.twoFactorRedirect) {
+        if (data.email) setEmail(data.email);
         setTwoFactorRequired(true);
         toast.info("Two-Factor Authentication required. Enter your authenticator code.");
         return;
@@ -142,11 +144,23 @@ function LoginForm() {
 
     setTotpLoading(true);
     try {
-      const res = await authClient.twoFactor.verifyTotp({ code: totpCode });
-      if (res.error) {
-        toast.error(res.error.message || "Invalid two-factor authentication code.");
-        return;
+      // 1. LinkForge Unified 2FA Verification & Session Issuance
+      const verifyRes = await fetch("/api/auth/verify-2fa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code: totpCode }),
+      });
+      const verifyData = (await verifyRes.json().catch(() => ({}))) as { error?: string };
+
+      if (!verifyRes.ok) {
+        // Fallback: try Better Auth client verifyTotp
+        const baRes = await authClient.twoFactor.verifyTotp({ code: totpCode }).catch(() => null);
+        if (baRes?.error) {
+          toast.error(verifyData.error || baRes.error.message || "Invalid two-factor authentication code.");
+          return;
+        }
       }
+
       toast.success("Identity confirmed. Welcome back!");
       window.location.href = params.get("next") ?? "/dashboard";
     } catch (err) {

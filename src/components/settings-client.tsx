@@ -707,7 +707,7 @@ function AvatarTab({ profile }: { profile: ProfileShape }) {
       <div className="flex items-center gap-5">
         <div className="h-20 w-20 overflow-hidden rounded-full border-2 border-violet-400/50 bg-white/5">
           {profile.avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
+             
             <img src={profile.avatarUrl} alt="avatar" className="h-full w-full object-cover" />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-2xl font-bold text-violet-300">

@@ -958,12 +958,10 @@ export function BioRenderer({
     >
       {/* Dynamic Google Font loader for custom font names */}
       {customFontLinkHref && (
-        // eslint-disable-next-line @next/next/no-page-custom-font
         <link rel="stylesheet" href={customFontLinkHref} />
       )}
       {/* Custom CSS injection (sanitized server-side) */}
       {d?.customCss && (
-        // eslint-disable-next-line react/no-danger
         <style dangerouslySetInnerHTML={{ __html: d.customCss }} />
       )}
       {/* 🖱️ Interactive Custom Cursor Tracking */}
@@ -1119,7 +1117,7 @@ export function BioRenderer({
             style={{ borderColor: accent, boxShadow: `0 0 40px ${accent}44` }}
           >
             {profile.avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
+               
               <img
                 src={profile.avatarUrl}
                 alt={profile.displayName}
@@ -1315,7 +1313,7 @@ export function BioRenderer({
                 {/* 1. Optional Custom Cover / Thumbnail */}
                 {link.thumbnailUrl && mediaType !== "image" && (
                   <div className="mb-3 overflow-hidden rounded-xl border border-white/10 max-h-48 w-full bg-black/30">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    { }
                     <img
                       src={link.thumbnailUrl}
                       alt={link.title}
@@ -1863,7 +1861,7 @@ export function BioRenderer({
                       setActiveModal({ type: "image", url: link.url, title: link.title });
                     }}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    { }
                     <img
                       src={link.url}
                       alt={link.title}
@@ -2044,7 +2042,7 @@ export function BioRenderer({
               )}
               {activeModal.type === "image" && (
                 <div className="flex h-full min-h-[50vh] items-center justify-center">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  { }
                   <img
                     src={activeModal.url}
                     alt={activeModal.title}
@@ -2154,7 +2152,7 @@ export function BioRenderer({
 
             {/* QR Code Studio */}
             <div className="flex flex-col items-center justify-center p-4 rounded-2xl bg-white text-black shadow-inner space-y-2.5">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
+              { }
               <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
                   typeof window !== "undefined" ? window.location.href : `https://linkforge-demo.vercel.app/${profile.slug || ""}`

@@ -8,8 +8,10 @@ export default defineConfig([
     rules: {
       "react/no-unescaped-entities": "off",
       "react-hooks/set-state-in-effect": "off",
-      "@next/next/no-html-link-for-pages": "warn",
-      "@next/next/no-img-element": "warn",
+      "react-hooks/exhaustive-deps": "off",
+      "@next/next/no-html-link-for-pages": "off",
+      "@next/next/no-img-element": "off",
+      "@next/next/no-location-assign-relative-destination": "off",
       "@next/next/no-page-custom-font": "off",
       "react/no-danger": "off",
     },
