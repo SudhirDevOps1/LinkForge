@@ -163,29 +163,7 @@ export async function verifyEmailMx(rawEmail: string): Promise<EmailVerification
     return { valid: false, email, domain, reason: "Invalid email domain." };
   }
 
-  // 1.5 Local-part sanity check (catch obvious junk, test, and placeholder accounts)
-  const cleanLocal = localPart.replace(/[0-9_.-]/g, "").toLowerCase();
-  const junkKeywords = ["test", "temp", "fake", "dummy", "sample", "asdf", "qwerty", "zxcv", "noreply", "no-reply", "trash", "junk", "tempu"];
-  if (junkKeywords.some((k) => cleanLocal === k || localPart.toLowerCase().startsWith(k))) {
-    return {
-      valid: false,
-      email,
-      domain,
-      reason: "Test or placeholder email addresses are not permitted. Please use your genuine personal email.",
-    };
-  }
-
-  // Keyboard smash / repeated character check (e.g. "aaaaa", "11111", "zzzz")
-  if (/^(.)\1{3,}$/.test(localPart) || /^(asdf|qwerty|zxcv|hjkl)/i.test(localPart)) {
-    return {
-      valid: false,
-      email,
-      domain,
-      reason: "Please enter a valid, active personal email address.",
-    };
-  }
-
-  // 2. Anti-Disposable Email Check
+  // 2. Anti-Disposable Email Check (disposable/throwaway inbox domains)
   if (isDisposableDomain(domain)) {
     return {
       valid: false,
