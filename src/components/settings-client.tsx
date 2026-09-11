@@ -859,13 +859,36 @@ function WebhooksTab({ initialHooks }: { initialHooks: WebhookRow[] }) {
   return (
     <div className="space-y-4">
       <Card className="space-y-4">
-        <h2 className="font-display text-lg font-semibold">Add webhook</h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <h2 className="font-display text-lg font-semibold">Add webhook</h2>
+          {/* Quick Platform Presets */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[11px] text-zinc-500 font-medium">Presets:</span>
+            {[
+              { label: "Discord", placeholder: "https://discord.com/api/webhooks/...", hint: "Embed alerts" },
+              { label: "Google Apps Script", placeholder: "https://script.google.com/macros/s/.../exec", hint: "Sheets logging" },
+              { label: "Slack", placeholder: "https://hooks.slack.com/services/...", hint: "Channel posts" },
+              { label: "Stoat / Custom", placeholder: "https://api.example.com/hooks/linkforge", hint: "Signed JSON" },
+            ].map((preset) => (
+              <button
+                key={preset.label}
+                type="button"
+                onClick={() => {
+                  setUrl(preset.placeholder);
+                  toast.info(`Paste your ${preset.label} Webhook URL`);
+                }}
+                className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] font-medium text-zinc-300 hover:border-violet-400/50 hover:bg-violet-500/10 hover:text-white transition-all"
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <p className="text-sm text-zinc-500">
-          A signed POST request will be sent to your endpoint on link clicks or profile views.
-          Signature header: <code className="rounded bg-white/5 px-1.5 py-0.5 text-xs">X-LinkForge-Signature</code> (HMAC-SHA256).
+          LinkForge automatically adapts payloads for <strong>Discord</strong> (rich embeds), <strong>Google Apps Script / Sheets</strong> (safe redirect logging), <strong>Slack</strong>, and <strong>Stoat / Custom REST</strong> with HMAC-SHA256 signing (<code className="rounded bg-white/5 px-1.5 py-0.5 text-xs">X-LinkForge-Signature</code>).
         </p>
         <div className="flex flex-col gap-2.5 sm:flex-row">
-          <Input placeholder="https://api.example.com/hooks/linkforge" value={url} onChange={(e) => setUrl(e.target.value)} />
+          <Input placeholder="https://discord.com/api/webhooks/... or https://script.google.com/..." value={url} onChange={(e) => setUrl(e.target.value)} />
           <Select value={events} onChange={(e) => setEvents(e.target.value)} className="sm:w-44">
             <option value="click">On click</option>
             <option value="view">On view</option>
@@ -899,26 +922,36 @@ function WebhooksTab({ initialHooks }: { initialHooks: WebhookRow[] }) {
       </Card>
 
       <div className="space-y-2.5">
-        {hooks.map((hook) => (
-          <Card key={hook.id} className="flex flex-wrap items-center gap-3 py-4">
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">{hook.url}</p>
-              <div className="mt-1 flex flex-wrap items-center gap-2">
-                {hook.events.map((e) => (
-                  <Badge key={e} tone="violet">{e}</Badge>
-                ))}
-                <span className="font-mono text-[10px] text-zinc-600">secret: {hook.secretPreview}</span>
+        {hooks.map((hook) => {
+          const isDiscord = hook.url.includes("discord.com");
+          const isGAS = hook.url.includes("script.google.com");
+          const isSlack = hook.url.includes("hooks.slack.com");
+          return (
+            <Card key={hook.id} className="flex flex-wrap items-center gap-3 py-4">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="truncate text-sm font-medium">{hook.url}</p>
+                  {isDiscord && <span className="rounded bg-[#5865F2]/20 border border-[#5865F2]/40 px-1.5 py-0.5 text-[10px] font-bold text-[#5865F2]">Discord</span>}
+                  {isGAS && <span className="rounded bg-emerald-500/20 border border-emerald-500/40 px-1.5 py-0.5 text-[10px] font-bold text-emerald-300">Google Sheets</span>}
+                  {isSlack && <span className="rounded bg-[#E01E5A]/20 border border-[#E01E5A]/40 px-1.5 py-0.5 text-[10px] font-bold text-[#E01E5A]">Slack</span>}
+                </div>
+                <div className="mt-1 flex flex-wrap items-center gap-2">
+                  {hook.events.map((e) => (
+                    <Badge key={e} tone="violet">{e}</Badge>
+                  ))}
+                  <span className="font-mono text-[10px] text-zinc-600">secret: {hook.secretPreview}</span>
+                </div>
               </div>
-            </div>
-            <Switch checked={hook.isActive} onCheckedChange={(v) => toggle(hook.id, v)} aria-label="toggle webhook" />
-            <Button variant="outline" size="sm" onClick={() => test(hook.id)}>
-              Test
-            </Button>
-            <Button variant="danger" size="icon" onClick={() => remove(hook.id)}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </Card>
-        ))}
+              <Switch checked={hook.isActive} onCheckedChange={(v) => toggle(hook.id, v)} aria-label="toggle webhook" />
+              <Button variant="outline" size="sm" onClick={() => test(hook.id)}>
+                Test
+              </Button>
+              <Button variant="danger" size="icon" onClick={() => remove(hook.id)}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </Card>
+          );
+        })}
         {hooks.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-white/10 p-8 text-center text-sm text-zinc-600">
             No webhooks configured yet — add your first webhook above

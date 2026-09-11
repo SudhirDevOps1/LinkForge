@@ -39,7 +39,7 @@ export const POST = handle(async (req: Request) => {
   const ext = cleanName.split(".").pop()?.toLowerCase() || "bin";
   const uniqueId = crypto.randomUUID();
   const rawStorageKey = sanitizeKey(
-    `files/${profile.id}/${Date.now()}-${uniqueId}.${ext}${isGzip ? ".gz" : ""}`,
+    `files/${profile.id}/${Date.now()}-${uniqueId}.${ext}`,
   );
 
   const adapter = await getStorageAdapter();

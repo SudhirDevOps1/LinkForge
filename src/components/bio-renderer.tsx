@@ -519,6 +519,25 @@ export function BioRenderer({
     }
   }, [activeModal]);
 
+  // 🖱️ Interactive Custom Cursor Tracking (accent glow dot / follower)
+  const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null);
+  const [cursorVisible, setCursorVisible] = useState(false);
+
+  useEffect(() => {
+    if (!d?.cursorEffect || d.cursorEffect === "none") return;
+    const onMove = (e: MouseEvent) => {
+      setCursorPos({ x: e.clientX, y: e.clientY });
+      setCursorVisible(true);
+    };
+    const onLeave = () => setCursorVisible(false);
+    window.addEventListener("mousemove", onMove, { passive: true });
+    document.addEventListener("mouseleave", onLeave);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseleave", onLeave);
+    };
+  }, [d?.cursorEffect]);
+
   const hrefFor = (link: Link) => (trackClicks ? `/r/${link.id}` : link.url);
 
   const cardStyleFor = (hover = false): React.CSSProperties => {
@@ -605,6 +624,38 @@ export function BioRenderer({
       {d?.customCss && (
         // eslint-disable-next-line react/no-danger
         <style dangerouslySetInnerHTML={{ __html: d.customCss }} />
+      )}
+      {/* 🖱️ Interactive Custom Cursor Tracking */}
+      {d?.cursorEffect && d.cursorEffect !== "none" && cursorPos && cursorVisible && (
+        <div
+          aria-hidden
+          className="pointer-events-none fixed z-50 transition-transform duration-75 ease-out will-change-transform hidden sm:block"
+          style={{
+            transform: `translate3d(${cursorPos.x}px, ${cursorPos.y}px, 0)`,
+            top: 0,
+            left: 0,
+          }}
+        >
+          {d.cursorEffect === "glow" ? (
+            <div
+              className="-translate-x-1/2 -translate-y-1/2 rounded-full blur-[6px] opacity-75 animate-pulse"
+              style={{
+                width: 32,
+                height: 32,
+                background: `radial-gradient(circle, ${accent}, ${accent}15)`,
+              }}
+            />
+          ) : (
+            <div
+              className="-translate-x-1/2 -translate-y-1/2 rounded-full border border-white/50 shadow-md"
+              style={{
+                width: 12,
+                height: 12,
+                backgroundColor: accent,
+              }}
+            />
+          )}
+        </div>
       )}
       {/* Ambient background light orbs for balanced widescreen and desktop presentation */}
       <div
@@ -738,7 +789,19 @@ export function BioRenderer({
                   animationDelay: `${idx * staggerMs}ms`,
                 }}
                 onMouseEnter={(e) => Object.assign(e.currentTarget.style, cardStyleFor(true))}
-                onMouseLeave={(e) => Object.assign(e.currentTarget.style, cardStyleFor(false))}
+                onMouseMove={(e) => {
+                  if (!d?.cardHover3D) return;
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const x = (e.clientX - rect.left) / rect.width - 0.5;
+                  const y = (e.clientY - rect.top) / rect.height - 0.5;
+                  e.currentTarget.style.transform = `perspective(800px) rotateX(${-y * 10}deg) rotateY(${x * 10}deg) translateZ(6px)`;
+                }}
+                onMouseLeave={(e) => {
+                  Object.assign(e.currentTarget.style, cardStyleFor(false));
+                  if (d?.cardHover3D) {
+                    e.currentTarget.style.transform = "";
+                  }
+                }}
               >
                 {isShimmer && (
                   <div

@@ -60,10 +60,17 @@ export const GET = handle(async (req: Request, ctx: RouteCtx) => {
       if (isPayloadEncrypted(data)) {
         data = decryptFilePayload(data);
       }
+
+      // Check for GZIP magic bytes (0x1f, 0x8b)
+      const isGzipPayload = data.length >= 2 && data[0] === 0x1f && data[1] === 0x8b;
+      const contentEncoding =
+        fetched.contentEncoding ||
+        (safeKey.endsWith(".gz") || isGzipPayload ? "gzip" : undefined);
+
       file = {
         data,
         contentType: fetched.contentType,
-        contentEncoding: fetched.contentEncoding || (safeKey.endsWith(".gz") ? "gzip" : undefined),
+        contentEncoding,
       };
       if (file.data.length <= MAX_CACHEABLE_FILE_SIZE) {
         MEMORY_CACHE.set(safeKey, {
@@ -89,20 +96,34 @@ export const GET = handle(async (req: Request, ctx: RouteCtx) => {
     ? `attachment; filename="${cleanFilename}"`
     : `inline; filename="${cleanFilename}"`;
 
+  let responseData = file.data;
+  let responseEncoding = file.contentEncoding;
+
+  // For explicit downloads, decompress GZIP so the saved file opens immediately in all viewers
+  if (isDownload && file.contentEncoding === "gzip") {
+    try {
+      const { gunzipSync } = await import("node:zlib");
+      responseData = gunzipSync(file.data);
+      responseEncoding = undefined;
+    } catch {
+      // fallback to original
+    }
+  }
+
   // 🚀 3. Vercel Edge CDN Caching (s-maxage=31536000):
   const headers: Record<string, string> = {
     "Content-Type": file.contentType || "application/octet-stream",
     "Cache-Control": "public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable",
     "ETag": etag,
     "Content-Disposition": disposition,
-    "Content-Length": String(file.data.length),
+    "Content-Length": String(responseData.length),
     "X-Content-Type-Options": "nosniff",
   };
-  if (file.contentEncoding) {
-    headers["Content-Encoding"] = file.contentEncoding;
+  if (responseEncoding) {
+    headers["Content-Encoding"] = responseEncoding;
   }
 
-  return new Response(new Uint8Array(file.data), {
+  return new Response(new Uint8Array(responseData), {
     status: 200,
     headers,
   });

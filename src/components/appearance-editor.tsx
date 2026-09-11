@@ -475,6 +475,8 @@ export function AppearanceEditor({
   const [staggerDelay, setStaggerDelay] = useState(initialDesign.staggerDelay ?? 45);
   const [hoverEasing, setHoverEasing] = useState(initialDesign.hoverEasing ?? "ease");
   const [scrollReveal, setScrollReveal] = useState(initialDesign.scrollReveal ?? false);
+  const [cursorEffect, setCursorEffect] = useState(initialDesign.cursorEffect ?? "none");
+  const [cardHover3D, setCardHover3D] = useState(initialDesign.cardHover3D ?? false);
 
   // Advanced code
   const [customCss, setCustomCss] = useState(initialDesign.customCss ?? "");
@@ -529,6 +531,8 @@ export function AppearanceEditor({
     staggerDelay !== (initialDesign.staggerDelay ?? 45) ||
     hoverEasing !== (initialDesign.hoverEasing ?? "ease") ||
     scrollReveal !== (initialDesign.scrollReveal ?? false) ||
+    cursorEffect !== (initialDesign.cursorEffect ?? "none") ||
+    cardHover3D !== (initialDesign.cardHover3D ?? false) ||
     customCss !== (initialDesign.customCss ?? "") ||
     extraBodyClass !== (initialDesign.extraBodyClass ?? "");
 
@@ -578,6 +582,8 @@ export function AppearanceEditor({
       staggerDelay,
       hoverEasing: hoverEasing !== "ease" ? hoverEasing : undefined,
       scrollReveal: scrollReveal || undefined,
+      cursorEffect: cursorEffect !== "none" ? cursorEffect : undefined,
+      cardHover3D: cardHover3D || undefined,
       customCss: customCss || undefined,
       extraBodyClass: extraBodyClass || undefined,
     },
@@ -617,6 +623,8 @@ export function AppearanceEditor({
     setCardOpacity(1.0);
     setCardPadding("default");
     setIconBgStyle("transparent");
+    setCursorEffect("none");
+    setCardHover3D(false);
     toast.success(`Applied "${p.name}" preset! Look at the preview.`);
   }
 
@@ -679,6 +687,8 @@ export function AppearanceEditor({
             staggerDelay,
             hoverEasing: hoverEasing !== "ease" ? hoverEasing : undefined,
             scrollReveal: scrollReveal || undefined,
+            cursorEffect: cursorEffect !== "none" ? cursorEffect : undefined,
+            cardHover3D: cardHover3D || undefined,
             customCss: customCss || undefined,
             extraBodyClass: extraBodyClass || undefined,
           }),
@@ -736,6 +746,8 @@ export function AppearanceEditor({
     setStaggerDelay(45);
     setHoverEasing("ease");
     setScrollReveal(false);
+    setCursorEffect("none");
+    setCardHover3D(false);
     setCustomCss("");
     setExtraBodyClass("");
     toast.info("Reset to default styling.");
@@ -1416,6 +1428,45 @@ export function AppearanceEditor({
                   <span>30% Transparent</span><span>100% Opaque</span>
                 </div>
               </div>
+
+              {/* 🎨 Tonal Color Weights & Harmonies */}
+              <div className="pt-4 border-t border-white/5 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-zinc-300">Tonal Accent Harmony Scale</label>
+                  <span className="text-[10px] font-mono text-violet-400">50 → 950 Tones</span>
+                </div>
+                <p className="text-[11px] text-zinc-500">1-click harmonize your accent with matching tints and shades.</p>
+                <div className="grid grid-cols-6 gap-1.5 p-2 rounded-xl bg-zinc-900/60 border border-white/10">
+                  {[
+                    { label: "50", opacity: "25", desc: "Sheer Tint" },
+                    { label: "200", opacity: "55", desc: "Soft Light" },
+                    { label: "400", opacity: "85", desc: "Vibrant" },
+                    { label: "600", opacity: "b5", desc: "Deep" },
+                    { label: "800", opacity: "e0", desc: "Rich" },
+                    { label: "950", opacity: "ff", desc: "Solid" },
+                  ].map((t) => {
+                    const baseColor = accent || "#8b5cf6";
+                    const toneColor = `${baseColor.slice(0, 7)}${t.opacity}`;
+                    return (
+                      <button
+                        key={t.label}
+                        type="button"
+                        onClick={() => {
+                          setAccent(baseColor);
+                          toast.success(`Harmonized with ${t.label} ${t.desc}`);
+                        }}
+                        className="flex flex-col items-center gap-1 p-1.5 rounded-lg border border-white/5 hover:border-white/20 transition-all group"
+                      >
+                        <span
+                          className="w-full h-7 rounded-md border border-white/10 shadow-sm"
+                          style={{ backgroundColor: toneColor }}
+                        />
+                        <span className="text-[10px] font-mono text-zinc-400 group-hover:text-white">{t.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           )}
 
@@ -1888,6 +1939,56 @@ export function AppearanceEditor({
                     className={cn(
                       "absolute top-1 w-4 h-4 rounded-full bg-white transition-transform",
                       scrollReveal ? "left-6" : "left-1",
+                    )}
+                  />
+                </button>
+              </div>
+
+              {/* 🖱️ Custom Cursor Tracking */}
+              <div className="pt-4 border-t border-white/5 space-y-2.5">
+                <label className="text-xs font-semibold text-zinc-300">Custom Cursor Tracking Effect</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: "none", label: "Default", desc: "Native cursor" },
+                    { id: "glow", label: "Accent Glow", desc: "Ambient luminous follower" },
+                    { id: "dot", label: "Target Dot", desc: "Crisp accent ring" },
+                  ].map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => setCursorEffect(c.id)}
+                      className={cn(
+                        "p-2.5 rounded-xl border text-left transition-all",
+                        cursorEffect === c.id
+                          ? "border-violet-400 bg-violet-500/15 ring-1 ring-violet-400"
+                          : "border-white/10 hover:border-white/20 bg-zinc-900/60",
+                      )}
+                    >
+                      <p className="text-xs font-semibold text-zinc-200">{c.label}</p>
+                      <p className="text-[10px] text-zinc-500">{c.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 🧊 Interactive 3D Perspective Card Tilt */}
+              <div className="flex items-center justify-between p-3 rounded-xl border border-white/10 bg-zinc-900/60">
+                <div>
+                  <p className="text-xs font-semibold text-zinc-200">Interactive 3D Card Tilt</p>
+                  <p className="text-[11px] text-zinc-400">Dynamic mouse-following perspective tilt on link cards</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCardHover3D(!cardHover3D)}
+                  className={cn(
+                    "w-11 h-6 rounded-full transition-colors relative",
+                    cardHover3D ? "bg-violet-600" : "bg-zinc-800",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "absolute top-1 w-4 h-4 rounded-full bg-white transition-transform",
+                      cardHover3D ? "left-6" : "left-1",
                     )}
                   />
                 </button>

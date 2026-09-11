@@ -134,32 +134,54 @@ export async function resolveAndAssertSafe(
 export interface SafeFetchOptions extends RequestInit {
   timeoutMs?: number;
   allowHttp?: boolean;
+  followSafeRedirects?: boolean;
+  maxRedirects?: number;
 }
 
 /**
- * SSRF-safe fetch: https-only, no-redirect, DNS-pinned, timeout.
- * 3xx / network error / timeout par throw karta hai — caller decide kare
- * (webhooks: warn + retry; importer: user-facing 400).
+ * SSRF-safe fetch: https-only, DNS-pinned, timeout.
+ * If followSafeRedirects is enabled, safe 1-2 hop redirects are followed
+ * after resolving and verifying each destination IP for SSRF safety (e.g. Google Apps Script).
  */
 export async function safeFetch(
   rawUrl: string,
   init?: SafeFetchOptions,
 ): Promise<Response> {
-  const { timeoutMs = 5_000, allowHttp, ...fetchInit } = init ?? {};
-  const url = await resolveAndAssertSafe(rawUrl, { allowHttp });
+  const { timeoutMs = 5_000, allowHttp, followSafeRedirects = false, maxRedirects = 2, ...fetchInit } = init ?? {};
+  let currentUrl = await resolveAndAssertSafe(rawUrl, { allowHttp });
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
   try {
-    const res = await fetch(url.toString(), {
-      ...fetchInit,
-      redirect: "manual", // redirects kabhi follow nahi
-      signal: controller.signal,
-      cache: "no-store",
-    });
-    if (res.status >= 300 && res.status < 400) {
-      throw new UnsafeOutboundError(`Redirect blocked (status ${res.status}): ${url.host}`);
+    let redirectsCount = 0;
+    while (true) {
+      const res = await fetch(currentUrl.toString(), {
+        ...fetchInit,
+        redirect: "manual",
+        signal: controller.signal,
+        cache: "no-store",
+      });
+
+      if (res.status >= 300 && res.status < 400) {
+        if (!followSafeRedirects) {
+          throw new UnsafeOutboundError(`Redirect blocked (status ${res.status}): ${currentUrl.host}`);
+        }
+        redirectsCount++;
+        if (redirectsCount > maxRedirects) {
+          throw new UnsafeOutboundError(`Too many redirects (max ${maxRedirects})`);
+        }
+        const location = res.headers.get("location");
+        if (!location) {
+          throw new UnsafeOutboundError(`Redirect without Location header: status ${res.status}`);
+        }
+        // Resolve relative or absolute target and assert destination IP safety
+        const nextUrlObj = new URL(location, currentUrl);
+        currentUrl = await resolveAndAssertSafe(nextUrlObj.toString(), { allowHttp });
+        continue;
+      }
+
+      return res;
     }
-    return res;
   } finally {
     clearTimeout(timeout);
   }

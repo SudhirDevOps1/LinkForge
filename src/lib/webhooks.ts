@@ -16,22 +16,99 @@ export interface WebhookPayload {
 }
 
 /**
- * Single delivery attempt — SSRF-safe (https-only, no-redirect, DNS-pinned).
- * Returns true on 2xx, false otherwise (koi throw nahi — caller retries).
+ * Format payload according to target platform (Discord, Slack, Google Apps Script, Stoat/Custom)
+ */
+function formatPayloadForUrl(url: string, payload: WebhookPayload): { body: string; headers: Record<string, string>; followSafeRedirects?: boolean } {
+  const isDiscord = url.includes("discord.com/api/webhooks") || url.includes("discordapp.com/api/webhooks");
+  const isSlack = url.includes("hooks.slack.com");
+  const isGoogleAppsScript = url.includes("script.google.com");
+
+  if (isDiscord) {
+    const discordBody = JSON.stringify({
+      username: "LinkForge Alerts",
+      avatar_url: "https://linkforge.dev/icon.svg",
+      embeds: [
+        {
+          title: `🔔 Event: ${payload.event.toUpperCase()}`,
+          description:
+            payload.event === "click"
+              ? `A visitor clicked a link on your profile.`
+              : payload.event === "view"
+                ? `New visitor view recorded on your LinkForge profile!`
+                : `LinkForge Webhook Test Dispatched Successfully!`,
+          color: 9133302, // #8b5cf6 (LinkForge Violet)
+          timestamp: payload.timestamp,
+          fields: Object.entries(payload.data).slice(0, 8).map(([key, val]) => ({
+            name: key.replace(/([A-Z])/g, " $1").toUpperCase(),
+            value: String(val || "N/A"),
+            inline: true,
+          })),
+          footer: { text: "LinkForge Webhooks" },
+        },
+      ],
+    });
+    return {
+      body: discordBody,
+      headers: { "Content-Type": "application/json" },
+    };
+  }
+
+  if (isSlack) {
+    const slackBody = JSON.stringify({
+      text: `🔔 *LinkForge Event: ${payload.event.toUpperCase()}*\n${Object.entries(payload.data)
+        .map(([k, v]) => `• *${k}*: ${v}`)
+        .join("\n")}`,
+    });
+    return {
+      body: slackBody,
+      headers: { "Content-Type": "application/json" },
+    };
+  }
+
+  if (isGoogleAppsScript) {
+    // Google Apps Script expects flat JSON for easy Sheets logging + follows 302 redirect
+    const gasBody = JSON.stringify({
+      event: payload.event,
+      timestamp: payload.timestamp,
+      ...payload.data,
+    });
+    return {
+      body: gasBody,
+      headers: { "Content-Type": "application/json" },
+      followSafeRedirects: true,
+    };
+  }
+
+  // Default LinkForge signed payload (Stoat / custom endpoints)
+  const defaultBody = JSON.stringify(payload);
+  return {
+    body: defaultBody,
+    headers: {
+      "Content-Type": "application/json",
+      "User-Agent": "LinkForge-Webhooks/1.0",
+      "X-LinkForge-Event": payload.event,
+    },
+  };
+}
+
+/**
+ * Single delivery attempt — SSRF-safe (https-only, DNS-pinned, platform-aware).
+ * Returns true on 2xx, false otherwise.
  */
 async function attempt(url: string, secret: string, payload: WebhookPayload): Promise<boolean> {
-  const body = JSON.stringify(payload);
+  const { body, headers, followSafeRedirects } = formatPayloadForUrl(url, payload);
+  const finalHeaders: Record<string, string> = {
+    ...headers,
+    "X-LinkForge-Signature": hmacSha256Hex(secret, body),
+  };
+
   try {
     const res = await safeFetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "User-Agent": "LinkForge-Webhooks/1.0",
-        "X-LinkForge-Event": payload.event,
-        "X-LinkForge-Signature": hmacSha256Hex(secret, body),
-      },
+      headers: finalHeaders,
       body,
-      timeoutMs: 5_000,
+      timeoutMs: 6_000,
+      followSafeRedirects,
     });
     // Response body drain karo taaki socket reuse ho sake
     await res.arrayBuffer().catch(() => undefined);

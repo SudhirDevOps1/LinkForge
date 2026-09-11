@@ -265,6 +265,8 @@ export const designPrefsSchema = z.object({
   staggerDelay: z.number().min(0).max(150).optional(),
   hoverEasing: z.string().max(40).optional(),
   scrollReveal: z.boolean().optional(),
+  cursorEffect: z.string().max(40).optional(),
+  cardHover3D: z.boolean().optional(),
   // Advanced code injection
   customCss: z.string().max(4000).optional(),
   extraBodyClass: z.string().max(80).optional(),

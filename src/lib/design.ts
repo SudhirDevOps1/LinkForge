@@ -89,6 +89,10 @@ export interface DesignPrefs {
   hoverEasing?: string;
   /** Enable Intersection Observer scroll-reveal for entrance animations. */
   scrollReveal?: boolean;
+  /** Interactive custom cursor tracking effect: "none" | "glow" | "dot" */
+  cursorEffect?: string;
+  /** Interactive 3D perspective mouse tilt on link cards */
+  cardHover3D?: boolean;
 
   // ── Advanced / Custom Code ───────────────────────────────────────────────────
   /** Raw CSS injected into bio page <style> tag (max 4000 chars, sanitized). */
@@ -240,6 +244,8 @@ export function clampDesign(prefs: DesignPrefs): DesignPrefs {
   }
   if (str40(prefs.hoverEasing)) out.hoverEasing = str40(prefs.hoverEasing)!;
   if (typeof prefs.scrollReveal === "boolean") out.scrollReveal = prefs.scrollReveal;
+  if (str40(prefs.cursorEffect)) out.cursorEffect = str40(prefs.cursorEffect)!;
+  if (typeof prefs.cardHover3D === "boolean") out.cardHover3D = prefs.cardHover3D;
 
   // ── Advanced Code ────────────────────────────────────────────────────────────
   if (prefs.customCss && typeof prefs.customCss === "string") {
