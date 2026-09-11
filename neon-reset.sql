@@ -7,12 +7,13 @@
 -- 3. Left sidebar me "SQL Editor" par click karein.
 -- 4. Yeh poori script copy karke editor me paste karein.
 -- 5. "Run" (green button) par click karein.
--- Result: Database clean ho jayega aur saare 13 tables + indexes ready ho jayenge!
+-- Result: Database clean ho jayega aur saare 14 tables + indexes ready ho jayenge!
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
 -- STEP 1: PURANE TABLES KO SAFELY DROP KAREIN (CASCADE CLEANUP)
 -- -----------------------------------------------------------------------------
+DROP TABLE IF EXISTS "subscribers" CASCADE;
 DROP TABLE IF EXISTS "analytics_rollups" CASCADE;
 DROP TABLE IF EXISTS "upload_tickets" CASCADE;
 DROP TABLE IF EXISTS "media_files" CASCADE;
@@ -33,7 +34,7 @@ DROP TABLE IF EXISTS "users" CASCADE;
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- -----------------------------------------------------------------------------
--- STEP 3: SARE 13 TABLES + INDEXES CREATE KAREIN
+-- STEP 3: SARE 14 TABLES + INDEXES CREATE KAREIN
 -- -----------------------------------------------------------------------------
 
 -- 1. Users
@@ -222,6 +223,19 @@ CREATE TABLE "analytics_rollups" (
 );
 CREATE UNIQUE INDEX "rollups_unique_bucket_idx" ON "analytics_rollups" ("profile_id", "date", "link_id", "device", "country");
 CREATE INDEX "rollups_profile_date_idx" ON "analytics_rollups" ("profile_id", "date");
+
+-- 14. Subscribers (Newsletter / Email Updates from Bio Page)
+CREATE TABLE "subscribers" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "profile_id" uuid NOT NULL REFERENCES "profiles"("id") ON DELETE CASCADE,
+  "email" text NOT NULL,
+  "status" text NOT NULL DEFAULT 'active',
+  "ip_hash" text,
+  "user_agent" text,
+  "created_at" timestamp with time zone NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX "subscribers_profile_email_idx" ON "subscribers" ("profile_id", "email");
+CREATE INDEX "subscribers_profile_idx" ON "subscribers" ("profile_id");
 
 -- -----------------------------------------------------------------------------
 -- STEP 4: VERIFICATION QUERY
