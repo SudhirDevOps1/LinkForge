@@ -163,6 +163,28 @@ export async function verifyEmailMx(rawEmail: string): Promise<EmailVerification
     return { valid: false, email, domain, reason: "Invalid email domain." };
   }
 
+  // 1.5 Local-part sanity check (catch obvious junk, test, and placeholder accounts)
+  const cleanLocal = localPart.replace(/[0-9_.-]/g, "").toLowerCase();
+  const junkKeywords = ["test", "temp", "fake", "dummy", "sample", "asdf", "qwerty", "zxcv", "noreply", "no-reply", "trash", "junk", "tempu"];
+  if (junkKeywords.some((k) => cleanLocal === k || localPart.toLowerCase().startsWith(k))) {
+    return {
+      valid: false,
+      email,
+      domain,
+      reason: "Test or placeholder email addresses are not permitted. Please use your genuine personal email.",
+    };
+  }
+
+  // Keyboard smash / repeated character check (e.g. "aaaaa", "11111", "zzzz")
+  if (/^(.)\1{3,}$/.test(localPart) || /^(asdf|qwerty|zxcv|hjkl)/i.test(localPart)) {
+    return {
+      valid: false,
+      email,
+      domain,
+      reason: "Please enter a valid, active personal email address.",
+    };
+  }
+
   // 2. Anti-Disposable Email Check
   if (isDisposableDomain(domain)) {
     return {
@@ -182,44 +204,57 @@ export async function verifyEmailMx(rawEmail: string): Promise<EmailVerification
     };
   }
 
-  // 4. Real DNS MX Record Lookup with OS getaddrinfo fallback
+  // 4. Strict Real DNS MX Record Lookup via Google & Cloudflare Resolvers
   try {
     const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("DNS_TIMEOUT")), 3000)
+      setTimeout(() => reject(new Error("DNS_TIMEOUT")), 4000)
     );
 
-    // First attempt: direct MX records via c-ares
-    try {
-      const mxRecords = await Promise.race([dns.promises.resolveMx(domain), timeoutPromise]);
-      if (mxRecords && mxRecords.length > 0) {
-        return { valid: true, email, domain };
-      }
-    } catch {
-      // If c-ares fails (ECONNREFUSED on Windows or ENODATA when domain has only A records),
-      // fallback to OS-native getaddrinfo resolution via dns.promises.lookup
+    // Direct MX query to 8.8.8.8 / 1.1.1.1
+    const mxRecords = await Promise.race([
+      resolver.resolveMx(domain),
+      timeoutPromise,
+    ]);
+
+    if (!mxRecords || mxRecords.length === 0) {
+      return {
+        valid: false,
+        email,
+        domain,
+        reason: `Email domain "${domain}" has no active mail servers (MX records missing). Emails cannot be received here.`,
+      };
     }
 
-    // OS-native getaddrinfo lookup (uses Windows/Linux OS network stack, 100% reliable)
-    try {
-      const addr = await Promise.race([dns.promises.lookup(domain), timeoutPromise]);
-      if (addr?.address) {
-        return { valid: true, email, domain };
-      }
-    } catch (lookupErr: unknown) {
-      const code = (lookupErr as { code?: string })?.code;
-      if (code === "ENOTFOUND" || code === "NXDOMAIN" || code === "ENOENT") {
-        return {
-          valid: false,
-          email,
-          domain,
-          reason: `Email domain "${domain}" does not exist. Please check for spelling mistakes.`,
-        };
-      }
+    return { valid: true, email, domain };
+  } catch (dnsErr: unknown) {
+    const code = (dnsErr as { code?: string })?.code;
+    const msg = (dnsErr as Error)?.message || "";
+
+    // Specific DNS failure codes
+    if (code === "ENODATA") {
+      return {
+        valid: false,
+        email,
+        domain,
+        reason: `Email domain "${domain}" has no mail exchange (MX) servers configured.`,
+      };
     }
 
-    // Fail safe on transient timeouts or network glitches
-    return { valid: true, email, domain };
-  } catch {
-    return { valid: true, email, domain };
+    if (code === "ENOTFOUND" || code === "NXDOMAIN" || code === "ENOENT") {
+      return {
+        valid: false,
+        email,
+        domain,
+        reason: `Domain "${domain}" does not exist. Please check for spelling mistakes.`,
+      };
+    }
+
+    // If timeout or transient network issue, return strict error rather than passing fake emails
+    return {
+      valid: false,
+      email,
+      domain,
+      reason: `Could not verify mail server for "${domain}" (${code || msg || "Connection timeout"}). Please try again.`,
+    };
   }
 }
