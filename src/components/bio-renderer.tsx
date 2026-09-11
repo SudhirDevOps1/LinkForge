@@ -640,9 +640,36 @@ export function BioRenderer({
     cyberpunk: "linear-gradient(135deg, #f43f5e 0%, #a855f7 50%, #06b6d4 100%)",
   };
 
-  const activeGradient = nameGrad && gradientPalettes[nameGrad] ? gradientPalettes[nameGrad] : null;
+  const activeGradient = nameGrad
+    ? (gradientPalettes[nameGrad] || (nameGrad.startsWith("linear-gradient") || nameGrad.startsWith("radial-gradient") ? nameGrad : null))
+    : null;
   const isGradientName = Boolean(activeGradient) || nameAnim === "gradient-flow";
   const nameBgGradient = activeGradient || "linear-gradient(135deg, #a855f7 0%, #06b6d4 50%, #ec4899 100%)";
+
+  // Typewriter effect state for display name
+  const [typedCount, setTypedCount] = useState(profile.displayName ? profile.displayName.length : 0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    if (nameAnim !== "typing") {
+      setTypedCount(profile.displayName ? profile.displayName.length : 0);
+      return;
+    }
+    const nameStr = profile.displayName || "";
+    if (!nameStr) return;
+
+    let timer: ReturnType<typeof setTimeout>;
+    if (!isDeleting && typedCount < nameStr.length) {
+      timer = setTimeout(() => setTypedCount((prev) => prev + 1), 130);
+    } else if (!isDeleting && typedCount >= nameStr.length) {
+      timer = setTimeout(() => setIsDeleting(true), 2400);
+    } else if (isDeleting && typedCount > 0) {
+      timer = setTimeout(() => setTypedCount((prev) => prev - 1), 70);
+    } else if (isDeleting && typedCount === 0) {
+      timer = setTimeout(() => setIsDeleting(false), 600);
+    }
+    return () => clearTimeout(timer);
+  }, [nameAnim, profile.displayName, typedCount, isDeleting]);
 
   let nameAnimStyle: React.CSSProperties = {};
   if (nameAnim === "gradient-flow") {
@@ -1143,7 +1170,56 @@ export function BioRenderer({
             color: isGradientName ? undefined : (effectiveNameColor || v.text),
           }}
         >
-          {isGradientName ? (
+          {nameAnim === "typing" ? (
+            <span className="inline-flex items-center justify-center">
+              <span
+                className={isGradientName ? "inline-block" : ""}
+                style={isGradientName ? {
+                  backgroundImage: nameBgGradient,
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                  color: "transparent",
+                } : {
+                  color: effectiveNameColor || v.text,
+                }}
+              >
+                {(profile.displayName || "").slice(0, typedCount)}
+              </span>
+              <span
+                className="inline-block ml-1 w-[2.5px] h-[0.9em] align-middle rounded-sm animate-[blink_0.9s_infinite]"
+                style={{ backgroundColor: accent }}
+              />
+            </span>
+          ) : nameAnim === "glitch" ? (
+            <span
+              className="inline-block"
+              style={{
+                animation: "glitch 2.5s infinite",
+                color: effectiveNameColor || accent,
+              }}
+            >
+              {profile.displayName}
+            </span>
+          ) : nameAnim === "bounce" ? (
+            <span
+              className="inline-block"
+              style={{
+                animation: "bounceSubtle 2s ease-in-out infinite",
+                ...(isGradientName ? {
+                  backgroundImage: nameBgGradient,
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                  color: "transparent",
+                } : {
+                  color: effectiveNameColor || v.text,
+                }),
+              }}
+            >
+              {profile.displayName}
+            </span>
+          ) : isGradientName ? (
             <span
               className="inline-block"
               style={{

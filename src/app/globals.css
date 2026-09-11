@@ -115,6 +115,22 @@
   0%, 100% { filter: drop-shadow(0 0 4px var(--lf-accent, #8b5cf6)); }
   50% { filter: drop-shadow(0 0 16px var(--lf-accent, #8b5cf6)) drop-shadow(0 0 28px var(--lf-accent, #8b5cf6)); }
 }
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+@keyframes glitch {
+  0% { transform: translate(0); text-shadow: -2px 0 #ff007b, 2px 0 #00f0ff; }
+  20% { transform: translate(-2px, 1px); text-shadow: 2px 0 #ff007b, -2px 0 #00f0ff; }
+  40% { transform: translate(2px, -1px); text-shadow: -2px 0 #ff007b, 2px 0 #00f0ff; }
+  60% { transform: translate(-1px, 2px); text-shadow: 2px 0 #ff007b, -2px 0 #00f0ff; }
+  80% { transform: translate(1px, -1px); text-shadow: -1px 0 #ff007b, 1px 0 #00f0ff; }
+  100% { transform: translate(0); text-shadow: -2px 0 #ff007b, 2px 0 #00f0ff; }
+}
+@keyframes bounceSubtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
 
 html {
   scroll-behavior: smooth;

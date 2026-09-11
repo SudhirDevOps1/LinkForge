@@ -285,7 +285,9 @@ export function clampDesign(prefs: DesignPrefs): DesignPrefs {
 
   // ── Display Name Animation ───────────────────────────────────────────────────
   if (str40(prefs.nameAnimation)) out.nameAnimation = str40(prefs.nameAnimation)!;
-  if (str40(prefs.nameGradient)) out.nameGradient = str40(prefs.nameGradient)!;
+  if (typeof prefs.nameGradient === "string" && prefs.nameGradient.trim()) {
+    out.nameGradient = prefs.nameGradient.trim().slice(0, 250);
+  }
 
   // ── Elite Public Bio Website Features ───────────────────────────────────────
   if (prefs.statusBadge && typeof prefs.statusBadge === "string") {

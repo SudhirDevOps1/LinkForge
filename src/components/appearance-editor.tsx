@@ -516,6 +516,14 @@ export function AppearanceEditor({
   // Display Name Animation & Gradients
   const [nameAnimation, setNameAnimation] = useState(initialDesign.nameAnimation ?? "none");
   const [nameGradient, setNameGradient] = useState(initialDesign.nameGradient ?? "");
+  const isCustomNameGradInitial = Boolean(
+    initialDesign.nameGradient && (initialDesign.nameGradient.startsWith("linear-gradient") || initialDesign.nameGradient.startsWith("radial-gradient"))
+  );
+  const [isCustomNameGrad, setIsCustomNameGrad] = useState(isCustomNameGradInitial);
+  const [nameGradColor1, setNameGradColor1] = useState("#f43f5e");
+  const [nameGradColor2, setNameGradColor2] = useState("#a855f7");
+  const [nameGradColor3, setNameGradColor3] = useState("#06b6d4");
+  const [nameGradAngle, setNameGradAngle] = useState(135);
 
   // Advanced code
   const [customCss, setCustomCss] = useState(initialDesign.customCss ?? "");
@@ -705,6 +713,7 @@ export function AppearanceEditor({
     setAvatarAuraBlur("subtle");
     setNameAnimation("none");
     setNameGradient("");
+    setIsCustomNameGrad(false);
     setStatusBadge("");
     setShowSearch(true);
     setShowCategories(true);
@@ -832,6 +841,11 @@ export function AppearanceEditor({
     setAvatarAuraBlur("subtle");
     setNameAnimation("none");
     setNameGradient("");
+    setIsCustomNameGrad(false);
+    setNameGradColor1("#f43f5e");
+    setNameGradColor2("#a855f7");
+    setNameGradColor3("#06b6d4");
+    setNameGradAngle(135);
     setStatusBadge("");
     setShowSearch(true);
     setShowCategories(true);
@@ -1244,13 +1258,16 @@ export function AppearanceEditor({
                     <span className="text-[10px] text-zinc-500 uppercase tracking-wider font-mono">Live effect</span>
                   </div>
                   <p className="text-[11px] text-zinc-500 mt-0.5">Choose real-time motion and lighting for your name heading.</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-2.5">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2.5">
                     {[
                       { id: "none", label: "Static", desc: "Clean" },
+                      { id: "typing", label: "Typewriter", desc: "Live typing" },
                       { id: "gradient-flow", label: "Gradient Flow", desc: "Flowing colors" },
                       { id: "neon-pulse", label: "Neon Pulse", desc: "Luminous glow" },
                       { id: "shimmer", label: "Light Shimmer", desc: "Light sweep" },
                       { id: "float", label: "Subtle Float", desc: "Levitation" },
+                      { id: "glitch", label: "Cyber Glitch", desc: "RGB distortion" },
+                      { id: "bounce", label: "Subtle Bounce", desc: "Spring rhythm" },
                     ].map((anim) => (
                       <button
                         key={anim.id}
@@ -1274,7 +1291,7 @@ export function AppearanceEditor({
                 <div>
                   <label className="text-xs font-semibold text-zinc-300 block mb-1.5">Display Name Gradient Palette</label>
                   <p className="text-[11px] text-zinc-500 mb-2.5">Color palette applied when using Gradient Flow or stylized gradient text.</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {[
                       { id: "", label: "Default Accent", gradient: "from-zinc-400 to-white" },
                       { id: "violet-cyan", label: "Aurora Violet", gradient: "from-purple-500 via-cyan-400 to-pink-500" },
@@ -1282,23 +1299,159 @@ export function AppearanceEditor({
                       { id: "neon-matrix", label: "Neon Matrix", gradient: "from-emerald-400 via-cyan-400 to-blue-500" },
                       { id: "golden-fire", label: "Golden Fire", gradient: "from-amber-400 via-red-500 to-yellow-300" },
                       { id: "cyberpunk", label: "Cyberpunk", gradient: "from-pink-500 via-purple-500 to-cyan-400" },
-                    ].map((pal) => (
-                      <button
-                        key={pal.id}
-                        type="button"
-                        onClick={() => setNameGradient(pal.id)}
-                        className={cn(
-                          "flex items-center gap-2 p-2 rounded-xl border text-left transition-all",
-                          nameGradient === pal.id
-                            ? "border-violet-400 bg-violet-500/20 text-white ring-1 ring-violet-400"
-                            : "border-white/10 text-zinc-400 hover:text-zinc-200 hover:bg-white/5",
-                        )}
-                      >
-                        <span className={cn("w-4 h-4 rounded-full bg-gradient-to-tr shrink-0", pal.gradient)} />
-                        <span className="text-xs font-medium truncate">{pal.label}</span>
-                      </button>
-                    ))}
+                      { id: "custom", label: "🎨 Custom Gradient", gradient: "from-fuchsia-500 via-purple-500 to-cyan-400" },
+                    ].map((pal) => {
+                      const isSelected = pal.id === "custom" ? isCustomNameGrad : (!isCustomNameGrad && nameGradient === pal.id);
+                      return (
+                        <button
+                          key={pal.id}
+                          type="button"
+                          onClick={() => {
+                            if (pal.id === "custom") {
+                              setIsCustomNameGrad(true);
+                              setNameGradient(`linear-gradient(${nameGradAngle}deg, ${nameGradColor1} 0%, ${nameGradColor2} 50%, ${nameGradColor3} 100%)`);
+                            } else {
+                              setIsCustomNameGrad(false);
+                              setNameGradient(pal.id);
+                            }
+                          }}
+                          className={cn(
+                            "flex items-center gap-2 p-2 rounded-xl border text-left transition-all",
+                            isSelected
+                              ? "border-violet-400 bg-violet-500/20 text-white ring-1 ring-violet-400"
+                              : "border-white/10 text-zinc-400 hover:text-zinc-200 hover:bg-white/5",
+                          )}
+                        >
+                          <span className={cn("w-4 h-4 rounded-full bg-gradient-to-tr shrink-0", pal.gradient)} />
+                          <span className="text-xs font-medium truncate">{pal.label}</span>
+                        </button>
+                      );
+                    })}
                   </div>
+
+                  {/* 🎨 Interactive Manual Custom Gradient Builder */}
+                  {isCustomNameGrad && (
+                    <div className="mt-3.5 p-3.5 rounded-2xl border border-violet-500/30 bg-violet-950/20 backdrop-blur-md space-y-3.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Palette className="w-4 h-4 text-violet-400" />
+                          <span className="text-xs font-semibold text-zinc-200">Manual Name Gradient Builder</span>
+                        </div>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                          {nameGradAngle}° Linear
+                        </span>
+                      </div>
+
+                      {/* Live Preview of name in studio */}
+                      <div className="p-3 rounded-xl border border-white/10 bg-zinc-950/70 text-center">
+                        <span className="text-[10px] uppercase font-mono tracking-widest text-zinc-500 block mb-1">Live Custom Gradient Preview</span>
+                        <span
+                          className="inline-block text-lg sm:text-xl font-bold tracking-tight"
+                          style={{
+                            backgroundImage: `linear-gradient(${nameGradAngle}deg, ${nameGradColor1} 0%, ${nameGradColor2} 50%, ${nameGradColor3} 100%)`,
+                            WebkitBackgroundClip: "text",
+                            WebkitTextFillColor: "transparent",
+                            backgroundClip: "text",
+                            color: "transparent",
+                          }}
+                        >
+                          {previewProfile.displayName || "Alex Morgan"}
+                        </span>
+                      </div>
+
+                      {/* Color Stops */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        {[
+                          { label: "Stop 1 (Start)", value: nameGradColor1, set: setNameGradColor1 },
+                          { label: "Stop 2 (Middle)", value: nameGradColor2, set: setNameGradColor2 },
+                          { label: "Stop 3 (End)", value: nameGradColor3, set: setNameGradColor3 },
+                        ].map((stop, idx) => (
+                          <div key={stop.label} className="space-y-1">
+                            <label className="text-[10px] text-zinc-400 font-semibold">{stop.label}</label>
+                            <div className="flex items-center gap-2 p-1.5 rounded-xl border border-white/10 bg-zinc-900/60">
+                              <input
+                                type="color"
+                                value={stop.value}
+                                onChange={(e) => {
+                                  const newCol = e.target.value;
+                                  stop.set(newCol);
+                                  const c1 = idx === 0 ? newCol : nameGradColor1;
+                                  const c2 = idx === 1 ? newCol : nameGradColor2;
+                                  const c3 = idx === 2 ? newCol : nameGradColor3;
+                                  setNameGradient(`linear-gradient(${nameGradAngle}deg, ${c1} 0%, ${c2} 50%, ${c3} 100%)`);
+                                }}
+                                className="w-7 h-7 rounded border-0 cursor-pointer bg-transparent shrink-0"
+                              />
+                              <input
+                                type="text"
+                                value={stop.value}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  stop.set(val);
+                                  if (/^#[0-9a-fA-F]{3,8}$/.test(val)) {
+                                    const c1 = idx === 0 ? val : nameGradColor1;
+                                    const c2 = idx === 1 ? val : nameGradColor2;
+                                    const c3 = idx === 2 ? val : nameGradColor3;
+                                    setNameGradient(`linear-gradient(${nameGradAngle}deg, ${c1} 0%, ${c2} 50%, ${c3} 100%)`);
+                                  }
+                                }}
+                                className="w-full bg-transparent text-xs font-mono text-zinc-200 outline-none uppercase"
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Gradient Angle */}
+                      <div>
+                        <div className="flex items-center justify-between text-[11px] text-zinc-400 mb-1">
+                          <span>Gradient Direction Angle</span>
+                          <span className="font-mono text-violet-400">{nameGradAngle}°</span>
+                        </div>
+                        <input
+                          type="range"
+                          min={0}
+                          max={360}
+                          step={15}
+                          value={nameGradAngle}
+                          onChange={(e) => {
+                            const angle = Number(e.target.value);
+                            setNameGradAngle(angle);
+                            setNameGradient(`linear-gradient(${angle}deg, ${nameGradColor1} 0%, ${nameGradColor2} 50%, ${nameGradColor3} 100%)`);
+                          }}
+                          className="w-full accent-violet-500"
+                        />
+                      </div>
+
+                      {/* Fast presets */}
+                      <div>
+                        <span className="text-[10px] text-zinc-500 font-semibold block mb-1.5">Quick Inspiration Combos</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {[
+                            { label: "Neon Cyber", c1: "#ff007b", c2: "#7928ca", c3: "#00f0ff" },
+                            { label: "Sunset Blaze", c1: "#f97316", c2: "#ec4899", c3: "#eab308" },
+                            { label: "Emerald Matrix", c1: "#10b981", c2: "#06b6d4", c3: "#3b82f6" },
+                            { label: "Royal Gold", c1: "#f59e0b", c2: "#fbbf24", c3: "#f43f5e" },
+                            { label: "Fire & Ice", c1: "#ef4444", c2: "#8b5cf6", c3: "#06b6d4" },
+                          ].map((combo) => (
+                            <button
+                              key={combo.label}
+                              type="button"
+                              onClick={() => {
+                                setNameGradColor1(combo.c1);
+                                setNameGradColor2(combo.c2);
+                                setNameGradColor3(combo.c3);
+                                setNameGradient(`linear-gradient(${nameGradAngle}deg, ${combo.c1} 0%, ${combo.c2} 50%, ${combo.c3} 100%)`);
+                              }}
+                              className="px-2 py-1 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-[10px] font-medium text-zinc-300 transition-colors"
+                            >
+                              {combo.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 

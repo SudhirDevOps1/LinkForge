@@ -309,7 +309,7 @@ export const designPrefsSchema = z.object({
   avatarAuraBlur: z.string().max(40).optional(),
   // Display Name Animation
   nameAnimation: z.string().max(40).optional(),
-  nameGradient: z.string().max(40).optional(),
+  nameGradient: z.string().max(250).optional(),
   // Elite Public Bio Website Features
   statusBadge: z.string().max(60).optional(),
   showSearch: z.boolean().optional(),
