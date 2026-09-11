@@ -158,18 +158,64 @@ export async function triggerWebhooks(
   }
 }
 
-/** Settings UI ka "Send test" button isko call karta hai */
-export async function sendTestWebhook(webhookId: string, profileId: string) {
+export interface WebhookTestResult {
+  found: boolean;
+  success: boolean;
+  statusCode?: number;
+  statusText?: string;
+  latencyMs: number;
+  error?: string;
+}
+
+/** Settings UI ka "Send test" button isko call karta hai aur live HTTP response return karta hai */
+export async function sendTestWebhook(webhookId: string, profileId: string): Promise<WebhookTestResult> {
   const rows = await db
     .select()
     .from(webhooks)
     .where(eq(webhooks.id, webhookId));
   const hook = rows.find((h) => h.profileId === profileId);
-  if (!hook) return false;
-  await deliver(hook.url, hook.secret, {
+  if (!hook) {
+    return { found: false, success: false, latencyMs: 0, error: "Webhook not found" };
+  }
+
+  const start = Date.now();
+  const payload: WebhookPayload = {
     event: "test",
     timestamp: new Date().toISOString(),
-    data: { message: "LinkForge webhook test ✅".replace(" ✅", ""), webhookId },
-  });
-  return true;
+    data: { message: "LinkForge webhook test event", webhookId },
+  };
+
+  const { body, headers, followSafeRedirects } = formatPayloadForUrl(hook.url, payload);
+  const finalHeaders: Record<string, string> = {
+    ...headers,
+    "X-LinkForge-Signature": hmacSha256Hex(hook.secret, body),
+  };
+
+  try {
+    const res = await safeFetch(hook.url, {
+      method: "POST",
+      headers: finalHeaders,
+      body,
+      timeoutMs: 6_000,
+      followSafeRedirects,
+    });
+    await res.arrayBuffer().catch(() => undefined);
+    const latencyMs = Date.now() - start;
+    return {
+      found: true,
+      success: res.ok,
+      statusCode: res.status,
+      statusText: res.statusText,
+      latencyMs,
+      error: res.ok ? undefined : `Receiver returned HTTP ${res.status} ${res.statusText || ""}`.trim(),
+    };
+  } catch (err: unknown) {
+    const latencyMs = Date.now() - start;
+    return {
+      found: true,
+      success: false,
+      latencyMs,
+      error: (err as Error).message || "Connection failed",
+    };
+  }
 }

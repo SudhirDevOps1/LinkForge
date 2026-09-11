@@ -12,7 +12,7 @@ export const POST = handle(async (req: Request) => {
   const { profile } = await requireUser();
   if (!profile) throw new ApiError(404, "Profile not found");
   const { id } = parseOrThrow(bodySchema, await req.json().catch(() => ({})));
-  const ok = await sendTestWebhook(id, profile.id);
-  if (!ok) throw new ApiError(404, "Webhook not found");
-  return json({ ok: true });
+  const result = await sendTestWebhook(id, profile.id);
+  if (!result.found) throw new ApiError(404, "Webhook not found");
+  return json(result);
 });

@@ -863,12 +863,56 @@ function WebhooksTab({ initialHooks }: { initialHooks: WebhookRow[] }) {
     }
   }
 
+  const [testingId, setTestingId] = useState<string | null>(null);
+  const [activePreset, setActivePreset] = useState<"gas" | "discord" | "slack" | "stoat" | null>("gas");
+  const [codeCopied, setCodeCopied] = useState(false);
+
+  const GAS_CODE = `function doPost(e) {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    
+    // Auto-create bold headers on first run
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(["Timestamp", "Event", "Title / Detail", "URL / Slug", "Raw JSON Data"]);
+      sheet.getRange("A1:E1").setFontWeight("bold").setBackground("#8b5cf6").setFontColor("#ffffff");
+      sheet.setFrozenRows(1);
+    }
+    
+    var raw = e.postData.contents;
+    var data = JSON.parse(raw);
+    
+    var timestamp = Utilities.formatDate(new Date(), "Asia/Kolkata", "yyyy-MM-dd HH:mm:ss");
+    var event = data.event || "unknown";
+    var title = data.title || data.name || data.displayName || data.message || "N/A";
+    var url = data.url || data.slug || "N/A";
+    
+    // Append event row to Google Sheet
+    sheet.appendRow([timestamp, event, title, url, raw]);
+    
+    return ContentService.createTextOutput(JSON.stringify({ status: "success" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}`;
+
   async function test(id: string) {
+    setTestingId(id);
     try {
-      await api("/api/webhooks/test", { method: "POST", body: JSON.stringify({ id }) });
-      toast.success("Test event dispatched — check receiver logs");
+      const res = await api<{ success: boolean; statusCode?: number; latencyMs?: number; error?: string }>("/api/webhooks/test", {
+        method: "POST",
+        body: JSON.stringify({ id }),
+      });
+      if (res.success) {
+        toast.success(`✅ Delivery verified! Receiver replied HTTP ${res.statusCode || 200} in ${res.latencyMs || 0}ms`);
+      } else {
+        toast.error(`❌ Delivery failed: ${res.error || `HTTP ${res.statusCode}`} (${res.latencyMs || 0}ms)`);
+      }
     } catch (err) {
       toast.error((err as Error).message);
+    } finally {
+      setTestingId(null);
     }
   }
 
@@ -879,21 +923,26 @@ function WebhooksTab({ initialHooks }: { initialHooks: WebhookRow[] }) {
           <h2 className="font-display text-lg font-semibold">Add webhook</h2>
           {/* Quick Platform Presets */}
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[11px] text-zinc-500 font-medium">Presets:</span>
+            <span className="text-[11px] text-zinc-500 font-medium">Platform Guides:</span>
             {[
-              { label: "Discord", placeholder: "https://discord.com/api/webhooks/...", hint: "Embed alerts" },
-              { label: "Google Apps Script", placeholder: "https://script.google.com/macros/s/.../exec", hint: "Sheets logging" },
-              { label: "Slack", placeholder: "https://hooks.slack.com/services/...", hint: "Channel posts" },
-              { label: "Stoat / Custom", placeholder: "https://api.example.com/hooks/linkforge", hint: "Signed JSON" },
+              { id: "gas" as const, label: "Google Sheets", placeholder: "https://script.google.com/macros/s/.../exec" },
+              { id: "discord" as const, label: "Discord", placeholder: "https://discord.com/api/webhooks/..." },
+              { id: "slack" as const, label: "Slack", placeholder: "https://hooks.slack.com/services/..." },
+              { id: "stoat" as const, label: "Stoat / Custom", placeholder: "https://api.example.com/hooks/linkforge" },
             ].map((preset) => (
               <button
-                key={preset.label}
+                key={preset.id}
                 type="button"
                 onClick={() => {
                   setUrl(preset.placeholder);
-                  toast.info(`Paste your ${preset.label} Webhook URL`);
+                  setActivePreset(preset.id);
+                  toast.info(`Opened ${preset.label} instructions below`);
                 }}
-                className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] font-medium text-zinc-300 hover:border-violet-400/50 hover:bg-violet-500/10 hover:text-white transition-all"
+                className={`rounded-lg border px-2 py-1 text-[11px] font-medium transition-all ${
+                  activePreset === preset.id
+                    ? "border-violet-400 bg-violet-500/20 text-white"
+                    : "border-white/10 bg-white/5 text-zinc-300 hover:border-violet-400/50 hover:bg-violet-500/10 hover:text-white"
+                }`}
               >
                 {preset.label}
               </button>
@@ -913,6 +962,103 @@ function WebhooksTab({ initialHooks }: { initialHooks: WebhookRow[] }) {
             <Plug className="h-4 w-4" /> Add
           </Button>
         </div>
+
+        {/* 📖 Platform Quickstart & Deployment Guide */}
+        {activePreset && (
+          <div className="rounded-xl border border-violet-500/30 bg-violet-950/20 p-4 space-y-3">
+            {activePreset === "gas" && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                    <h3 className="text-xs font-semibold text-white uppercase tracking-wider">
+                      Google Sheets (Apps Script) Setup in 60 Seconds
+                    </h3>
+                  </div>
+                  <a
+                    href="https://sheets.new"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] text-violet-300 hover:text-white underline"
+                  >
+                    Open sheets.new <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+                <ol className="text-xs text-zinc-300 space-y-1.5 list-decimal list-inside leading-relaxed">
+                  <li>Nayi Google Sheet banayein ➔ Menu mein <strong>Extensions ➔ Apps Script</strong> par click karein.</li>
+                  <li>Wahan pehle se likhe code ko delete karke neeche diya gaya code paste karein:</li>
+                </ol>
+                <div className="relative">
+                  <pre className="bg-black/60 border border-white/10 rounded-lg p-3 text-[11px] font-mono text-zinc-300 overflow-x-auto max-h-36">
+                    {GAS_CODE}
+                  </pre>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(GAS_CODE);
+                      setCodeCopied(true);
+                      setTimeout(() => setCodeCopied(false), 2000);
+                      toast.success("Apps Script code copied to clipboard!");
+                    }}
+                    className="absolute top-2 right-2 text-xs"
+                  >
+                    {codeCopied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                    {codeCopied ? "Copied!" : "Copy Code"}
+                  </Button>
+                </div>
+                <ol start={3} className="text-xs text-zinc-300 space-y-1.5 list-decimal list-inside leading-relaxed">
+                  <li>Right top corner mein <strong>Deploy ➔ New deployment</strong> chunein.</li>
+                  <li>Gear icon (⚙️) par click karke <strong>Web app</strong> chunein.</li>
+                  <li><strong>Who has access:</strong> <span className="text-amber-300 font-semibold">&quot;Anyone&quot;</span> chunein (⚠️ mandatory for LinkForge to connect).</li>
+                  <li><strong>Deploy</strong> dabayein ➔ Google dwara diya gaya <strong>Web App URL</strong> copy karke upar input box mein paste karein!</li>
+                </ol>
+              </div>
+            )}
+
+            {activePreset === "discord" && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#5865F2]" />
+                  <h3 className="text-xs font-semibold text-white uppercase tracking-wider">Discord Channel Setup</h3>
+                </div>
+                <ol className="text-xs text-zinc-300 space-y-1.5 list-decimal list-inside leading-relaxed">
+                  <li>Discord server mein us channel ke gear icon (⚙️) <strong>Channel Settings ➔ Integrations</strong> par jayein.</li>
+                  <li><strong>Webhooks ➔ New Webhook</strong> banayein aur channel select karein.</li>
+                  <li><strong>Copy Webhook URL</strong> par click karke upar paste karein. LinkForge har click par beautiful violet embed notification bhejega!</li>
+                </ol>
+              </div>
+            )}
+
+            {activePreset === "slack" && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#E01E5A]" />
+                  <h3 className="text-xs font-semibold text-white uppercase tracking-wider">Slack Channel Setup</h3>
+                </div>
+                <ol className="text-xs text-zinc-300 space-y-1.5 list-decimal list-inside leading-relaxed">
+                  <li>Slack workspace mein <strong>Incoming WebHooks</strong> app enable karein.</li>
+                  <li>Target channel choose karke Webhook URL generate karein.</li>
+                  <li>Webhook URL ko upar paste karein aur Add dabayein!</li>
+                </ol>
+              </div>
+            )}
+
+            {activePreset === "stoat" && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-violet-400" />
+                  <h3 className="text-xs font-semibold text-white uppercase tracking-wider">Stoat / Custom REST Webhook</h3>
+                </div>
+                <p className="text-xs text-zinc-300 leading-relaxed">
+                  LinkForge standard JSON POST bhejta hai with header: <code className="bg-white/10 px-1 py-0.5 rounded font-mono text-[11px]">X-LinkForge-Signature: hmac-sha256(secret, body)</code>.
+                  Aap receiver server par signature verify karke secure automated actions trigger kar sakte hain.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
         {newSecret ? (
           <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 p-4">
             <p className="text-xs font-semibold uppercase tracking-wider text-emerald-300">
@@ -959,8 +1105,8 @@ function WebhooksTab({ initialHooks }: { initialHooks: WebhookRow[] }) {
                 </div>
               </div>
               <Switch checked={hook.isActive} onCheckedChange={(v) => toggle(hook.id, v)} aria-label="toggle webhook" />
-              <Button variant="outline" size="sm" onClick={() => test(hook.id)}>
-                Test
+              <Button variant="outline" size="sm" onClick={() => test(hook.id)} disabled={testingId === hook.id}>
+                {testingId === hook.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Test"}
               </Button>
               <Button variant="danger" size="icon" onClick={() => remove(hook.id)}>
                 <Trash2 className="h-4 w-4" />
