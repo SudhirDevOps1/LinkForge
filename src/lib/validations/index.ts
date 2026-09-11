@@ -310,6 +310,9 @@ export const designPrefsSchema = z.object({
   // Display Name Animation
   nameAnimation: z.string().max(40).optional(),
   nameGradient: z.string().max(250).optional(),
+  typewriterPhrases: z.string().max(300).optional(),
+  typewriterCursor: z.string().max(40).optional(),
+  typewriterSpeed: z.string().max(40).optional(),
   // Elite Public Bio Website Features
   statusBadge: z.string().max(60).optional(),
   showSearch: z.boolean().optional(),

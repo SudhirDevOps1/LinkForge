@@ -646,30 +646,97 @@ export function BioRenderer({
   const isGradientName = Boolean(activeGradient) || nameAnim === "gradient-flow";
   const nameBgGradient = activeGradient || "linear-gradient(135deg, #a855f7 0%, #06b6d4 50%, #ec4899 100%)";
 
-  // Typewriter effect state for display name
+  // ⌨️ Multi-Type Real-Time Typewriter Engine
+  const isTypingAnim = nameAnim.startsWith("typing");
+  const isMultiTyping = nameAnim === "typing-multi";
+  const isTerminalTyping = nameAnim === "typing-terminal";
+  const isOnceTyping = nameAnim === "typing-once";
+
+  const rawPhrases = d?.typewriterPhrases
+    ? d.typewriterPhrases.split(",").map((s) => s.trim()).filter(Boolean)
+    : [];
+  const multiPhrases = rawPhrases.length > 0
+    ? rawPhrases
+    : [profile.displayName || "Creator", profile.slug ? `@${profile.slug}` : "Creator", "Welcome to my Bio"];
+
+  const [phraseIdx, setPhraseIdx] = useState(0);
+  const currentTargetText = isMultiTyping
+    ? multiPhrases[phraseIdx % multiPhrases.length]
+    : (profile.displayName || "");
+
   const [typedCount, setTypedCount] = useState(profile.displayName ? profile.displayName.length : 0);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const typeSpeed = d?.typewriterSpeed === "fast" ? 70 : d?.typewriterSpeed === "slow" ? 180 : 110;
+  const deleteSpeed = Math.round(typeSpeed * 0.55);
+
   useEffect(() => {
-    if (nameAnim !== "typing") {
-      setTypedCount(profile.displayName ? profile.displayName.length : 0);
+    if (!isTypingAnim || nameAnim === "typing-scramble") {
+      setTypedCount(currentTargetText.length);
       return;
     }
-    const nameStr = profile.displayName || "";
-    if (!nameStr) return;
+    if (!currentTargetText) return;
 
     let timer: ReturnType<typeof setTimeout>;
-    if (!isDeleting && typedCount < nameStr.length) {
-      timer = setTimeout(() => setTypedCount((prev) => prev + 1), 130);
-    } else if (!isDeleting && typedCount >= nameStr.length) {
+
+    if (!isDeleting && typedCount < currentTargetText.length) {
+      timer = setTimeout(() => setTypedCount((prev) => prev + 1), typeSpeed);
+    } else if (!isDeleting && typedCount >= currentTargetText.length) {
+      if (isOnceTyping) return;
       timer = setTimeout(() => setIsDeleting(true), 2400);
     } else if (isDeleting && typedCount > 0) {
-      timer = setTimeout(() => setTypedCount((prev) => prev - 1), 70);
+      timer = setTimeout(() => setTypedCount((prev) => prev - 1), deleteSpeed);
     } else if (isDeleting && typedCount === 0) {
-      timer = setTimeout(() => setIsDeleting(false), 600);
+      if (isMultiTyping) {
+        setPhraseIdx((i) => (i + 1) % multiPhrases.length);
+      }
+      timer = setTimeout(() => setIsDeleting(false), 500);
     }
+
     return () => clearTimeout(timer);
-  }, [nameAnim, profile.displayName, typedCount, isDeleting]);
+  }, [isTypingAnim, isOnceTyping, isMultiTyping, nameAnim, currentTargetText, typedCount, isDeleting, typeSpeed, deleteSpeed, multiPhrases.length]);
+
+  // 👾 Hacker Matrix Decrypt Effect
+  const [scrambleText, setScrambleText] = useState(profile.displayName || "");
+
+  useEffect(() => {
+    if (nameAnim !== "typing-scramble") return;
+    const target = profile.displayName || "";
+    if (!target) return;
+    const glyphs = "!<>-_\\/[]{}—=+*^?#________0101";
+    let iteration = 0;
+    let timer: ReturnType<typeof setTimeout>;
+    let interval: ReturnType<typeof setInterval>;
+
+    const runScramble = () => {
+      iteration = 0;
+      clearInterval(interval);
+      interval = setInterval(() => {
+        setScrambleText(
+          target
+            .split("")
+            .map((char, index) => {
+              if (index < iteration) return target[index];
+              if (char === " ") return " ";
+              return glyphs[Math.floor(Math.random() * glyphs.length)];
+            })
+            .join("")
+        );
+
+        if (iteration >= target.length) {
+          clearInterval(interval);
+          timer = setTimeout(runScramble, 3200);
+        }
+        iteration += 1 / 3;
+      }, 35);
+    };
+
+    runScramble();
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timer);
+    };
+  }, [nameAnim, profile.displayName]);
 
   let nameAnimStyle: React.CSSProperties = {};
   if (nameAnim === "gradient-flow") {
@@ -1170,8 +1237,28 @@ export function BioRenderer({
             color: isGradientName ? undefined : (effectiveNameColor || v.text),
           }}
         >
-          {nameAnim === "typing" ? (
+          {nameAnim === "typing-scramble" ? (
+            <span
+              className={isGradientName ? "inline-block font-mono tracking-wider" : "font-mono tracking-wider"}
+              style={isGradientName ? {
+                backgroundImage: nameBgGradient,
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+                color: "transparent",
+              } : {
+                color: effectiveNameColor || accent,
+              }}
+            >
+              {scrambleText}
+            </span>
+          ) : isTypingAnim ? (
             <span className="inline-flex items-center justify-center">
+              {isTerminalTyping && (
+                <span className="opacity-70 font-mono text-emerald-400 select-none mr-1.5 font-bold text-[0.9em]">
+                  $ 
+                </span>
+              )}
               <span
                 className={isGradientName ? "inline-block" : ""}
                 style={isGradientName ? {
@@ -1181,15 +1268,29 @@ export function BioRenderer({
                   backgroundClip: "text",
                   color: "transparent",
                 } : {
-                  color: effectiveNameColor || v.text,
+                  color: isTerminalTyping ? "#10b981" : (effectiveNameColor || v.text),
                 }}
               >
-                {(profile.displayName || "").slice(0, typedCount)}
+                {currentTargetText.slice(0, typedCount)}
               </span>
-              <span
-                className="inline-block ml-1 w-[2.5px] h-[0.9em] align-middle rounded-sm animate-[blink_0.9s_infinite]"
-                style={{ backgroundColor: accent }}
-              />
+              {(d?.typewriterCursor || (isTerminalTyping ? "block" : "bar")) === "block" ? (
+                <span
+                  className="inline-block ml-1 px-1 rounded-[2px] font-mono text-[0.75em] leading-none align-middle animate-[blink_0.8s_infinite]"
+                  style={{ backgroundColor: isTerminalTyping ? "#10b981" : accent, color: "#000" }}
+                >
+                  █
+                </span>
+              ) : (d?.typewriterCursor || (isTerminalTyping ? "block" : "bar")) === "underscore" ? (
+                <span
+                  className="inline-block ml-0.5 w-[0.55em] h-[3px] align-baseline animate-[blink_0.8s_infinite]"
+                  style={{ backgroundColor: accent }}
+                />
+              ) : (
+                <span
+                  className="inline-block ml-1 w-[2.5px] h-[0.9em] align-middle rounded-sm animate-[blink_0.9s_infinite]"
+                  style={{ backgroundColor: accent }}
+                />
+              )}
             </span>
           ) : nameAnim === "glitch" ? (
             <span

@@ -32,6 +32,7 @@ import {
   Smartphone,
   Sparkles,
   Square,
+  Terminal,
   Type,
   UserPlus,
   Volume2,
@@ -524,6 +525,9 @@ export function AppearanceEditor({
   const [nameGradColor2, setNameGradColor2] = useState("#a855f7");
   const [nameGradColor3, setNameGradColor3] = useState("#06b6d4");
   const [nameGradAngle, setNameGradAngle] = useState(135);
+  const [typewriterPhrases, setTypewriterPhrases] = useState(initialDesign.typewriterPhrases ?? "");
+  const [typewriterCursor, setTypewriterCursor] = useState(initialDesign.typewriterCursor ?? "bar");
+  const [typewriterSpeed, setTypewriterSpeed] = useState(initialDesign.typewriterSpeed ?? "normal");
 
   // Advanced code
   const [customCss, setCustomCss] = useState(initialDesign.customCss ?? "");
@@ -597,6 +601,9 @@ export function AppearanceEditor({
     avatarAuraBlur !== (initialDesign.avatarAuraBlur ?? "subtle") ||
     nameAnimation !== (initialDesign.nameAnimation ?? "none") ||
     nameGradient !== (initialDesign.nameGradient ?? "") ||
+    typewriterPhrases !== (initialDesign.typewriterPhrases ?? "") ||
+    typewriterCursor !== (initialDesign.typewriterCursor ?? "bar") ||
+    typewriterSpeed !== (initialDesign.typewriterSpeed ?? "normal") ||
     statusBadge !== (initialDesign.statusBadge ?? "") ||
     showSearch !== (initialDesign.showSearch ?? true) ||
     showCategories !== (initialDesign.showCategories ?? true) ||
@@ -640,6 +647,9 @@ export function AppearanceEditor({
       avatarAuraBlur: avatarAuraBlur !== "subtle" ? avatarAuraBlur : undefined,
       nameAnimation: nameAnimation !== "none" ? nameAnimation : undefined,
       nameGradient: nameGradient || undefined,
+      typewriterPhrases: typewriterPhrases || undefined,
+      typewriterCursor: typewriterCursor !== "bar" ? typewriterCursor : undefined,
+      typewriterSpeed: typewriterSpeed !== "normal" ? typewriterSpeed : undefined,
       statusBadge: statusBadge || undefined,
       showSearch,
       showCategories,
@@ -770,6 +780,9 @@ export function AppearanceEditor({
             avatarAuraBlur: avatarAuraBlur !== "subtle" ? avatarAuraBlur : undefined,
             nameAnimation: nameAnimation !== "none" ? nameAnimation : undefined,
             nameGradient: nameGradient || undefined,
+            typewriterPhrases: typewriterPhrases || undefined,
+            typewriterCursor: typewriterCursor !== "bar" ? typewriterCursor : undefined,
+            typewriterSpeed: typewriterSpeed !== "normal" ? typewriterSpeed : undefined,
             statusBadge: statusBadge || undefined,
             showSearch,
             showCategories,
@@ -846,6 +859,9 @@ export function AppearanceEditor({
     setNameGradColor2("#a855f7");
     setNameGradColor3("#06b6d4");
     setNameGradAngle(135);
+    setTypewriterPhrases("");
+    setTypewriterCursor("bar");
+    setTypewriterSpeed("normal");
     setStatusBadge("");
     setShowSearch(true);
     setShowCategories(true);
@@ -1261,7 +1277,11 @@ export function AppearanceEditor({
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2.5">
                     {[
                       { id: "none", label: "Static", desc: "Clean" },
-                      { id: "typing", label: "Typewriter", desc: "Live typing" },
+                      { id: "typing", label: "⌨️ Typewriter", desc: "Classic loop" },
+                      { id: "typing-terminal", label: "💻 Terminal", desc: "$ hacker prompt" },
+                      { id: "typing-scramble", label: "👾 Decrypt", desc: "Matrix cipher" },
+                      { id: "typing-multi", label: "🔄 Rotating Roles", desc: "Cycles titles" },
+                      { id: "typing-once", label: "✍️ Type Once", desc: "Hold & shine" },
                       { id: "gradient-flow", label: "Gradient Flow", desc: "Flowing colors" },
                       { id: "neon-pulse", label: "Neon Pulse", desc: "Luminous glow" },
                       { id: "shimmer", label: "Light Shimmer", desc: "Light sweep" },
@@ -1285,6 +1305,170 @@ export function AppearanceEditor({
                       </button>
                     ))}
                   </div>
+
+                  {/* ⌨️ Typewriter Engine Customization Panel */}
+                  {nameAnimation.startsWith("typing") && (
+                    <div className="mt-3.5 p-4 rounded-2xl border border-violet-500/30 bg-violet-950/20 backdrop-blur-md space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Terminal className="w-4 h-4 text-violet-400" />
+                          <h3 className="text-xs font-semibold text-zinc-200">
+                            Typewriter Engine Controls
+                          </h3>
+                        </div>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                          {nameAnimation === "typing-terminal"
+                            ? "Terminal Mode"
+                            : nameAnimation === "typing-scramble"
+                            ? "Matrix Decrypt"
+                            : nameAnimation === "typing-multi"
+                            ? "Role Rotator"
+                            : nameAnimation === "typing-once"
+                            ? "Single Pass"
+                            : "Continuous Loop"}
+                        </span>
+                      </div>
+
+                      {/* Cursor Style (for non-scramble) */}
+                      {nameAnimation !== "typing-scramble" && (
+                        <div>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <label className="text-[11px] font-semibold text-zinc-300">
+                              Cursor Style
+                            </label>
+                            <span className="text-[10px] text-zinc-500 font-mono">Blinks in accent</span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2">
+                            {[
+                              { id: "bar", label: "| Bar", desc: "Classic line" },
+                              { id: "block", label: "█ Block", desc: "Terminal style" },
+                              { id: "underscore", label: "_ Under", desc: "Bottom cursor" },
+                            ].map((c) => (
+                              <button
+                                key={c.id}
+                                type="button"
+                                onClick={() => setTypewriterCursor(c.id)}
+                                className={cn(
+                                  "p-2 rounded-xl border text-center transition-all",
+                                  typewriterCursor === c.id
+                                    ? "border-violet-400 bg-violet-500/20 text-white ring-1 ring-violet-400"
+                                    : "border-white/10 text-zinc-400 hover:text-zinc-200 hover:bg-white/5",
+                                )}
+                              >
+                                <p className="text-xs font-semibold font-mono">{c.label}</p>
+                                <p className="text-[10px] text-zinc-500">{c.desc}</p>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Typing Speed */}
+                      {nameAnimation !== "typing-scramble" && (
+                        <div>
+                          <label className="text-[11px] font-semibold text-zinc-300 block mb-1.5">
+                            Typing Cadence & Speed
+                          </label>
+                          <div className="grid grid-cols-3 gap-2">
+                            {[
+                              { id: "fast", label: "⚡ Fast", desc: "70ms keystroke" },
+                              { id: "normal", label: "🎯 Natural", desc: "110ms keystroke" },
+                              { id: "slow", label: "🌊 Smooth", desc: "180ms keystroke" },
+                            ].map((s) => (
+                              <button
+                                key={s.id}
+                                type="button"
+                                onClick={() => setTypewriterSpeed(s.id)}
+                                className={cn(
+                                  "p-2 rounded-xl border text-center transition-all",
+                                  typewriterSpeed === s.id
+                                    ? "border-violet-400 bg-violet-500/20 text-white ring-1 ring-violet-400"
+                                    : "border-white/10 text-zinc-400 hover:text-zinc-200 hover:bg-white/5",
+                                )}
+                              >
+                                <p className="text-xs font-semibold">{s.label}</p>
+                                <p className="text-[10px] text-zinc-500">{s.desc}</p>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Multi-Role Phrases Input */}
+                      {nameAnimation === "typing-multi" && (
+                        <div className="space-y-2 pt-2 border-t border-white/5">
+                          <div className="flex items-center justify-between">
+                            <label className="text-[11px] font-semibold text-zinc-300">
+                              Rotating Roles / Phrases (Comma-separated)
+                            </label>
+                            <span className="text-[10px] text-zinc-500 font-mono">
+                              {typewriterPhrases.split(",").filter((p) => p.trim()).length || 1} phrase(s)
+                            </span>
+                          </div>
+                          <input
+                            type="text"
+                            value={typewriterPhrases}
+                            placeholder="DevOps Engineer, Cloud Architect, Open Source Creator"
+                            onChange={(e) => setTypewriterPhrases(e.target.value.slice(0, 300))}
+                            className="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-zinc-200 outline-none placeholder:text-zinc-600 focus:border-violet-400/50 transition-colors"
+                          />
+                          <p className="text-[10px] text-zinc-500">
+                            💡 The live loop will type the first title, pause, backspace it away, and type the next title in order!
+                          </p>
+
+                          {/* Quick Suggestions */}
+                          <div className="space-y-1.5 pt-1">
+                            <span className="text-[10px] text-zinc-400 font-medium">Quick Presets:</span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {[
+                                { label: "💻 Tech", value: "Full Stack Engineer, Cloud Architect, Open Source Builder" },
+                                { label: "🎨 Creative", value: "UI/UX Designer, Brand Strategist, 3D Motion Artist" },
+                                { label: "🚀 Founder", value: "Startup Founder, Angel Investor, Tech Advisor" },
+                                { label: "🎙️ Creator", value: "Tech YouTuber, Podcaster, Newsletter Writer" },
+                              ].map((item) => (
+                                <button
+                                  key={item.label}
+                                  type="button"
+                                  onClick={() => setTypewriterPhrases(item.value)}
+                                  className="text-[10px] px-2 py-1 rounded-lg bg-zinc-900 border border-white/10 hover:border-violet-400/50 hover:text-violet-300 text-zinc-400 transition-colors"
+                                >
+                                  {item.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Mode description hints */}
+                      {nameAnimation === "typing-terminal" && (
+                        <div className="text-[11px] text-emerald-400/90 bg-emerald-500/[0.08] border border-emerald-500/20 rounded-xl p-2.5 flex items-start gap-2">
+                          <Terminal className="w-4 h-4 shrink-0 mt-0.5 text-emerald-400" />
+                          <span>
+                            <strong>Terminal Shell Mode:</strong> Prepends an authentic shell prompt (<code className="font-mono">$ </code>) and renders with a retro solid block cursor in terminal emerald or your accent gradient!
+                          </span>
+                        </div>
+                      )}
+
+                      {nameAnimation === "typing-scramble" && (
+                        <div className="text-[11px] text-cyan-400/90 bg-cyan-500/[0.08] border border-cyan-500/20 rounded-xl p-2.5 flex items-start gap-2">
+                          <Sparkles className="w-4 h-4 shrink-0 mt-0.5 text-cyan-400" />
+                          <span>
+                            <strong>Matrix Decrypt Mode:</strong> Your name decrypts dynamically using high-speed glyph permutations (<code className="font-mono">!&lt;&gt;-_/[]&#123;&#125;—=*^?#</code>) into crystal-clear gradient text, then smoothly rescrambles periodically.
+                          </span>
+                        </div>
+                      )}
+
+                      {nameAnimation === "typing-once" && (
+                        <div className="text-[11px] text-violet-400/90 bg-violet-500/[0.08] border border-violet-500/20 rounded-xl p-2.5 flex items-start gap-2">
+                          <Sparkles className="w-4 h-4 shrink-0 mt-0.5 text-violet-400" />
+                          <span>
+                            <strong>Type-Once Mode:</strong> Types your name smoothly once when the page loads with a blinking cursor, then holds permanently without deleting.
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Display Name Gradient Preset */}

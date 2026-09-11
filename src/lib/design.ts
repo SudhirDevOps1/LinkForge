@@ -105,10 +105,16 @@ export interface DesignPrefs {
   avatarAuraBlur?: string;
 
   // ── Display Name Typography & Animation ────────────────────────────────────────
-  /** Display name animation style: "none" | "gradient-flow" | "neon-pulse" | "shimmer" | "float" */
+  /** Display name animation style: "none" | "typing" | "typing-terminal" | "typing-scramble" | "typing-once" | "typing-multi" | "gradient-flow" | "neon-pulse" | "shimmer" | "float" | "glitch" | "bounce" */
   nameAnimation?: string;
-  /** Gradient color preset for name text: "violet-cyan" | "sunset" | "neon-matrix" | "golden-fire" | "cyberpunk" */
+  /** Gradient color preset for name text: "violet-cyan" | "sunset" | "neon-matrix" | "golden-fire" | "cyberpunk" or custom linear-gradient(...) */
   nameGradient?: string;
+  /** Optional comma-separated phrases for multi-role typewriter loop */
+  typewriterPhrases?: string;
+  /** Cursor style for typewriter: "bar" | "block" | "underscore" | "pulse" */
+  typewriterCursor?: string;
+  /** Typewriter typing speed: "fast" | "normal" | "slow" */
+  typewriterSpeed?: string;
 
   // ── Elite Public Bio Website Features ───────────────────────────────────────
   /** Optional creator status text badge (e.g. "🟢 Available for work", "🚀 Building LinkForge") */
@@ -283,11 +289,15 @@ export function clampDesign(prefs: DesignPrefs): DesignPrefs {
   if (str40(prefs.avatarAuraSpeed)) out.avatarAuraSpeed = str40(prefs.avatarAuraSpeed)!;
   if (str40(prefs.avatarAuraBlur)) out.avatarAuraBlur = str40(prefs.avatarAuraBlur)!;
 
-  // ── Display Name Animation ───────────────────────────────────────────────────
   if (str40(prefs.nameAnimation)) out.nameAnimation = str40(prefs.nameAnimation)!;
   if (typeof prefs.nameGradient === "string" && prefs.nameGradient.trim()) {
     out.nameGradient = prefs.nameGradient.trim().slice(0, 250);
   }
+  if (prefs.typewriterPhrases && typeof prefs.typewriterPhrases === "string") {
+    out.typewriterPhrases = prefs.typewriterPhrases.trim().slice(0, 300);
+  }
+  if (str40(prefs.typewriterCursor)) out.typewriterCursor = str40(prefs.typewriterCursor)!;
+  if (str40(prefs.typewriterSpeed)) out.typewriterSpeed = str40(prefs.typewriterSpeed)!;
 
   // ── Elite Public Bio Website Features ───────────────────────────────────────
   if (prefs.statusBadge && typeof prefs.statusBadge === "string") {
