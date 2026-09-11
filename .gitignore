@@ -88,3 +88,10 @@ Desktop.ini
 !.vscode/extensions.json
 *.swp
 *.swo
+
+# AI Agent Assistant Guidelines
+agent.md
+agents.md
+AGENTS.md
+claude.md
+CLAUDE.md
