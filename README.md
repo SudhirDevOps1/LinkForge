@@ -87,7 +87,7 @@ Runs on any database · Any object storage · Any cloud host · 100% self-hostab
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │                                  CORE APPLICATION ENGINES                              │
 ├──────────────────────────┬─────────────────────────────┬───────────────────────────────┤
-│ 🔐 Better Auth Stack     │ ✍️ Daily Blog Engine         │ 🛍️ Creator Studio            │
+│ 🔐 Better Auth Stack     │ ✍️ Daily Blog Engine         │ 🛍️ Creator Studio           │
 │ • WebAuthn Passkeys      │ • S3/B2 Object Storage      │ • Video Courses & Syllabi     │
 │ • RFC 6238 TOTP 2FA      │ • Dual Manifest Healing     │ • 1:1 Mentorship Booking      │
 │ • Multi-Tenant Orgs      │ • Markdown Live Editor      │ • Digital File Fulfillment    │
