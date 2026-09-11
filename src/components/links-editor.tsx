@@ -30,7 +30,9 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
+  Calendar,
   Check,
+  Clock,
   Copy,
   CopyPlus,
   Download,
@@ -79,6 +81,12 @@ const SIZE_LABELS: Record<string, string> = {
 
 const TYPE_LABELS: Record<string, string> = {
   link: "🔗 Link (Generic)",
+  lead_magnet: "🎁 Freebie / Lead Magnet (Email capture)",
+  countdown: "⏳ Launch / Event Countdown Timer",
+  cal: "📅 1:1 Booking / Calendar (Cal / Calendly)",
+  contact: "📬 Contact & Business Inquiry Form",
+  product: "🛍️ Digital Product / Store Item",
+  course: "🎓 Course / Video Curriculum",
   file: "📁 File / Download",
   video: "🎬 Video",
   audio: "🎵 Audio",
@@ -833,6 +841,10 @@ export function LinksEditor({
             <div className="flex flex-wrap gap-1.5">
               {[
                 { type: "link", label: "🔗 Link", icon: "link" },
+                { type: "lead_magnet", label: "🎁 Freebie / Lead Magnet", icon: "download" },
+                { type: "countdown", label: "⏳ Launch Countdown", icon: "clock" },
+                { type: "cal", label: "📅 1:1 Booking", icon: "calendar" },
+                { type: "contact", label: "📬 Inquiry Form", icon: "mail" },
                 { type: "image", label: "🖼️ Image", icon: "camera" },
                 { type: "pdf", label: "📄 PDF", icon: "file" },
                 { type: "upi", label: "💳 UPI Pay", icon: "upi" },
@@ -939,6 +951,111 @@ export function LinksEditor({
                     />
                   </Field>
                 </div>
+              </div>
+            )}
+
+            {/* Specialized Countdown Helper */}
+            {form.type === "countdown" && (
+              <div className="sm:col-span-2 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-3">
+                <div className="flex items-center gap-2 text-amber-300 font-semibold text-xs uppercase tracking-wider">
+                  <Clock className="h-4 w-4" />
+                  <span>Interactive Launch / Event Countdown Helper</span>
+                </div>
+                <p className="text-xs text-zinc-400">
+                  Renders a real-time live ticking countdown timer card on your public bio page.
+                </p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Field label="Target Date & Time" hint="The exact moment countdown ends">
+                    <Input
+                      type="datetime-local"
+                      value={form.expiresAt ? form.expiresAt.slice(0, 16) : ""}
+                      onChange={(e) => {
+                        const val = e.target.value ? new Date(e.target.value).toISOString() : "";
+                        setForm((prev) => ({ ...prev, expiresAt: val }));
+                      }}
+                    />
+                  </Field>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-zinc-300">Quick Date Presets</label>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {[
+                        { label: "+24 Hours", hours: 24 },
+                        { label: "+3 Days", hours: 72 },
+                        { label: "+7 Days", hours: 168 },
+                        { label: "+30 Days", hours: 720 },
+                      ].map((preset) => (
+                        <button
+                          key={preset.label}
+                          type="button"
+                          onClick={() => {
+                            const d = new Date(Date.now() + preset.hours * 3600 * 1000);
+                            setForm((prev) => ({ ...prev, expiresAt: d.toISOString() }));
+                          }}
+                          className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs text-amber-300 hover:bg-amber-500/20"
+                        >
+                          {preset.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Specialized Lead Magnet Helper */}
+            {form.type === "lead_magnet" && (
+              <div className="sm:col-span-2 rounded-2xl border border-fuchsia-500/30 bg-fuchsia-500/5 p-4 space-y-3">
+                <div className="flex items-center gap-2 text-fuchsia-300 font-semibold text-xs uppercase tracking-wider">
+                  <Download className="h-4 w-4" />
+                  <span>Freebie & Lead Magnet (Email Capture to Unlock)</span>
+                </div>
+                <p className="text-xs text-zinc-400">
+                  Visitors must enter their email to unlock this download. All collected emails are stored in your Subscribers CRM and synced with Mailchimp automatically.
+                </p>
+                <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 text-[11px] text-zinc-400 flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-fuchsia-400 shrink-0" />
+                  <span>Put the file download link or PDF URL in &quot;Destination URL&quot; above. It will be protected and only shown to verified subscribers.</span>
+                </div>
+              </div>
+            )}
+
+            {/* Specialized Calendar / Cal Helper */}
+            {form.type === "cal" && (
+              <div className="sm:col-span-2 rounded-2xl border border-sky-500/30 bg-sky-500/5 p-4 space-y-3">
+                <div className="flex items-center gap-2 text-sky-300 font-semibold text-xs uppercase tracking-wider">
+                  <Calendar className="h-4 w-4" />
+                  <span>1:1 Meeting & Consultation Booking</span>
+                </div>
+                <p className="text-xs text-zinc-400">
+                  Embeds your Calendly or Cal.com scheduler directly inside your public bio page so visitors can schedule calls without leaving your site.
+                </p>
+                <Field label="Calendar URL" hint="e.g. https://calendly.com/yourname/30min or https://cal.com/yourname">
+                  <Input
+                    placeholder="https://calendly.com/username/call"
+                    value={form.url}
+                    onChange={(e) => setForm({ ...form, url: e.target.value })}
+                  />
+                </Field>
+              </div>
+            )}
+
+            {/* Specialized Contact Helper */}
+            {form.type === "contact" && (
+              <div className="sm:col-span-2 rounded-2xl border border-violet-500/30 bg-violet-500/5 p-4 space-y-3">
+                <div className="flex items-center gap-2 text-violet-300 font-semibold text-xs uppercase tracking-wider">
+                  <MessageCircle className="h-4 w-4" />
+                  <span>Direct Business Inquiry & Contact Form</span>
+                </div>
+                <p className="text-xs text-zinc-400">
+                  Renders an inquiry card on your bio. Visitors can send inquiries, proposals, or sponsorship requests directly to your email.
+                </p>
+                <Field label="Receiving Email (or mailto: link)" hint="Where inquiries should be sent">
+                  <Input
+                    placeholder="creator@example.com"
+                    value={form.url.replace(/^mailto:/, "")}
+                    onChange={(e) => setForm({ ...form, url: e.target.value.startsWith("mailto:") ? e.target.value : `mailto:${e.target.value}` })}
+                  />
+                </Field>
               </div>
             )}
 

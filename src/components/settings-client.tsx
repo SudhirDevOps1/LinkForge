@@ -76,6 +76,11 @@ interface ProfileShape {
   noIndex: boolean;
   hidePublicStats: boolean;
   announcement: AnnouncementShape | null;
+  metaPixelId: string | null;
+  tiktokPixelId: string | null;
+  googleAnalyticsId: string | null;
+  mailchimpApiKey: string | null;
+  upiId: string | null;
 }
 
 async function api<T = Record<string, unknown>>(path: string, init?: RequestInit): Promise<T> {
@@ -112,6 +117,8 @@ export function SettingsClient({
           { id: "privacy", label: "Privacy", icon: <Shield className="h-4 w-4" /> },
           { id: "avatar", label: "Avatar", icon: <Camera className="h-4 w-4" /> },
           { id: "data", label: "Data", icon: <Database className="h-4 w-4" /> },
+          { id: "monetization", label: "Monetization", icon: <KeyRound className="h-4 w-4" /> },
+          { id: "pixels", label: "Pixels & CRM", icon: <Plug className="h-4 w-4" /> },
           { id: "webhooks", label: "Webhooks", icon: <Webhook className="h-4 w-4" /> },
           { id: "keys", label: "API Keys", icon: <KeyRound className="h-4 w-4" /> },
         ]}
@@ -126,6 +133,8 @@ export function SettingsClient({
       {tab === "privacy" ? <PrivacyTab profile={profile} /> : null}
       {tab === "avatar" ? <AvatarTab profile={profile} /> : null}
       {tab === "data" ? <DataTab /> : null}
+      {tab === "monetization" ? <MonetizationTab profile={profile} /> : null}
+      {tab === "pixels" ? <PixelsTab profile={profile} /> : null}
       {tab === "webhooks" ? <WebhooksTab initialHooks={initialHooks} /> : null}
       {tab === "keys" ? <ApiKeysTab initialKeys={initialKeys} /> : null}
     </div>
@@ -1203,14 +1212,143 @@ function ApiKeysTab({ initialKeys }: { initialKeys: ApiKeyRow[] }) {
               <p className="text-[11px] text-zinc-400 leading-relaxed">
                 <strong className="text-zinc-200">GitHub Actions & Cron Jobs:</strong> Roz subah automatically naye blog posts ya YouTube videos LinkForge bio par add/update karne ke liye aap GitHub Actions workflow mein ye API call chala sakte hain.
               </p>
+              <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1.5">
+                <p className="font-semibold text-white flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-[#E01E5A]" /> Slack / CRM Automation
+                </p>
+                <p className="text-zinc-400 leading-relaxed text-[11px]">
+                  Zapier, Make ya Slack se connect karke instant leads alert aur automatic welcome email sequence trigger kar sakte hain.
+                </p>
+              </div>
             </div>
           </div>
         )}
       </Card>
+    </div>
+  );
+}
 
-      <p className="flex items-center gap-2 text-xs text-zinc-600">
-        <Loader2 className="h-3 w-3" /> API keys are stored as salted SHA-256 hashes — raw keys cannot be recovered.
-      </p>
+
+// ---- Monetization & UPI -----------------------------------------------------------
+function MonetizationTab({ profile }: { profile: ProfileShape }) {
+  const [form, setForm] = useState({
+    upiId: profile.upiId ?? "",
+  });
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    setSaving(true);
+    try {
+      await api("/api/profile", { method: "PATCH", body: JSON.stringify(form) });
+      toast.success("Monetization settings saved.");
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <Card className="space-y-5">
+        <h2 className="font-display text-lg font-semibold">Payment Integrations</h2>
+        <p className="text-sm text-zinc-400">Configure direct checkout and tip jar payments.</p>
+        <div className="space-y-4">
+          <Field label="Global UPI ID (India)" hint="Receive 0% fee payments directly via Google Pay, PhonePe, and Paytm.">
+            <Input
+              value={form.upiId}
+              onChange={(e) => setForm({ ...form, upiId: e.target.value })}
+              placeholder="e.g. creator@okicici"
+            />
+          </Field>
+          <div className="p-3 rounded-xl bg-black/30 border border-white/5 flex items-start gap-2.5">
+            <Sparkles className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+            <p className="text-[11px] text-zinc-400 leading-relaxed">
+              When a visitor buys your digital product or sends a tip, the payment will go directly to this UPI ID instantly.
+            </p>
+          </div>
+        </div>
+        <div className="mt-4 flex justify-end">
+          <Button onClick={save} loading={saving} variant="primary">
+            Save Payments
+          </Button>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// ---- Pixels & CRM -----------------------------------------------------------------
+function PixelsTab({ profile }: { profile: ProfileShape }) {
+  const [form, setForm] = useState({
+    metaPixelId: profile.metaPixelId ?? "",
+    tiktokPixelId: profile.tiktokPixelId ?? "",
+    googleAnalyticsId: profile.googleAnalyticsId ?? "",
+    mailchimpApiKey: profile.mailchimpApiKey ?? "",
+  });
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    setSaving(true);
+    try {
+      await api("/api/profile", { method: "PATCH", body: JSON.stringify(form) });
+      toast.success("Marketing settings saved.");
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <Card className="space-y-5">
+        <h2 className="font-display text-lg font-semibold">Retargeting Pixels</h2>
+        <p className="text-sm text-zinc-400">Track visitors and run retargeting ads.</p>
+        <div className="space-y-4">
+          <Field label="Meta (Facebook) Pixel ID">
+            <Input
+              value={form.metaPixelId}
+              onChange={(e) => setForm({ ...form, metaPixelId: e.target.value })}
+              placeholder="e.g. 123456789012345"
+            />
+          </Field>
+          <Field label="TikTok Pixel ID">
+            <Input
+              value={form.tiktokPixelId}
+              onChange={(e) => setForm({ ...form, tiktokPixelId: e.target.value })}
+              placeholder="e.g. CXXXXXX..."
+            />
+          </Field>
+          <Field label="Google Analytics (G-XXXXXXX)">
+            <Input
+              value={form.googleAnalyticsId}
+              onChange={(e) => setForm({ ...form, googleAnalyticsId: e.target.value })}
+              placeholder="e.g. G-ABC123XYZ"
+            />
+          </Field>
+        </div>
+      </Card>
+
+      <Card className="space-y-5">
+        <h2 className="font-display text-lg font-semibold">Email CRM Sync</h2>
+        <p className="text-sm text-zinc-400">Automatically sync lead magnet subscribers to your CRM.</p>
+        <div className="space-y-4">
+          <Field label="Mailchimp API Key">
+            <Input
+              type="password"
+              value={form.mailchimpApiKey}
+              onChange={(e) => setForm({ ...form, mailchimpApiKey: e.target.value })}
+              placeholder="e.g. xyz123-us21"
+            />
+          </Field>
+        </div>
+        <div className="mt-4 flex justify-end">
+          <Button onClick={save} loading={saving} variant="primary">
+            Save Integrations
+          </Button>
+        </div>
+      </Card>
     </div>
   );
 }

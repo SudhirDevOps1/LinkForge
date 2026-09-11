@@ -131,6 +131,12 @@ export const profiles = pgTable(
       url?: string;
       expiresAt?: string; // ISO date string
     } | null>(),
+    // 📈 Marketing & Monetization
+    metaPixelId: text("meta_pixel_id"),
+    tiktokPixelId: text("tiktok_pixel_id"),
+    googleAnalyticsId: text("google_analytics_id"),
+    mailchimpApiKey: text("mailchimp_api_key"),
+    upiId: text("upi_id"), // Global UPI ID for creator tips/payments
     // Manual custom design (accent/radius/font/icon-size) — nullable JSON,
     // theme/layout ke upar override layer. NULL = theme defaults.
     design: jsonb("design").$type<{

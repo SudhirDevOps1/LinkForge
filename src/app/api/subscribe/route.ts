@@ -43,7 +43,12 @@ export const POST = handle(async (req: Request) => {
 
   // 1. Check profile exists and is published
   const [profile] = await db
-    .select({ id: profiles.id, isPublished: profiles.isPublished, displayName: profiles.displayName })
+    .select({
+      id: profiles.id,
+      isPublished: profiles.isPublished,
+      displayName: profiles.displayName,
+      mailchimpApiKey: profiles.mailchimpApiKey,
+    })
     .from(profiles)
     .where(eq(profiles.slug, slug))
     .limit(1);
@@ -104,6 +109,36 @@ export const POST = handle(async (req: Request) => {
     ipHash,
     userAgent,
   });
+
+  // 6. Automatic Mailchimp Audience Sync if configured by creator
+  if (profile.mailchimpApiKey && profile.mailchimpApiKey.includes("-")) {
+    const dc = profile.mailchimpApiKey.split("-")[1];
+    if (dc) {
+      // Async fire-and-forget sync to Mailchimp list
+      fetch(`https://${dc}.api.mailchimp.com/3.0/lists`, {
+        headers: { Authorization: `Bearer ${profile.mailchimpApiKey}` },
+      })
+        .then(async (res) => {
+          if (!res.ok) return;
+          const listData = (await res.json().catch(() => null)) as { lists?: Array<{ id: string }> } | null;
+          const firstListId = listData?.lists?.[0]?.id;
+          if (firstListId) {
+            await fetch(`https://${dc}.api.mailchimp.com/3.0/lists/${firstListId}/members`, {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${profile.mailchimpApiKey}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                email_address: verification.email,
+                status: "subscribed",
+              }),
+            }).catch(() => {});
+          }
+        })
+        .catch(() => {});
+    }
+  }
 
   return json(
     {

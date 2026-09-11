@@ -28,6 +28,7 @@ import {
   Link2,
   Mail,
   Maximize2,
+  MessageCircle,
   Music,
   Play,
   QrCode,
@@ -43,6 +44,7 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { CountdownCard } from "./countdown-card";
 import { DigitalCheckoutDrawer, type DigitalItem } from "./digital-checkout-drawer";
 
 export function linkIcon(
@@ -281,6 +283,7 @@ export interface BioProfileShape {
   design?: DesignPrefs | null;
   /** 🔒 Privacy: view count public page par dikhana hai ya nahi */
   hidePublicStats?: boolean;
+  upiId?: string | null;
 }
 
 interface ActiveMediaModal {
@@ -1510,6 +1513,68 @@ export function BioRenderer({
                       {link.title.toLowerCase().includes("free") ? "Download" : "Get Now"}
                     </button>
                   </div>
+                ) : link.type === "countdown" ? (
+                  /* ⏳ Interactive Live Ticking Launch / Event Countdown Timer Card */
+                  <CountdownCard
+                    link={link}
+                    accent={accent}
+                    textColor={v.text}
+                    mutedColor={v.muted}
+                    iconBox={iconBox}
+                    onOpen={() => {
+                      if (link.url && link.url !== "#") {
+                        if (trackClicks) {
+                          window.open(hrefFor(link), "_blank");
+                        } else {
+                          window.open(link.url, "_blank");
+                        }
+                      }
+                    }}
+                  />
+                ) : link.type === "contact" ? (
+                  /* 📬 Direct Business Inquiry & Contact Card */
+                  <div
+                    onClick={() => openDigitalCheckout(link)}
+                    className="flex items-center gap-3.5 cursor-pointer w-full text-left"
+                  >
+                    <span
+                      className="flex shrink-0 items-center justify-center rounded-xl border"
+                      style={{
+                        width: iconBox,
+                        height: iconBox,
+                        borderColor: "#8b5cf640",
+                        color: "#a78bfa",
+                        background: "#8b5cf615",
+                      }}
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="truncate font-semibold text-sm" style={{ color: v.text }}>
+                          {link.title}
+                        </p>
+                        <span className="rounded-md bg-violet-500/20 px-1.5 py-0.5 text-[10px] font-bold text-violet-300 border border-violet-500/30">
+                          INQUIRY
+                        </span>
+                      </div>
+                      {link.description && (
+                        <p className="mt-0.5 truncate text-xs" style={{ color: v.muted }}>
+                          {link.description}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openDigitalCheckout(link);
+                      }}
+                      className="rounded-full bg-violet-600 px-3 py-1 text-xs font-bold text-white shadow-sm shrink-0 hover:bg-violet-500 transition-colors"
+                    >
+                      Contact
+                    </button>
+                  </div>
                 ) : link.type === "cal" ? (
                   /* 📅 Calendly / Cal.com Meeting Booking Card */
                   <div
@@ -2138,6 +2203,7 @@ export function BioRenderer({
         displayName={profile.displayName || "Creator"}
         onClose={() => setCheckoutItem(null)}
         accentColor={accent}
+        globalUpiId={profile.upiId ?? undefined}
       />
     </div>
   );

@@ -134,6 +134,12 @@ export const profiles = sqliteTable(
       url?: string;
       expiresAt?: string;
     } | null>(),
+    // 📈 Marketing & Monetization
+    metaPixelId: text("meta_pixel_id"),
+    tiktokPixelId: text("tiktok_pixel_id"),
+    googleAnalyticsId: text("google_analytics_id"),
+    mailchimpApiKey: text("mailchimp_api_key"),
+    upiId: text("upi_id"), // Global UPI ID for creator tips/payments
     // Manual custom design (pg jsonb ka mirror — JSON text).
     design: text("design", { mode: "json" }).$type<{
       accent?: string;

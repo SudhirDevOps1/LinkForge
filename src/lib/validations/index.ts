@@ -41,6 +41,9 @@ export const LINK_TYPES = [
   "course",    // Course playlist / curriculum
   "playlist",  // Video / audio playlist
   "product",   // Store / Digital product with price
+  "lead_magnet", // 🎁 Free digital download unlocked via email capture
+  "countdown",   // ⏳ Live ticking event / launch countdown timer
+  "contact",     // 📬 Direct contact & inquiry form
   "cal",       // Calendly / Cal.com booking
   "substack",  // Substack / Medium newsletter article
   "discord",   // Discord community
@@ -141,6 +144,11 @@ export const profileUpdateSchema = z.object({
   noIndex: z.boolean().optional(),
   hidePublicStats: z.boolean().optional(),
   announcement: announcementSchema,
+  metaPixelId: z.string().trim().max(100).optional(),
+  tiktokPixelId: z.string().trim().max(100).optional(),
+  googleAnalyticsId: z.string().trim().max(100).optional(),
+  mailchimpApiKey: z.string().trim().max(200).optional(),
+  upiId: z.string().trim().max(100).optional(),
 });
 
 // ---- Links ------------------------------------------------------------------

@@ -45,6 +45,11 @@ export default async function SettingsPage() {
         noIndex: profile.noIndex ?? false,
         hidePublicStats: profile.hidePublicStats ?? false,
         announcement: (profile.announcement as { text: string; emoji?: string; url?: string; expiresAt?: string } | null) ?? null,
+        metaPixelId: profile.metaPixelId ?? null,
+        tiktokPixelId: profile.tiktokPixelId ?? null,
+        googleAnalyticsId: profile.googleAnalyticsId ?? null,
+        mailchimpApiKey: profile.mailchimpApiKey ?? null,
+        upiId: profile.upiId ?? null,
       }}
       webhooks={hooks.map((w) => ({
         id: w.id,
