@@ -6,6 +6,7 @@ import { mkdir, readdir, readFile, stat, unlink, writeFile } from "fs/promises";
 import path from "path";
 import os from "os";
 import { sanitizeKey } from "./index";
+import { decryptFilePayload, encryptFilePayload, isPayloadEncrypted } from "@/lib/file-cipher";
 import type { StorageAdapter } from "./types";
 
 const UPLOAD_DIR =
@@ -59,7 +60,10 @@ export class LocalStorageAdapter implements StorageAdapter {
     const safeKey = sanitizeKey(key);
     const target = path.join(/*turbopackIgnore: true*/ UPLOAD_DIR, safeKey);
     await this.ensureDir(target);
-    const buf = Buffer.isBuffer(body) ? body : Buffer.from(body);
+    let buf = Buffer.isBuffer(body) ? body : Buffer.from(body);
+    if (!isPayloadEncrypted(buf)) {
+      buf = encryptFilePayload(buf);
+    }
     await writeFile(target, buf);
   }
 
@@ -69,7 +73,8 @@ export class LocalStorageAdapter implements StorageAdapter {
     const safeKey = sanitizeKey(key);
     const target = path.join(/*turbopackIgnore: true*/ UPLOAD_DIR, safeKey);
     try {
-      const data = await readFile(target);
+      const rawData = await readFile(target);
+      const data = isPayloadEncrypted(rawData) ? decryptFilePayload(rawData) : rawData;
       const ext = path.extname(safeKey).toLowerCase();
       const mimeMap: Record<string, string> = {
         ".jpg": "image/jpeg",

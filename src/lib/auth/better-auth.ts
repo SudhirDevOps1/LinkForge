@@ -47,6 +47,91 @@ const betterAuthSchema = {
   invitations: s.invitations,
 };
 
+import { decryptEmail, decryptField, encryptEmail, encryptField } from "@/lib/db-cipher";
+
+function encryptedDrizzleAdapter(drizzleDb: any, config: any) {
+  const baseFactory = drizzleAdapter(drizzleDb, config);
+  return (options: any) => {
+    const baseAdapter = baseFactory(options);
+    return {
+      ...baseAdapter,
+      async create(args: any) {
+        if (args.model === "user" && args.data) {
+          const cloned = { ...args.data };
+          if (cloned.email) cloned.email = encryptEmail(cloned.email);
+          if (cloned.name) cloned.name = encryptField(cloned.name);
+          const res: any = await baseAdapter.create({ ...args, data: cloned });
+          if (res) {
+            if (res.email) res.email = decryptEmail(res.email);
+            if (res.name) res.name = decryptField(res.name);
+          }
+          return res;
+        }
+        return baseAdapter.create(args);
+      },
+      async findOne(args: any) {
+        if (args.model === "user" && args.where) {
+          const transformedWhere = args.where.map((w: any) => {
+            if (w.field === "email" && typeof w.value === "string") {
+              return { ...w, value: encryptEmail(w.value) };
+            }
+            return w;
+          });
+          const res: any = await baseAdapter.findOne({ ...args, where: transformedWhere });
+          if (res) {
+            if (res.email) res.email = decryptEmail(res.email);
+            if (res.name) res.name = decryptField(res.name);
+          }
+          return res;
+        }
+        return baseAdapter.findOne(args);
+      },
+      async findMany(args: any) {
+        let where = args.where;
+        if (args.model === "user" && where) {
+          where = where.map((w: any) => {
+            if (w.field === "email" && typeof w.value === "string") {
+              return { ...w, value: encryptEmail(w.value) };
+            }
+            return w;
+          });
+        }
+        const res: any = await baseAdapter.findMany({ ...args, where });
+        if (args.model === "user" && Array.isArray(res)) {
+          return res.map((item: any) => {
+            if (item) {
+              if (item.email) item.email = decryptEmail(item.email);
+              if (item.name) item.name = decryptField(item.name);
+            }
+            return item;
+          });
+        }
+        return res;
+      },
+      async update(args: any) {
+        if (args.model === "user") {
+          const transformedWhere = args.where?.map((w: any) => {
+            if (w.field === "email" && typeof w.value === "string") {
+              return { ...w, value: encryptEmail(w.value) };
+            }
+            return w;
+          });
+          const transformedUpdate = { ...args.update };
+          if (transformedUpdate.email) transformedUpdate.email = encryptEmail(transformedUpdate.email);
+          if (transformedUpdate.name) transformedUpdate.name = encryptField(transformedUpdate.name);
+          const res: any = await baseAdapter.update({ ...args, where: transformedWhere, update: transformedUpdate });
+          if (res) {
+            if (res.email) res.email = decryptEmail(res.email);
+            if (res.name) res.name = decryptField(res.name);
+          }
+          return res;
+        }
+        return baseAdapter.update(args);
+      },
+    };
+  };
+}
+
 export const auth = betterAuth({
   appName: "LinkForge",
   baseURL: process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
@@ -56,7 +141,7 @@ export const auth = betterAuth({
     process.env.AUTH_SECRET ||
     process.env.SESSION_SECRET ||
     "linkforge-better-auth-secure-secret-entropy-32b",
-  database: drizzleAdapter(db, {
+  database: encryptedDrizzleAdapter(db, {
     provider: isSqliteProvider ? "sqlite" : "pg",
     schema: betterAuthSchema,
     usePlural: true,

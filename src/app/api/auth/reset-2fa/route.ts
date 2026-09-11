@@ -4,13 +4,14 @@
 // Allows users who enabled 2FA (Google Authenticator / 1Password) or have
 // backup codes to reset their credentials instantly without third-party email.
 // =============================================================================
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import { ApiError, assertSameOrigin, guardRateLimitDual, handle, json } from "@/lib/api";
 import { autoMigrate } from "@/db/auto-migrate";
 import { db } from "@/db";
 import { accounts, twoFactors, users } from "@/db/schema";
 import { verifyAltchaSolution } from "@/lib/altcha";
 import { hashPassword, signOutEverywhere, verifyPassword } from "@/lib/auth";
+import { encryptEmail } from "@/lib/db-cipher";
 import { verifyTotpToken } from "@/lib/totp";
 
 const DUMMY_HASH = "$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ012";
@@ -52,7 +53,7 @@ export const POST = handle(async (req: Request) => {
   const [user] = await db
     .select()
     .from(users)
-    .where(eq(users.email, email))
+    .where(or(eq(users.email, email), eq(users.email, encryptEmail(email))))
     .limit(1);
 
   if (!user) {

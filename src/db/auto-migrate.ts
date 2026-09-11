@@ -730,18 +730,17 @@ export async function autoMigrate(force = false): Promise<{ ok: boolean; count: 
 
       const anyDb = db as any;
 
-      // 1. Ensure users table has plain email and name for Better Auth & Drizzle compatibility
-      const { decryptEmail, decryptField } = await import("@/lib/db-cipher");
-      const rawUsers = await anyDb.select({ id: users.id, email: users.email, name: users.name }).from(users).limit(200);
+      // 1. Transparently encrypt users table email and name for at-rest database privacy
+      const rawUsers = await anyDb.select({ id: users.id, email: users.email, name: users.name }).from(users).limit(500);
       for (const u of rawUsers || []) {
-        const needsEmailDec = u.email && u.email.startsWith("enc:em:");
-        const needsNameDec = u.name && u.name.startsWith("enc:v1:");
-        if (needsEmailDec || needsNameDec) {
+        const needsEmailEnc = u.email && !u.email.startsWith("enc:em:");
+        const needsNameEnc = u.name && !u.name.startsWith("enc:v1:") && u.name.trim() !== "";
+        if (needsEmailEnc || needsNameEnc) {
           await anyDb
             .update(users)
             .set({
-              ...(needsEmailDec ? { email: decryptEmail(u.email) } : {}),
-              ...(needsNameDec ? { name: decryptField(u.name) } : {}),
+              ...(needsEmailEnc ? { email: encryptEmail(u.email) } : {}),
+              ...(needsNameEnc ? { name: encryptField(u.name) } : {}),
             })
             .where(eq(users.id, u.id));
         }

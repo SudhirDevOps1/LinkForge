@@ -78,7 +78,7 @@ export async function signUp(input: {
     existing = await db
       .select({ id: users.id })
       .from(users)
-      .where(eq(users.email, email))
+      .where(or(eq(users.email, email), eq(users.email, encryptEmail(email))))
       .limit(1);
   } catch (err) {
     const msg = String(err).toLowerCase();
@@ -88,7 +88,7 @@ export async function signUp(input: {
       existing = await db
         .select({ id: users.id })
         .from(users)
-        .where(eq(users.email, email))
+        .where(or(eq(users.email, email), eq(users.email, encryptEmail(email))))
         .limit(1);
     } else {
       throw err;
@@ -106,8 +106,8 @@ export async function signUp(input: {
     .insert(users)
     .values({
       id: crypto.randomUUID(),
-      email,
-      name: input.name.trim(),
+      email: encryptEmail(email),
+      name: encryptField(input.name.trim()),
       passwordHash: await hashPassword(input.password),
       emailVerified: false,
       createdAt: new Date(),
@@ -144,7 +144,7 @@ export async function signUp(input: {
     createdAt: new Date(),
     updatedAt: new Date(),
   });
-  return user;
+  return { ...user, email: decryptEmail(user.email), name: decryptField(user.name) };
 }
 
 // ---- Sessions ----------------------------------------------------------------
@@ -174,41 +174,49 @@ export async function createSession(
 
 /** httpOnly cookie set karo — sirf Route Handlers / Server Actions se call karein */
 export async function setSessionCookie(token: string, expiresAt: Date) {
-  const jar = await cookies();
-  jar.set(SESSION_COOKIE, token, {
-    httpOnly: true,
-    sameSite: "lax", // CSRF mitigation
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    expires: expiresAt,
-  });
-
-  // Seamless Better Auth session cookie bridge
   try {
-    const secret =
-      process.env.BETTER_AUTH_SECRET ||
-      process.env.AUTH_SECRET ||
-      process.env.SESSION_SECRET ||
-      "linkforge-better-auth-secure-secret-entropy-32b";
-    const signature = crypto.createHmac("sha256", secret).update(token).digest("base64");
-    const signedValue = `${token}.${encodeURIComponent(signature)}`;
-    jar.set("better-auth.session_token", signedValue, {
+    const jar = await cookies();
+    jar.set(SESSION_COOKIE, token, {
       httpOnly: true,
-      sameSite: "lax",
+      sameSite: "lax", // CSRF mitigation
       secure: process.env.NODE_ENV === "production",
       path: "/",
       expires: expiresAt,
     });
-  } catch (err) {
-    console.warn("[auth] Failed to set Better Auth session cookie:", (err as Error).message);
+
+    // Seamless Better Auth session cookie bridge
+    try {
+      const secret =
+        process.env.BETTER_AUTH_SECRET ||
+        process.env.AUTH_SECRET ||
+        process.env.SESSION_SECRET ||
+        "linkforge-better-auth-secure-secret-entropy-32b";
+      const signature = crypto.createHmac("sha256", secret).update(token).digest("base64");
+      const signedValue = `${token}.${encodeURIComponent(signature)}`;
+      jar.set("better-auth.session_token", signedValue, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        expires: expiresAt,
+      });
+    } catch (err) {
+      console.warn("[auth] Failed to set Better Auth session cookie:", (err as Error).message);
+    }
+  } catch {
+    // Graceful fallback when invoked outside Next.js request scope
   }
 }
 
 export async function clearSessionCookie() {
-  const jar = await cookies();
-  jar.delete(SESSION_COOKIE);
-  jar.delete("better-auth.session_token");
-  jar.delete("better-auth.session_data");
+  try {
+    const jar = await cookies();
+    jar.delete(SESSION_COOKIE);
+    jar.delete("better-auth.session_token");
+    jar.delete("better-auth.session_data");
+  } catch {
+    // Graceful fallback when invoked outside Next.js request scope
+  }
 }
 
 export async function signIn(input: {
@@ -227,7 +235,7 @@ export async function signIn(input: {
     const res = await db
       .select()
       .from(users)
-      .where(eq(users.email, email))
+      .where(or(eq(users.email, email), eq(users.email, encryptEmail(email))))
       .limit(1);
     user = res[0];
   } catch (err) {
@@ -238,12 +246,20 @@ export async function signIn(input: {
       const res = await db
         .select()
         .from(users)
-        .where(eq(users.email, email))
+        .where(or(eq(users.email, email), eq(users.email, encryptEmail(email))))
         .limit(1);
       user = res[0];
     } else {
       throw err;
     }
+  }
+
+  if (user) {
+    user = {
+      ...user,
+      email: decryptEmail(user.email),
+      name: decryptField(user.name),
+    };
   }
 
   let passwordOk = false;
@@ -394,10 +410,11 @@ export async function requireUser(): Promise<SessionContext> {
 
 // ---- Password reset ------------------------------------------------------------
 export async function createPasswordReset(email: string): Promise<string | null> {
+  const cleanEmail = email.toLowerCase().trim();
   const [user] = await db
     .select()
     .from(users)
-    .where(eq(users.email, email.toLowerCase().trim()))
+    .where(or(eq(users.email, cleanEmail), eq(users.email, encryptEmail(cleanEmail))))
     .limit(1);
   if (!user) return null; // user-enumeration se bachne ke liye silent
   const token = randomToken(24);

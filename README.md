@@ -33,15 +33,16 @@ Runs on any database · Any object storage · Any cloud host · 100% self-hostab
 - [Overview](#-overview)
 - [System Architecture](#-system-architecture)
 - [Enterprise Feature Matrix](#-enterprise-feature-matrix)
-  - [🔐 Hardened Authentication & Passkeys](#1--hardened-authentication--passkeys)
+  - [🔐 Hardened Authentication & Better Auth Stack](#1--hardened-authentication--better-auth-plugin-stack)
   - [🛡️ Bot Defense & Rate Limiting](#2-️-bot-defense--rate-limiting)
-  - [📱 Multi-Device Responsive Presentation](#3--multi-device-responsive-presentation)
-  - [🔗 Dynamic Link & Bento Builder](#4--dynamic-link--bento-builder)
-  - [✍️ Serverless Object Storage Blog Engine](#5-️-serverless-object-storage-blog-engine)
-  - [🛍️ Creator Monetization Studio](#6-️-creator-monetization-studio)
-  - [📊 Privacy Analytics & OLAP Engine](#7--privacy-analytics--olap-engine)
-  - [🗄️ Multi-Dialect Database (21 Tables)](#8-️-multi-dialect-database-21-tables)
-  - [📦 Universal S3 Object Storage](#9--universal-s3-object-storage)
+  - [🔒 Zero-Knowledge Storage Bucket Encryption](#3--zero-knowledge-storage-bucket-encryption-file-cipher)
+  - [📱 Multi-Device Responsive Presentation](#4--multi-device-responsive-presentation)
+  - [🔗 Dynamic Link & Bento Builder](#5--dynamic-link--bento-builder)
+  - [✍️ Serverless Object Storage Blog Engine](#6-️-serverless-object-storage-blog-engine)
+  - [🛍️ Creator Monetization Studio](#7-️-creator-monetization-studio)
+  - [📊 Privacy Analytics & OLAP Engine](#8--privacy-analytics--olap-engine)
+  - [🗄️ Multi-Dialect Database (21 Tables)](#9-️-multi-dialect-database-21-tables)
+  - [📦 Universal S3 Object Storage](#10--universal-s3-object-storage)
 - [Quick Start](#-quick-start)
 - [Configuration & Environment Variables](#-configuration--environment-variables)
 - [Database Schema Reference](#-database-schema-reference-21-tables)
@@ -105,56 +106,63 @@ Runs on any database · Any object storage · Any cloud host · 100% self-hostab
 
 ## 🚀 Enterprise Feature Matrix
 
-### 1. 🔐 Hardened Authentication & Passkeys
-* **Better Auth Core Engine**: Built on the official `@better-auth/drizzle-adapter` supporting both PostgreSQL and SQLite.
-* **WebAuthn / FIDO2 Passkeys (`@better-auth/passkey`)**: Hardware-backed biometric authentication with public key verification.
-* **Two-Factor Authentication (`twoFactor`)**: Zero-cost TOTP authenticator app support (Google Authenticator, Microsoft Authenticator, 1Password) with 10 offline recovery backup codes.
+### 1. 🔐 Hardened Authentication & Better Auth Plugin Stack
+* **Transparent AES-256 Database Encryption (`db-cipher`)**: All sensitive PII (`users.email`, `users.name`, `subscribers.email`, `subscribers.name`) is encrypted at rest in Neon DB / Postgres / SQLite. Emails are encrypted with deterministic AES-256-CBC (`enc:em:...`) and names with AES-256-GCM (`enc:v1:...`). Database inspection and SQL dumps reveal **zero raw personal data**.
+* **Encrypted Drizzle Adapter**: Our custom `encryptedDrizzleAdapter` wraps `@better-auth/drizzle-adapter` to seamlessly transform queries (e.g. `WHERE email = ?` -> `WHERE email = enc:em:...`) and decrypt records in application memory so Better Auth plugins run with 100% native compatibility.
+* **WebAuthn / FIDO2 Passkeys (`@better-auth/passkey`)**: Hardware-backed biometric authentication via Touch ID, Face ID, Windows Hello, and YubiKeys with public-key cryptographic verification.
+* **Two-Factor Authentication (`twoFactor`)**: Zero-cost TOTP authenticator app support (Google Authenticator, Microsoft Authenticator, 1Password) with 10 offline recovery backup codes and visual QR Code generation.
+* **Phone Number OTP (`phoneNumber`)**: Free multi-channel dispatch (WhatsApp webhooks, Telegram bots, or console outbox) without expensive SMS vendor fees.
+* **Self-Sovereign 2FA Password Reset**: Users with active TOTP or backup codes can reset their credentials directly without third-party email dependencies.
 * **Multi-Tenant Organizations (`organization`)**: Workspace management with team role hierarchies (`owner`, `admin`, `member`) and time-limited invitations.
 * **Anonymous Guest Trials (`anonymous`)**: Instant creator customization exploration that converts seamlessly to permanent accounts.
 * **Administrative Controls (`admin`)**: Role-based access control, user bans, and audit-friendly session impersonation.
 
 ### 2. 🛡️ Bot Defense & Rate Limiting
-* **ALTCHA Proof-of-Work**: Eliminates tracking-based CAPTCHAs by issuing SHA-256 cryptographic challenges solved client-side.
+* **ALTCHA Proof-of-Work Shield**: Eliminates tracking-based CAPTCHAs by issuing SHA-256 cryptographic challenges solved client-side across Login, Signup, Password Reset, 2FA Reset, and Newsletter Subscriptions.
 * **Dual-Bucket Sliding Window Rate Limiting**: Simultaneous protection across IP origin buckets and target account email buckets with standard RFC `Retry-After: <sec>` headers.
-* **Live Lockout Countdown UX**: Live 1-second countdown cooldown banner and reactively disabled submission controls.
-* **Timing Attack Mitigation**: Constant-time `DUMMY_HASH` bcrypt verification to eliminate user enumeration side channels.
+* **Client-Side Throttling & Cooldown UX**: Live 1-second countdown cooldown banner and reactively disabled submission controls after repeated failed attempts.
+* **Generic Error Messages & Timing Attack Defense**: Constant-time `DUMMY_HASH` verification and generic error notifications ("Invalid email or password") eliminate user enumeration side channels.
 
-### 3. 📱 Multi-Device Responsive Presentation
+### 3. 🔒 Zero-Knowledge Storage Bucket Encryption (`file-cipher`)
+* **Payload Encryption at Rest**: Every media file, avatar, and document uploaded to Backblaze B2, S3, or local storage is encrypted before writing using AES-256-GCM with the `LENC\x01` binary magic header.
+* **Zero-Leak Storage Security**: Direct inspection of the storage bucket or local directory reveals only unreadable ciphertext; files are decrypted on-the-fly only during authenticated proxy streaming or download.
+
+### 4. 📱 Multi-Device Responsive Presentation
 * **Adaptive Mobile-First Layout**: Sleek, thumb-friendly vertical links on compact viewports (< 640px).
 * **Desktop Glassmorphism Framing**: Automatic transformation on tablets and wide screens into an elevated, centered glassmorphism canvas (`max-w-2xl`, subtle borders, backdrop-blur).
 * **Ambient Lighting Glow**: Eliminates empty dark voids on widescreen displays with ambient blurred color orbs.
 * **Dynamic Typography Scaling**: Display names, avatars, and bio descriptions scale seamlessly across mobile, desktop, and ultra-wide displays.
 
-### 4. 🔗 Dynamic Link & Bento Builder
+### 5. 🔗 Dynamic Link & Bento Builder
 * **Interactive Bento Grid**: Switch between vertical list mode and masonry Bento grid layouts with standard, wide, tall, and hero cards.
 * **12 Interactive Card Embeds**: YouTube player, Spotify streams, Twitter/X, Instagram, TikTok, GitHub repositories, PDF viewer, custom audio, email, phone, and standard links.
 * **Drag-and-Drop Reordering**: Smooth animations powered by `@dnd-kit`.
 * **Link Scheduling & Pinned Cards**: Automatic visibility triggers based on start and expiration dates, with pinned cards remaining fixed at the top.
 
-### 5. ✍️ Serverless Object Storage Blog Engine
+### 6. ✍️ Serverless Object Storage Blog Engine
 * **Direct Object Storage Persistence**: Long-form markdown articles and manifests are saved directly to your S3/B2 bucket (`blogs/${slug}/`).
 * **Dual Manifest Auto-Healing**: Maintains manifest synchronization across both profile slugs and internal UUIDs, auto-repairing legacy links on-the-fly.
 * **Instant Publication**: Uses Next.js dynamic routing with `revalidate = 0` and `Cache-Control: no-store` headers so new articles appear instantly.
 * **In-App Markdown Studio**: Live side-by-side editing, cover image uploads, tag assignment, and reading time calculation.
 
-### 6. 🛍️ Creator Monetization Studio
+### 7. 🛍️ Creator Monetization Studio
 * **Multi-Module Courses**: Structured masterclasses with chapter breakdowns, lesson duration badges, and sample preview tags.
 * **1:1 Mentorship Booking**: Dedicated consultation blocks with duration selectors and direct links to Cal.com, Calendly, or Google Meet.
 * **Digital Download Fulfillment**: Sell engineering PDFs, design UI kits, and source code bundles with instant post-purchase delivery.
 * **0% Commission Direct Payments**: Accept direct UPI peer-to-peer payments via QR code (Google Pay, PhonePe, Paytm) and global tip jars (Stripe, PayPal, Buy Me a Coffee).
 
-### 7. 📊 Privacy Analytics & OLAP Engine
+### 8. 📊 Privacy Analytics & OLAP Engine
 * **Zero Tracking Cookies**: 100% GDPR/CCPA compliant without cookie consent banners.
 * **Salted SHA-256 IP Hashes**: Visitor IPs are hashed with server entropy; raw IP addresses are never saved to disk.
 * **DuckDB In-Browser OLAP**: Query millions of visitor events using in-browser DuckDB WebAssembly.
 * **Compact Daily Rollups**: Aggregates raw views into daily buckets, reducing database storage requirements by **over 98%**.
 
-### 8. 🗄️ Multi-Dialect Database (21 Tables)
+### 9. 🗄️ Multi-Dialect Database (21 Tables)
 * **Unified Query Interface**: Powered by Drizzle ORM for PostgreSQL and SQLite.
 * **Zero-Config Auto-Migrator (`src/db/auto-migrate.ts`)**: Automatically provisions and verifies all 21 tables during cold starts.
 * **Single-Click Bootstrap Scripts**: Includes [`neon-reset.sql`](neon-reset.sql) and [`scripts/neon-reset.sql`](scripts/neon-reset.sql) for instant cloud database resets.
 
-### 9. 📦 Universal S3 Object Storage
+### 10. 📦 Universal S3 Object Storage
 * **Universal Adapter Interface**: Switch seamlessly between Backblaze B2, Cloudflare R2, AWS S3, MinIO, Vercel Blob, and Local Disk.
 * **Direct Client PUT**: Browser uploads stream directly to storage buckets using short-lived presigned tickets.
 * **Fail-Closed Magic Byte Validation**: Protects against executable spoofing by validating binary signatures before committing records.
