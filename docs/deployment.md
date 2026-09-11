@@ -1,100 +1,96 @@
-# ☁️ Deployment Guides — 5 Platforms, One Codebase
+# ☁️ Multi-Cloud Deployment Guide
 
-> **package.json deploy scripts** (apne package.json me add karein):
-> ```json
-> "deploy:vercel": "vercel --prod",
-> "deploy:cloudflare": "opennextjs-cloudflare build && wrangler pages deploy",
-> "deploy:netlify": "netlify deploy --prod"
-> ```
+LinkForge is engineered to run seamlessly across any cloud platform with zero code modifications. The same codebase deploys to Vercel, Cloudflare Pages, Netlify, Railway, Render, and self-hosted Docker environments.
 
 ---
 
-## 1. Vercel (recommended for Neon)
+## 🚀 Deployment Matrix
 
-1. Repo import: [vercel.com/new](https://vercel.com/new)
-2. Env vars add karein (`DATABASE_URL` / Neon / B2 etc.)
-3. Deploy — bas. Middleware edge par, API routes serverless functions par chalte hain.
+| Platform | Database Compatibility | Storage Compatibility | Edge / Serverless Support | Recommended Setup |
+|---|---|---|---|---|
+| **Vercel** | Neon, Supabase, Postgres | Backblaze B2, R2, S3, Vercel Blob | Serverless Node.js + Edge Middleware | Neon + B2 + Upstash |
+| **Cloudflare Pages** | Cloudflare D1, Turso | Cloudflare R2, Backblaze B2 | Native Cloudflare Workers Edge | D1 + R2 (Zero egress) |
+| **Netlify** | Neon, Supabase, Turso | Backblaze B2, AWS S3 | Netlify Serverless Functions | Neon + B2 |
+| **Railway** | Managed Postgres | Backblaze B2, AWS S3, MinIO | Containerized Node.js Service | Railway Postgres + B2 |
+| **Render** | Managed Postgres | Backblaze B2, AWS S3 | Managed Web Service | Render Postgres + B2 |
+| **Docker / VPS** | Local Postgres / SQLite | Local Disk, MinIO, S3 | Self-Hosted Container | Docker Compose (All-in-one) |
+
+---
+
+## 🛠️ Platform Instructions
+
+### 1. Vercel (Recommended for Neon Serverless)
+
+1. Import your Git repository via [vercel.com/new](https://vercel.com/new).
+2. Configure environment variables in the Vercel Dashboard:
+   * `DATABASE_PROVIDER=neon`
+   * `NEON_DATABASE_URL=postgresql://...`
+   * `BETTER_AUTH_SECRET=...`
+   * `BETTER_AUTH_URL=https://your-custom-domain.com`
+   * `STORAGE_PROVIDER=b2` (or `vercel-blob`)
+3. Deploy! LinkForge's auto-migration engine will automatically provision all 21 tables during the first request.
 
 ```bash
-npm i -g vercel && vercel --prod
+# Or deploy via Vercel CLI:
+npm i -g vercel
+vercel --prod
 ```
 
-**Best combo:** Vercel + Neon (`neon-http`) + Vercel Blob/B2 + Upstash rate-limit.
+### 2. Cloudflare Pages (Recommended for D1 + R2)
 
-Custom domains: Vercel dashboard → Domains → `bio.user.com` add karein +
-`APP_DOMAIN` env set karein — user domains edge middleware se route honge.
-
-## 2. Cloudflare Pages (recommended for D1 + R2)
-
+1. Ensure `@opennextjs/cloudflare` and `wrangler` are available:
 ```bash
 npm i -D @opennextjs/cloudflare wrangler
+```
+2. In `wrangler.toml`, ensure the D1 database binding is specified:
+```toml
+[[d1_databases]]
+binding = "DB"
+database_name = "linkforge-db"
+database_id = "your-database-id"
+```
+3. Build and deploy:
+```bash
 npx opennextjs-cloudflare build
 npx wrangler pages deploy
 ```
 
-1. `wrangler.toml` me `[[d1_databases]]` binding uncomment karein (`binding = "DB"`)
-2. `DATABASE_PROVIDER=d1` + D1 credentials env me
-3. Migrations: `npx drizzle-kit push --config drizzle.config.d1.ts`
+### 3. Netlify
 
-**Best combo:** Cloudflare + D1 (5 GB free) + R2 (10 GB, zero egress).
-
-## 3. Netlify
-
-`netlify.toml` already included:
-
+Netlify configuration is pre-configured via `netlify.toml`:
 ```bash
 npm i -g netlify-cli
-netlify login && netlify init
+netlify login
+netlify init
 netlify deploy --prod
 ```
 
-- Build command: `npm run build` · Publish: `.next`
-- `@netlify/plugin-nextjs` API routes ko functions par map karta hai
-- Env vars Netlify UI → Site settings → Environment variables
+### 4. Railway
 
-**Best combo:** Netlify + Neon/Supabase + B2.
+1. In [Railway Dashboard](https://railway.app), create a new project from your GitHub repository.
+2. Click **Add Service → Database → PostgreSQL**.
+3. Railway automatically injects `DATABASE_URL`. Set `DATABASE_PROVIDER=postgres`.
+4. Deploy the service.
 
-## 4. Railway
+### 5. Docker & Docker Compose (Self-Hosted)
 
-1. [railway.app](https://railway.app) → New Project → Deploy from GitHub
-2. "Add service" → **PostgreSQL** (free-ish) — `DATABASE_URL` auto-inject
-3. App service me `DATABASE_URL=${{ Postgres.DATABASE_URL }}` reference
-4. `npx drizzle-kit push` (locally, DATABASE_URL ke against)
-
-Railway persistent containers deta hai — `STORAGE_PROVIDER=local` bhi chalega
-(volume attach karein), ya MinIO service add karein.
-
-## 5. Render
-
-1. New → **Web Service** → repo connect
-2. Build: `npm install && npm run build` · Start: `npm run start`
-3. **Render PostgreSQL** instance add karein (free 90 days) → `DATABASE_URL`
-4. Disks: `/data/uploads` mount karke `UPLOAD_DIR=/data/uploads`
-
-## 6. Docker (self-hosted, full control)
+A production-ready `Dockerfile` and `docker-compose.yml` are included in the repository.
 
 ```bash
-# App + Postgres + MinIO + MailHog
-docker compose --profile full up --build
+# Start LinkForge with local PostgreSQL:
+docker compose up -d
 ```
 
-`.env` me internal URLs use karein:
-
-```env
-DATABASE_URL=postgresql://postgres:postgres@postgres:5432/linkforge
-STORAGE_PROVIDER=minio
-MINIO_ENDPOINT=http://minio:9000
+To include the development mail catcher profile:
+```bash
+docker compose --profile mail up -d
 ```
-
-Schema push (first run): `docker compose exec app npx drizzle-kit push`
 
 ---
 
-## Post-deploy checklist
+## 🌐 Custom Domains & Subdomain Routing
 
-- [ ] `GET /api/health` → `{ "status": "ok", providers: {...} }`
-- [ ] `AUTH_SECRET` strong random (32+ bytes)
-- [ ] `NEXT_PUBLIC_APP_URL` production domain
-- [ ] `APP_DOMAIN` set (custom domains ke liye)
-- [ ] Upstash REST env (multi-instance rate limiting ke liye)
-- [ ] Analytics retention (`ANALYTICS_RETENTION_DAYS`) review
+LinkForge features built-in custom domain resolution in Next.js middleware:
+1. When a visitor navigates to `yourcreator.bio` or `links.yourcompany.com`, the edge middleware detects the custom host.
+2. It looks up the associated profile in the database via `profiles.custom_domain`.
+3. The request is transparently rewritten to the creator's profile page without URL redirects.

@@ -1,184 +1,161 @@
-# 🚀 LinkForge — Complete Production Environment & Deployment Guide
+# 🚀 LinkForge — Production Environment & Deployment Guide
 
-This guide details **every environment variable**, **where to get each value** from provider consoles, **what each value looks like**, whether it should be configured as a **Secret** or **Plain Text** in Vercel, and the **exact post-deployment checklist** to ensure all features (Database, B2 Storage, DuckDB Analytics, CORS) work seamlessly.
+This guide details **every environment variable**, **where to get each value** from provider consoles, whether it should be configured as a **Secret** or **Plain Text** in Vercel or cloud hosts, and the **exact verification steps** to ensure all 21 tables, object storage, ALTCHA bot defense, and Better Auth work seamlessly.
 
 ---
 
 ## 📑 Table of Contents
 1. [Environment Variables Matrix](#-environment-variables-matrix)
-2. [Step 1: Database Setup (Neon Postgres)](#step-1-database-setup-neon-serverless-postgres)
-3. [Step 2: Auth & Session Secret](#step-2-auth--session-secret-auth_secret)
+2. [Step 1: Database Setup (Neon Serverless Postgres)](#step-1-database-setup-neon-serverless-postgres)
+3. [Step 2: Authentication & Cryptographic Secrets](#step-2-authentication--cryptographic-secrets)
 4. [Step 3: Object Storage Vault (Backblaze B2)](#step-3-object-storage-vault-backblaze-b2)
-5. [Step 4: Vercel Deployment & Configuration](#step-4-vercel-deployment--configuration)
-6. [Step 5: Post-Deployment One-Click Verification](#step-5-post-deployment-one-click-verification)
-7. [Ready-to-Copy Production `.env` Template](#-ready-to-copy-production-env-template)
+5. [Step 4: ALTCHA Proof-of-Work Bot Defense](#step-4-altcha-proof-of-work-bot-defense)
+6. [Step 5: Cloud Deployment & Configuration](#step-5-cloud-deployment--configuration)
+7. [Step 6: Post-Deployment Verification](#step-6-post-deployment-verification)
+8. [Production `.env` Template](#-production-env-template)
 
 ---
 
 ## 📊 Environment Variables Matrix
 
-| Variable Name | Required | Vercel Type | Description | Example / Recommended Value |
+| Variable Name | Required | Host Secret Type | Description | Example / Recommended Value |
 | :--- | :---: | :---: | :--- | :--- |
-| **`DATABASE_URL`** | **YES** | 🔒 **SECRET** | Primary PostgreSQL connection string | `postgresql://neondb_owner:pass@ep-xyz.us-east-2.aws.neon.tech/neondb?sslmode=require` |
-| **`DATABASE_PROVIDER`** | **YES** | 📄 Plain Text | Database engine dialect | `neon` *(or `postgres`, `supabase`, `turso`)* |
-| **`AUTH_SECRET`** | **YES** | 🔒 **SECRET** | 32-byte hex secret for session signing & IP hashing | `b79a32c4e1f85d9082ac3f0982d61b3e7a1c5d9e0f2b4c6e8a1d3f5b7c9e1a3d` |
-| **`AUTH_PROVIDER`** | **YES** | 📄 Plain Text | Authentication provider | `builtin` |
-| **`STORAGE_PROVIDER`** | **YES** | 📄 Plain Text | Object storage driver | `b2` *(or `local`, `r2`, `s3`, `minio`)* |
-| **`STORAGE_DRIVER`** | **YES** | 📄 Plain Text | Alias for `STORAGE_PROVIDER` | `b2` |
-| **`B2_BUCKET_NAME`** | **YES** | 📄 Plain Text | 100% Private Backblaze B2 bucket name | `my-linkforge-private-vault` |
-| **`B2_BUCKET`** | **YES** | 📄 Plain Text | Alias for `B2_BUCKET_NAME` | `my-linkforge-private-vault` |
-| **`B2_APPLICATION_KEY_ID`** | **YES** | 📄 Plain Text | Backblaze B2 Application Key ID | `005abc1234567890000000001` |
-| **`B2_KEY_ID`** | **YES** | 📄 Plain Text | Alias for `B2_APPLICATION_KEY_ID` | `005abc1234567890000000001` |
-| **`B2_APPLICATION_KEY`** | **YES** | 🔒 **SECRET** | Backblaze B2 Application Key secret | `K005abcDefGhi123JklMnoPqr456Stu` |
-| **`B2_ENDPOINT`** | **YES** | 📄 Plain Text | S3 Endpoint hostname (no `https://`) | `s3.us-east-005.backblazeb2.com` |
-| **`B2_REGION`** | **YES** | 📄 Plain Text | S3 cluster region code | `us-east-005` |
-| **`B2_PRIVATE_BUCKET`** | **YES** | 📄 Plain Text | Enforces zero public access security | `true` |
-| **`B2_PRESIGN_PUT_EXPIRY_SEC`**| Optional | 📄 Plain Text | Upload ticket TTL (seconds) | `600` |
-| **`B2_PRESIGN_GET_EXPIRY_SEC`**| Optional | 📄 Plain Text | Download ticket TTL (seconds) | `300` |
-| **`B2_CORS_ALLOWED_ORIGINS`** | **YES** | 📄 Plain Text | Direct browser-to-B2 upload origins | `https://inkorge-demo.vercel.app,https://linkforge-delta.vercel.app,http://localhost:3000` |
-| **`DEPLOYMENT_PLATFORM`** | **YES** | 📄 Plain Text | Target host provider | `vercel` |
-| **`NEXT_PUBLIC_APP_URL`** | **YES** | 📄 Plain Text | Public production domain URL | `https://inkorge-demo.vercel.app` |
-| **`ANALYTICS_ENABLED`** | **YES** | 📄 Plain Text | Enables DuckDB tracking & rollups | `true` |
-| **`ANALYTICS_RETENTION_DAYS`** | **YES** | 📄 Plain Text | Raw event retention period (days) | `30` |
+| **`DATABASE_URL`** | **YES** | 🔒 **Secret** | Primary PostgreSQL connection string | `postgresql://neondb_owner:pass@ep-xyz.us-east-2.aws.neon.tech/neondb?sslmode=require` |
+| **`DATABASE_PROVIDER`** | **YES** | 📄 Plain Text | Database engine dialect (`postgres`, `neon`, `supabase`, `turso`, `d1`) | `neon` |
+| **`BETTER_AUTH_SECRET`** | **YES** | 🔒 **Secret** | 32-byte secret key for Better Auth tokens and cookies | `b79a32c4e1f85d9082ac3f0982d61b3e7a1c5d9e0f2b4c6e8a1d3f5b7c9e1a3d` |
+| **`BETTER_AUTH_URL`** | **YES** | 📄 Plain Text | Public URL of your LinkForge application | `https://yourdomain.com` *(or `http://localhost:3000`)* |
+| **`AUTH_SECRET`** | **YES** | 🔒 **Secret** | 32-byte secret for session signing & IP hashing salt | `a41d92c7e3f85d9082ac3f0982d61b3e7a1c5d9e0f2b4c6e8a1d3f5b7c9e1a3d` |
+| **`ALTCHA_HMAC_KEY`** | **YES** | 🔒 **Secret** | Secret key for signing client Proof-of-Work challenges | `c92b45f1e8a93d0124ba56fe78dc9012a4b5c6d7e8f901a2b3c4d5e6f7a8b9c0` |
+| **`STORAGE_PROVIDER`** | **YES** | 📄 Plain Text | Object storage driver (`local`, `b2`, `r2`, `s3`, `minio`, `vercel-blob`) | `b2` |
+| **`B2_BUCKET_NAME`** | **YES** | 📄 Plain Text | Backblaze B2 bucket name | `my-linkforge-vault` |
+| **`B2_APPLICATION_KEY_ID`**| **YES**| 📄 Plain Text | Backblaze B2 Application Key ID | `005abc1234567890000000001` |
+| **`B2_APPLICATION_KEY`** | **YES** | 🔒 **Secret** | Backblaze B2 Application Key Secret | `K005abcDefGhi123JklMnoPqr456Stu` |
+| **`B2_ENDPOINT`** | **YES** | 📄 Plain Text | S3 Endpoint hostname (without `https://`) | `s3.us-east-005.backblazeb2.com` |
+| **`B2_REGION`** | **YES** | 📄 Plain Text | S3 cluster region identifier | `us-east-005` |
+| **`B2_PRIVATE_BUCKET`** | **YES** | 📄 Plain Text | Enforces private proxy streaming with HTTP 206 support | `true` |
+| **`B2_CORS_ALLOWED_ORIGINS`**| **YES**| 📄 Plain Text | Direct browser-to-B2 upload origins (comma-separated) | `https://yourdomain.com,http://localhost:3000` |
+| **`NEXT_PUBLIC_APP_URL`**| **YES** | 📄 Plain Text | Public production domain URL | `https://yourdomain.com` |
+| **`ANALYTICS_ENABLED`** | **YES** | 📄 Plain Text | Enables DuckDB tracking & compact rollups | `true` |
+| **`ANALYTICS_RETENTION_DAYS`**| Optional | 📄 Plain Text | Raw event retention period (days) | `30` |
 
 ---
 
 ## Step 1: Database Setup (Neon Serverless Postgres)
 
-Neon provides a generous free tier with **0.5 GB storage** and serverless scaling.
+Neon provides a generous free tier with **0.5 GB storage** and instant serverless scaling.
 
-### Where to get it:
 1. Open the [Neon Console](https://console.neon.tech/).
 2. Create a new project (e.g. `linkforge-prod`).
-3. On the **Dashboard**, locate the **Connection Details** card.
-4. Select **Pooled connection** (recommended for serverless environments) or **Direct**.
-5. Copy the connection string.
-
-### What it looks like:
-```text
-postgresql://neondb_owner:npg_xYz123AbC@ep-cool-frost-123456.us-east-2.aws.neon.tech/neondb?sslmode=require
-```
-
-### In Vercel:
-- **Key**: `DATABASE_URL`
-- **Value**: *(Paste your copied string)*
-- **Type**: 🔒 **Sensitive / Secret** (Check the checkbox)
+3. Under **Connection Details**, copy your pooled connection string:
+   ```text
+   postgresql://neondb_owner:YOUR_PASSWORD@ep-sample-123456.us-east-2.aws.neon.tech/neondb?sslmode=require
+   ```
+4. Set in your environment:
+   * `DATABASE_PROVIDER=neon`
+   * `DATABASE_URL="postgresql://..."`
 
 ---
 
-## Step 2: Auth & Session Secret (`AUTH_SECRET`)
+## Step 2: Authentication & Cryptographic Secrets
 
-`AUTH_SECRET` signs session tokens and acts as the cryptographic salt for privacy-preserving SHA-256 IP hashing.
+Generate high-entropy 32-byte hexadecimal strings for `BETTER_AUTH_SECRET`, `AUTH_SECRET`, and `ALTCHA_HMAC_KEY`:
 
-### How to generate:
-Run either command in your local terminal:
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
-*Or using OpenSSL:*
-```bash
-openssl rand -hex 32
-```
 
-### What it looks like:
-```text
-b79a32c4e1f85d9082ac3f0982d61b3e7a1c5d9e0f2b4c6e8a1d3f5b7c9e1a3d
-```
-*(A 64-character hexadecimal string)*
-
-### In Vercel:
-- **Key**: `AUTH_SECRET`
-- **Value**: *(Paste your generated 64-char string)*
-- **Type**: 🔒 **Sensitive / Secret**
+Configure in your host environment:
+* `BETTER_AUTH_SECRET` = *(Generated 64-character hex string)* (🔒 Secret)
+* `BETTER_AUTH_URL` = `https://yourdomain.com` (📄 Plain Text)
+* `AUTH_SECRET` = *(Generated 64-character hex string)* (🔒 Secret)
 
 ---
 
 ## Step 3: Object Storage Vault (Backblaze B2)
 
-Backblaze B2 provides **10 GB free storage** with zero egress fees when accessed via Cloudflare, and native S3 compatibility.
+Backblaze B2 offers **10 GB free object storage** with native S3 compatibility.
 
-### 3.1 Create a 100% Private Bucket
-1. Open [Backblaze B2 Buckets Console](https://secure.backblaze.com/b2_buckets.htm).
-2. Click **Create a Bucket**:
-   - **Bucket Unique Name**: Enter a globally unique name (e.g., `my-linkforge-private-vault`).
-   - **Files in Bucket are**: Select **`Private`** ⚠️ *(DO NOT select Public)*.
-   - **Default Encryption**: Enabled.
-3. Copy your Bucket Name:
-   - `B2_BUCKET_NAME` = `my-linkforge-private-vault`
-   - `B2_BUCKET` = `my-linkforge-private-vault`
+1. In [Backblaze B2 Buckets](https://secure.backblaze.com/b2_buckets.htm), create a bucket (e.g. `linkforge-vault`).
+2. Set bucket type to **`Private`**.
+3. Under **Application Keys**, click **Add a New Application Key**:
+   * Allow access to your bucket.
+   * Access type: `Read and Write`.
+4. Copy the credentials:
+   * `B2_APPLICATION_KEY_ID`: Plain Text.
+   * `B2_APPLICATION_KEY`: 🔒 Secret.
+   * `B2_ENDPOINT`: `s3.region.backblazeb2.com` (without `https://`).
+   * `B2_REGION`: e.g. `us-west-004` or `us-east-005`.
+   * `B2_PRIVATE_BUCKET`: `true`.
 
-### 3.2 S3 Endpoint & Region
-1. Look at your bucket in the Buckets list.
-2. Find the **Endpoint** column.
-   - Example: `s3.us-east-005.backblazeb2.com`
-3. Enter values:
-   - `B2_ENDPOINT` = `s3.us-east-005.backblazeb2.com` *(Do NOT include `https://`)*
-   - `B2_REGION` = `us-east-005` *(The cluster code between `s3.` and `.backblazeb2.com`)*
+---
 
-### 3.3 Create Application Key
-1. Open [Backblaze Application Keys](https://secure.backblaze.com/app_keys.htm).
-2. Click **Add a New Application Key**:
-   - **Name of Key**: `linkforge-app-key`
-   - **Allow access to Bucket(s)**: Select your bucket.
-   - **Type of Access**: `Read and Write`.
-3. Click **Create New Key**. Backblaze displays your credentials **only once**:
-   - **keyID**: Looks like `005abc1234567890000000001`
-     - Set in `B2_APPLICATION_KEY_ID` and `B2_KEY_ID` (📄 Plain Text).
-   - **applicationKey**: Looks like `K005abcDefGhi123JklMnoPqr456Stu`
-     - Set in `B2_APPLICATION_KEY` (🔒 **Secret**).
+## Step 4: ALTCHA Proof-of-Work Bot Defense
 
-### 3.4 Direct Upload CORS Origins
-Set `B2_CORS_ALLOWED_ORIGINS` to a comma-separated list of your deployment URLs:
-```text
-https://inkorge-demo.vercel.app,https://linkforge-delta.vercel.app,http://localhost:3000
+Generate an HMAC secret for challenge verification:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
----
-
-## Step 4: Vercel Deployment & Configuration
-
-1. In your **Vercel Project Dashboard**:
-   - Navigate to **Settings** $\to$ **Environment Variables**.
-2. Add all variables listed in the [Environment Variables Matrix](#-environment-variables-matrix).
-3. Ensure **Production** and **Preview** environments are checked.
-4. Click **Redeploy** (or trigger a new commit push on `main`).
+Configure:
+* `ALTCHA_HMAC_KEY` = *(Generated hex string)* (🔒 Secret)
 
 ---
 
-## Step 5: Post-Deployment One-Click Verification
+## Step 5: Cloud Deployment & Configuration
 
-Once Vercel finishes deploying, run these three quick API calls in your browser or curl:
+1. In your cloud provider's dashboard (e.g. Vercel, Netlify, Railway):
+   * Add the variables specified in the [Environment Variables Matrix](#-environment-variables-matrix).
+2. Trigger deployment (`git push origin main` or via CLI).
+3. The zero-config auto-migrator (`src/db/auto-migrate.ts`) will automatically provision all 21 tables during the first application boot.
 
-### 1. Database Schema Synchronization
+---
+
+## Step 6: Post-Deployment Verification
+
+Verify your production deployment with these verification checks:
+
+### 1. Database Schema Verification (21 Tables)
 ```http
-GET https://YOUR-APP.vercel.app/api/db/migrate
+GET https://yourdomain.com/api/db/migrate
 ```
-* **Expected Response**: `{"ok":true,"count":13,"message":"Database schema synchronized successfully (13 tables ensured)"}`
-* *This creates all 13 tables including `analytics_rollups` idempotently with zero data loss.*
+* **Expected Response**:
+  ```json
+  {
+    "ok": true,
+    "count": 21,
+    "message": "Database schema synchronized successfully"
+  }
+  ```
 
 ### 2. Backblaze B2 CORS Sync
 ```http
-POST https://YOUR-APP.vercel.app/api/storage/cors
+POST https://yourdomain.com/api/storage/cors
 ```
-* **Expected Response**: `{"ok":true,"message":"Bucket CORS rules synchronized successfully with Backblaze B2"}`
-* *This automatically configures Backblaze B2 CORS rules for direct browser uploads.*
+* **Expected Response**:
+  ```json
+  {
+    "ok": true,
+    "message": "Bucket CORS rules synchronized successfully"
+  }
+  ```
 
-### 3. Comprehensive System Health Check
+### 3. System & Database Health Probe
 ```http
-GET https://YOUR-APP.vercel.app/api/health
+GET https://yourdomain.com/api/health
 ```
 * **Expected Response**:
   ```json
   {
     "status": "healthy",
-    "db": { "ok": true, "provider": "neon", "pingMs": 35 },
-    "storage": { "ok": true, "provider": "b2", "bucket": "your-bucket" }
+    "db": { "ok": true, "provider": "neon" },
+    "storage": { "ok": true, "provider": "b2" }
   }
   ```
 
 ---
 
-## 📋 Ready-to-Copy Production `.env` Template
+## 📋 Production `.env` Template
 
 ```env
 # =============================================================================
@@ -187,40 +164,36 @@ GET https://YOUR-APP.vercel.app/api/health
 
 # ===== 1. DATABASE (NEON SERVERLESS POSTGRES) =====
 DATABASE_PROVIDER=neon
-DATABASE_URL=postgresql://neondb_owner:YOUR_NEON_PASSWORD@ep-xyz.us-east-2.aws.neon.tech/neondb?sslmode=require
+DATABASE_URL=postgresql://neondb_owner:YOUR_PASSWORD@ep-sample-123456.us-east-2.aws.neon.tech/neondb?sslmode=require
 
 # ===== 2. AUTHENTICATION & SECURITY =====
-AUTH_PROVIDER=builtin
-AUTH_SECRET=b79a32c4e1f85d9082ac3f0982d61b3e7a1c5d9e0f2b4c6e8a1d3f5b7c9e1a3d
+BETTER_AUTH_SECRET=b79a32c4e1f85d9082ac3f0982d61b3e7a1c5d9e0f2b4c6e8a1d3f5b7c9e1a3d
+BETTER_AUTH_URL=https://yourdomain.com
+AUTH_SECRET=a41d92c7e3f85d9082ac3f0982d61b3e7a1c5d9e0f2b4c6e8a1d3f5b7c9e1a3d
 
-# ===== 3. STORAGE (BACKBLAZE B2 PRIVATE VAULT) =====
+# ===== 3. BOT DEFENSE (ALTCHA PROOF-OF-WORK) =====
+ALTCHA_HMAC_KEY=c92b45f1e8a93d0124ba56fe78dc9012a4b5c6d7e8f901a2b3c4d5e6f7a8b9c0
+
+# ===== 4. STORAGE (BACKBLAZE B2 PRIVATE VAULT) =====
 STORAGE_PROVIDER=b2
 STORAGE_DRIVER=b2
-
-B2_BUCKET_NAME=my-linkforge-private-vault
-B2_BUCKET=my-linkforge-private-vault
-
+B2_BUCKET_NAME=my-linkforge-vault
+B2_BUCKET=my-linkforge-vault
 B2_APPLICATION_KEY_ID=005abc1234567890000000001
 B2_KEY_ID=005abc1234567890000000001
-
-# 🔒 Sensitive Secret:
 B2_APPLICATION_KEY=K005abcDefGhi123JklMnoPqr456Stu
-
 B2_ENDPOINT=s3.us-east-005.backblazeb2.com
 B2_REGION=us-east-005
 B2_PRIVATE_BUCKET=true
 B2_PRESIGN_PUT_EXPIRY_SEC=600
 B2_PRESIGN_GET_EXPIRY_SEC=300
+B2_CORS_ALLOWED_ORIGINS=https://yourdomain.com,http://localhost:3000
 
-# CORS Allowed Domains:
-B2_CORS_ALLOWED_ORIGINS=https://inkorge-demo.vercel.app,https://linkforge-delta.vercel.app,http://localhost:3000
-
-# ===== 4. DEPLOYMENT & ROUTING =====
+# ===== 5. DEPLOYMENT & ROUTING =====
 DEPLOYMENT_PLATFORM=vercel
-NEXT_PUBLIC_APP_URL=https://inkorge-demo.vercel.app
+NEXT_PUBLIC_APP_URL=https://yourdomain.com
 
-# ===== 5. DUCKDB ANALYTICS & SPACE SAVINGS =====
+# ===== 6. DUCKDB ANALYTICS =====
 ANALYTICS_ENABLED=true
 ANALYTICS_RETENTION_DAYS=30
-API_CORS_ORIGINS=*
 ```

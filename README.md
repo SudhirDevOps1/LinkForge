@@ -2,616 +2,333 @@
 
 <br/>
 
-<img src="https://img.shields.io/badge/Next.js-16.3-black?style=for-the-badge&logo=next.js" alt="Next.js">
+<img src="https://img.shields.io/badge/Next.js-16.3_Turbopack-black?style=for-the-badge&logo=next.js" alt="Next.js">
 <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
 <img src="https://img.shields.io/badge/TailwindCSS-4.1-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS">
-<img src="https://img.shields.io/badge/DrizzleORM-0.45-C5F74F?style=for-the-badge" alt="Drizzle ORM">
+<img src="https://img.shields.io/badge/Drizzle_ORM-0.45-C5F74F?style=for-the-badge&logo=drizzle" alt="Drizzle ORM">
+<img src="https://img.shields.io/badge/Better_Auth-Enterprise-9333EA?style=for-the-badge" alt="Better Auth">
+<img src="https://img.shields.io/badge/WebAuthn-Passkeys-0070F3?style=for-the-badge" alt="WebAuthn Passkeys">
+<img src="https://img.shields.io/badge/ALTCHA-Proof_of_Work-10B981?style=for-the-badge" alt="ALTCHA PoW">
 <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="MIT License">
 
 <br/><br/>
 
 # ⚡ LinkForge
 
-### **One link. Every platform. Zero lock-in.**
+### **The Enterprise Open-Source Link-in-Bio & Creator Platform**
 
-Advanced link-in-bio builder — runs on any database, any cloud, any storage.  
-100% open-source · Self-host anywhere · Privacy-first by design.
+One link. Every platform. Zero vendor lock-in.  
+Runs on any database · Any object storage · Any cloud host · 100% self-hostable.
 
 <br/>
 
-[**Live Demo**](https://inkorge-demo.vercel.app) · [**GitHub**](https://github.com/SudhirDevOps1/LinkForge) · [**Report Bug**](https://github.com/SudhirDevOps1/LinkForge/issues) · [**Request Feature**](https://github.com/SudhirDevOps1/LinkForge/issues)
+[**Live Demo**](https://inkorge-demo.vercel.app) · [**Documentation**](https://github.com/SudhirDevOps1/LinkForge/tree/main/docs) · [**Report Issue**](https://github.com/SudhirDevOps1/LinkForge/issues) · [**Request Feature**](https://github.com/SudhirDevOps1/LinkForge/issues)
 
 </div>
 
 ---
 
-## Table of Contents
+## 📑 Table of Contents
 
-- [Overview](#overview)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Architecture](#architecture)
-- [Getting Started](#getting-started)
-- [Environment Variables](#environment-variables)
-- [Database Providers](#database-providers)
-- [Storage Providers](#storage-providers)
-- [Deployment](#deployment)
-- [API Reference](#api-reference)
-- [Project Structure](#project-structure)
-- [Database Schema](#database-schema)
-- [Contributing](#contributing)
-- [Documentation](#documentation)
-- [License](#license)
-
----
-
-## Overview
-
-**LinkForge** is a production-grade, open-source link-in-bio platform built with the modern web stack. It gives creators, developers, and businesses a fully sovereign digital presence page — without subscriptions, vendor lock-in, or data held hostage on third-party servers.
-
-Unlike cloud-only alternatives, LinkForge is designed to be **self-hostable from day one**: swap databases, storage backends, and hosting platforms using a single environment variable. The same codebase runs on Vercel, Cloudflare Workers, Netlify, Railway, Render, and Docker — with zero code changes.
-
-**What makes it different:**
-
-| Capability | Detail |
-|---|---|
-| 🗄️ Multi-database | Neon, Turso, Cloudflare D1, Supabase, Postgres — one env var |
-| 📦 Multi-storage | Backblaze B2, Cloudflare R2, AWS S3, MinIO, Vercel Blob, local disk |
-| ☁️ Multi-cloud | Vercel, Cloudflare Pages, Netlify, Railway, Render, Docker |
-| 🔒 Privacy-first | Zero cookies · Zero raw IP storage · Salted SHA-256 IP hashing |
-| 📝 Blog engine | Built-in markdown blog with live editor, drafts, and public reader |
-| 💰 Creator monetization | Digital products, courses, and download gating via creator studio |
-| 📊 Real analytics | Clicks, views, devices, geo, referrers — OLAP-compressed rollups |
-| 🎨 Deep theming | 12 themes, bento grid, custom accent/font/radius per profile |
+- [Overview](#-overview)
+- [System Architecture](#-system-architecture)
+- [Enterprise Feature Matrix](#-enterprise-feature-matrix)
+  - [🔐 Hardened Authentication & Passkeys](#1--hardened-authentication--passkeys)
+  - [🛡️ Bot Defense & Rate Limiting](#2-️-bot-defense--rate-limiting)
+  - [📱 Multi-Device Responsive Presentation](#3--multi-device-responsive-presentation)
+  - [🔗 Dynamic Link & Bento Builder](#4--dynamic-link--bento-builder)
+  - [✍️ Serverless Object Storage Blog Engine](#5-️-serverless-object-storage-blog-engine)
+  - [🛍️ Creator Monetization Studio](#6-️-creator-monetization-studio)
+  - [📊 Privacy Analytics & OLAP Engine](#7--privacy-analytics--olap-engine)
+  - [🗄️ Multi-Dialect Database (21 Tables)](#8-️-multi-dialect-database-21-tables)
+  - [📦 Universal S3 Object Storage](#9--universal-s3-object-storage)
+- [Quick Start](#-quick-start)
+- [Configuration & Environment Variables](#-configuration--environment-variables)
+- [Database Schema Reference](#-database-schema-reference-21-tables)
+- [API Reference](#-api-reference)
+- [Multi-Cloud Deployment](#-multi-cloud-deployment)
+- [Documentation Index](#-documentation-index)
+- [License](#-license)
 
 ---
 
-## Features
+## 🌟 Overview
 
-### 🔗 Link Management
-- Unlimited links with **drag-and-drop reordering** (dnd-kit)
-- **12 link types**: standard, YouTube embed, Spotify embed, Twitter/X, Instagram, TikTok, GitHub, PDF, audio player, video player, email, phone
-- **Bento grid layout** — standard / wide / tall / feature card sizes
-- **Link scheduling** — show after a date, hide after expiry
-- **Pin links** to keep them at the top regardless of sort order
-- Per-link toggle (active/inactive) without deleting
-- Custom thumbnail upload per link card
+**LinkForge** is a sovereign, production-ready link-in-bio builder and creator monetization storefront built with the modern web stack. It gives creators, developers, and businesses a high-converting digital home — without recurring platform subscriptions, proprietary data silos, or invasive third-party tracking.
 
-### 🎨 Appearance & Theming
-- **12 built-in themes**: Midnight, Aurora, Cyber Neon, Ocean Depth, Forest Dusk, Solar Flare, Rose Gold, Arctic Ice, Lava, Sage, Dusk Purple, Monochrome
-- **Two layout modes**: List (vertical stack) and Bento (masonry grid)
-- **Per-profile design overrides**: accent color, border radius, font scale, icon size
-- **Announcement banner** with emoji, link, and auto-expiry date
-- Live **phone preview** in the dashboard (no save required to see changes)
-- Custom **OG image** upload for social sharing cards
-- **SEO controls**: custom title, description, noIndex toggle
+### 🏆 Why Choose LinkForge?
 
-### 📊 Privacy-First Analytics
-- Page views, link clicks, unique visitors
-- Device breakdowns (mobile / tablet / desktop)
-- Country geo-location (no raw IP stored — salted SHA-256 hash only)
-- Browser and OS breakdown
-- Referrer tracking
-- **OLAP daily rollups** — 98% database space savings vs raw event rows
-- **DuckDB-powered** in-browser analytics view with Recharts visualizations
-- Configurable data retention window (default 30 days for raw events)
-
-### ✍️ Blog Studio
-- Full **markdown blog editor** with live preview
-- Draft / publish workflow
-- Slug auto-generation from title
-- Public reader page at `/{username}/blog/{post-slug}`
-- Dual-manifest storage (ID + slug) for zero-miss resolution
-- Compatible with local disk, Backblaze B2, R2, S3, and MinIO
-
-### 💰 Creator Studio (Monetization)
-- **Digital product listings** with description, price, and file attachment
-- **Course creation** with module/lesson structure
-- **Download gating** — attach media files to products
-- Shareable product pages
-
-### 🔌 Integrations Hub
-- **20+ platform integrations**: YouTube, Spotify, GitHub, Twitter/X, Instagram, TikTok, LinkedIn, Twitch, Discord, Telegram, WhatsApp, Snapchat, Pinterest, Behance, Dribbble, Substack, Medium, Dev.to, Ko-fi, and more
-- OAuth-based external auth integrations (GitHub, Google)
-- Per-integration enable/disable toggle
-
-### 📧 Newsletter & Subscribers
-- Public **email subscribe widget** on every profile page
-- Subscriber management dashboard (view, export, delete)
-- Privacy-safe: subscriber IP hashed, not stored raw
-
-### 📁 Media Manager
-- Drag-and-drop file uploader
-- Supported types: images (JPEG, PNG, WebP, GIF, AVIF), PDF, audio (MP3, WAV, OGG, AAC, FLAC), video (MP4, WebM, MOV, AVI, MKV), documents (DOCX, XLSX, PPTX), ZIP, CSV, Markdown
-- Up to **100 files per profile** (configurable)
-- Default **50 MB per file** (configurable via env)
-- **Presigned S3 uploads** — browser uploads directly to storage, server only verifies
-- Full **media library** with search, sort, and one-click copy URL
-
-### 🔐 Security & Privacy
-- Built-in **email + password authentication** with bcrypt hashing
-- **Session-based auth** (Lucia-style opaque token sessions)
-- Password reset via secure one-time tokens
-- **Profile password protection** (bcrypt-gated private profiles)
-- AES-256-GCM **data-at-rest encryption** for sensitive storage keys in database
-- **API key management** — personal `lfk_` prefixed keys, SHA-256 hash stored (raw key shown once)
-- **HMAC-signed webhooks** for click/view events
-- Role-based access: `owner`, `editor`, `viewer`
-- `noIndex` flag to hide profiles from search engines
-- Zero cookies by default — session stored in `HttpOnly` cookie
-
-### 🌐 Public Profile Page
-- SEO-optimized OpenGraph image generation per profile
-- QR code generator for profile URL
-- vCard download button
-- Share sheet (Web Share API)
-- Password gate for private profiles
-- Dynamic sitemap and robots.txt
-
-### 🏗️ Developer Features
-- **REST API** (`/api/v1/links`, `/api/v1/profile`) with Bearer token auth
-- **Webhooks** — HMAC-signed outbound HTTP callbacks on link click/page view events
-- **Health endpoint** (`/api/health`) — database, storage, and system status
-- Database admin endpoint (`/api/db`) for schema inspection
-- **Team collaboration** — invite team members (owner / editor / viewer roles)
-- Self-hosted mail outbox — password reset emails queued when SMTP is not configured
+* **Zero Vendor Lock-In**: Swap database engines and cloud storage providers with a single environment variable change.
+* **Biometric Hardware Passkeys**: Instant, phishing-resistant WebAuthn logins via Touch ID, Face ID, Windows Hello, and YubiKeys.
+* **Proof-of-Work Bot Defense**: Embedded ALTCHA cryptographic challenges eliminate bot spam and credential stuffing without tracking cookies or third-party CAPTCHAs.
+* **Serverless Object Storage Blogging**: Store daily long-form blog articles directly in Backblaze B2 or Cloudflare R2 with dual manifest auto-healing and zero relational database bloat.
+* **0% Platform Commission Monetization**: Sell courses, book paid 1:1 mentorship calls, distribute digital downloads, and accept direct payments via UPI QR and global tip jars.
+* **Privacy-First Analytics**: In-browser DuckDB OLAP aggregation achieving **98%+ database space savings** with zero tracking cookies and salted SHA-256 IP hashes.
 
 ---
 
-## Tech Stack
-
-| Layer | Technology | Version |
-|---|---|---|
-| **Framework** | Next.js (App Router, Turbopack) | 16.3.4 |
-| **Language** | TypeScript | 5.9.3 |
-| **Styling** | Tailwind CSS | 4.1.17 |
-| **ORM** | Drizzle ORM | 0.45.2 |
-| **UI Components** | Lucide React icons | 1.43.0 |
-| **Charts** | Recharts | 3.10.1 |
-| **Drag & Drop** | dnd-kit/core + dnd-kit/sortable | 6.3.1 / 10.0.0 |
-| **Toasts** | Sonner | 2.0.8 |
-| **Validation** | Zod | 4.5.4 |
-| **QR Codes** | qrcode + qrcode.react | 1.5.4 / 4.2.0 |
-| **S3 Client** | AWS SDK v3 (S3 + Presigner) | 3.1128.0 |
-| **Runtime** | Node.js 22 / Cloudflare Workers | — |
-| **Test Runner** | Vitest | 5.0.0 |
-| **DB Migration** | drizzle-kit | 0.31.10 |
-| **Linter** | ESLint (eslint-config-next) | 9.39.4 |
-
----
-
-## Architecture
+## 🏗️ System Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        LinkForge                            │
-│                                                             │
-│  ┌──────────────┐   ┌──────────────┐   ┌──────────────┐   │
-│  │ Landing Page │   │  Dashboard   │   │Public Profile│   │
-│  │     /        │   │  /dashboard  │   │   /[slug]    │   │
-│  └──────────────┘   └──────┬───────┘   └──────────────┘   │
-│                             │                               │
-│         ┌───────────────────┼──────────────────┐            │
-│         ▼                   ▼                  ▼            │
-│  ┌─────────────┐  ┌──────────────────┐  ┌──────────────┐  │
-│  │  Auth Layer │  │   API Routes     │  │ Blog Engine  │  │
-│  │  (sessions) │  │  /api/* /api/v1  │  │  /api/blog   │  │
-│  └─────────────┘  └────────┬─────────┘  └──────────────┘  │
-│                             │                               │
-│         ┌───────────────────┼──────────────────┐            │
-│         ▼                   ▼                  ▼            │
-│  ┌─────────────┐  ┌──────────────────┐  ┌──────────────┐  │
-│  │  Database   │  │ Storage Adapter  │  │  Analytics   │  │
-│  │  Adapter    │  │ (multi-backend)  │  │  Engine      │  │
-│  └──────┬──────┘  └────────┬─────────┘  └──────────────┘  │
-│         │                   │                               │
-│  ┌──────┴──────────────┐    │  ┌───────────────────────┐   │
-│  │ Neon │ Turso │ D1   │    │  │ B2 │ R2 │ S3 │ Local │   │
-│  │ PG   │ Supabase     │    │  │ MinIO │ Vercel Blob   │   │
-│  └──────────────────────┘   └──└───────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                               LINKFORGE PRESENTATION LAYER                             │
+│     Next.js 16 App Router · Tailwind CSS 4 · Adaptive Bento Grid · Desktop Glass Frame │
+└───────────────────────────────────────────┬────────────────────────────────────────────┘
+                                            │
+                                            ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                               SECURITY & BOT GATEWAY                                   │
+│  • ALTCHA Proof-of-Work Verification      • Dual-Bucket Sliding Window Rate Limiting   │
+│  • Constant-Time DUMMY_HASH Defense       • Zero-Knowledge AES-256-GCM db-cipher       │
+└───────────────────────────────────────────┬────────────────────────────────────────────┘
+                                            │
+                                            ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                                  CORE APPLICATION ENGINES                              │
+├──────────────────────────┬─────────────────────────────┬───────────────────────────────┤
+│ 🔐 Better Auth Stack     │ ✍️ Daily Blog Engine         │ 🛍️ Creator Studio            │
+│ • WebAuthn Passkeys      │ • S3/B2 Object Storage      │ • Video Courses & Syllabi     │
+│ • RFC 6238 TOTP 2FA      │ • Dual Manifest Healing     │ • 1:1 Mentorship Booking      │
+│ • Multi-Tenant Orgs      │ • Markdown Live Editor      │ • Digital File Fulfillment    │
+│ • Anonymous Guest Trial  │ • Zero-Cache Dynamic Routes │ • Direct 0% Commission UPI    │
+└──────────────────────────┴─────────────────────────────┴───────────────────────────────┘
+                                            │
+                                            ▼
+┌───────────────────────────────────────────┴────────────────────────────────────────────┐
+│                         MULTI-DIALECT DATABASE LAYER (21 TABLES)                       │
+│      PostgreSQL (Self-hosted / Docker)  ·  Neon (Serverless HTTP)  ·  Supabase Pooler  │
+│             Turso (libSQL Global Edge)  ·  Cloudflare D1 (Native Edge SQLite)          │
+└────────────────────────────────────────────────────────────────────────────────────────┘
 ```
-
-### Key Design Decisions
-
-- **Database abstraction**: Drizzle ORM with separate schema files for PostgreSQL-compatible (`schema.ts`) and SQLite-compatible (`schema.sqlite.ts`) dialects. App code is fully dialect-agnostic.
-- **Storage abstraction**: Two storage interfaces — `StorageService` (media uploads) and `StorageAdapter` (blog manifests). Both are lazy-loaded via `src/lib/storage/index.ts`, selected by `STORAGE_DRIVER` env.
-- **Analytics**: Raw `events` table with configurable retention + `analytics_rollups` table for compressed daily aggregates. Rollup strategy achieves 98%+ space savings.
-- **Session management**: Opaque random token sessions stored in `sessions` table. Raw IP never stored — salted SHA-256 hash only. AES-256-GCM encryption on sensitive DB columns.
-- **Blog storage**: Dual manifest mirroring — every blog manifest is written to both `blogs/{profileId}/manifest.json` and `blogs/{profileSlug}/manifest.json`, ensuring zero-miss resolution from either path.
 
 ---
 
-## Getting Started
+## 🚀 Enterprise Feature Matrix
 
-### Prerequisites
+### 1. 🔐 Hardened Authentication & Passkeys
+* **Better Auth Core Engine**: Built on the official `@better-auth/drizzle-adapter` supporting both PostgreSQL and SQLite.
+* **WebAuthn / FIDO2 Passkeys (`@better-auth/passkey`)**: Hardware-backed biometric authentication with public key verification.
+* **Two-Factor Authentication (`twoFactor`)**: Zero-cost TOTP authenticator app support (Google Authenticator, Microsoft Authenticator, 1Password) with 10 offline recovery backup codes.
+* **Multi-Tenant Organizations (`organization`)**: Workspace management with team role hierarchies (`owner`, `admin`, `member`) and time-limited invitations.
+* **Anonymous Guest Trials (`anonymous`)**: Instant creator customization exploration that converts seamlessly to permanent accounts.
+* **Administrative Controls (`admin`)**: Role-based access control, user bans, and audit-friendly session impersonation.
 
-- Node.js 22+ (see `.nvmrc`)
-- A supported database (see [Database Providers](#database-providers))
-- `npm` or compatible package manager
+### 2. 🛡️ Bot Defense & Rate Limiting
+* **ALTCHA Proof-of-Work**: Eliminates tracking-based CAPTCHAs by issuing SHA-256 cryptographic challenges solved client-side.
+* **Dual-Bucket Sliding Window Rate Limiting**: Simultaneous protection across IP origin buckets and target account email buckets with standard RFC `Retry-After: <sec>` headers.
+* **Live Lockout Countdown UX**: Live 1-second countdown cooldown banner and reactively disabled submission controls.
+* **Timing Attack Mitigation**: Constant-time `DUMMY_HASH` bcrypt verification to eliminate user enumeration side channels.
 
-### Local Development (SQLite, Zero Config)
+### 3. 📱 Multi-Device Responsive Presentation
+* **Adaptive Mobile-First Layout**: Sleek, thumb-friendly vertical links on compact viewports (< 640px).
+* **Desktop Glassmorphism Framing**: Automatic transformation on tablets and wide screens into an elevated, centered glassmorphism canvas (`max-w-2xl`, subtle borders, backdrop-blur).
+* **Ambient Lighting Glow**: Eliminates empty dark voids on widescreen displays with ambient blurred color orbs.
+* **Dynamic Typography Scaling**: Display names, avatars, and bio descriptions scale seamlessly across mobile, desktop, and ultra-wide displays.
 
+### 4. 🔗 Dynamic Link & Bento Builder
+* **Interactive Bento Grid**: Switch between vertical list mode and masonry Bento grid layouts with standard, wide, tall, and hero cards.
+* **12 Interactive Card Embeds**: YouTube player, Spotify streams, Twitter/X, Instagram, TikTok, GitHub repositories, PDF viewer, custom audio, email, phone, and standard links.
+* **Drag-and-Drop Reordering**: Smooth animations powered by `@dnd-kit`.
+* **Link Scheduling & Pinned Cards**: Automatic visibility triggers based on start and expiration dates, with pinned cards remaining fixed at the top.
+
+### 5. ✍️ Serverless Object Storage Blog Engine
+* **Direct Object Storage Persistence**: Long-form markdown articles and manifests are saved directly to your S3/B2 bucket (`blogs/${slug}/`).
+* **Dual Manifest Auto-Healing**: Maintains manifest synchronization across both profile slugs and internal UUIDs, auto-repairing legacy links on-the-fly.
+* **Instant Publication**: Uses Next.js dynamic routing with `revalidate = 0` and `Cache-Control: no-store` headers so new articles appear instantly.
+* **In-App Markdown Studio**: Live side-by-side editing, cover image uploads, tag assignment, and reading time calculation.
+
+### 6. 🛍️ Creator Monetization Studio
+* **Multi-Module Courses**: Structured masterclasses with chapter breakdowns, lesson duration badges, and sample preview tags.
+* **1:1 Mentorship Booking**: Dedicated consultation blocks with duration selectors and direct links to Cal.com, Calendly, or Google Meet.
+* **Digital Download Fulfillment**: Sell engineering PDFs, design UI kits, and source code bundles with instant post-purchase delivery.
+* **0% Commission Direct Payments**: Accept direct UPI peer-to-peer payments via QR code (Google Pay, PhonePe, Paytm) and global tip jars (Stripe, PayPal, Buy Me a Coffee).
+
+### 7. 📊 Privacy Analytics & OLAP Engine
+* **Zero Tracking Cookies**: 100% GDPR/CCPA compliant without cookie consent banners.
+* **Salted SHA-256 IP Hashes**: Visitor IPs are hashed with server entropy; raw IP addresses are never saved to disk.
+* **DuckDB In-Browser OLAP**: Query millions of visitor events using in-browser DuckDB WebAssembly.
+* **Compact Daily Rollups**: Aggregates raw views into daily buckets, reducing database storage requirements by **over 98%**.
+
+### 8. 🗄️ Multi-Dialect Database (21 Tables)
+* **Unified Query Interface**: Powered by Drizzle ORM for PostgreSQL and SQLite.
+* **Zero-Config Auto-Migrator (`src/db/auto-migrate.ts`)**: Automatically provisions and verifies all 21 tables during cold starts.
+* **Single-Click Bootstrap Scripts**: Includes [`neon-reset.sql`](neon-reset.sql) and [`scripts/neon-reset.sql`](scripts/neon-reset.sql) for instant cloud database resets.
+
+### 9. 📦 Universal S3 Object Storage
+* **Universal Adapter Interface**: Switch seamlessly between Backblaze B2, Cloudflare R2, AWS S3, MinIO, Vercel Blob, and Local Disk.
+* **Direct Client PUT**: Browser uploads stream directly to storage buckets using short-lived presigned tickets.
+* **Fail-Closed Magic Byte Validation**: Protects against executable spoofing by validating binary signatures before committing records.
+* **Private Proxy Streaming**: Streams private media through `/api/file/[...key]` with HTTP 206 Range seeking and immutable caching.
+
+---
+
+## 💻 Quick Start
+
+### 1. Clone the Repository
 ```bash
-# 1. Clone the repository
 git clone https://github.com/SudhirDevOps1/LinkForge.git
 cd LinkForge
+```
 
-# 2. Install dependencies
+### 2. Install Dependencies
+```bash
 npm install
+```
 
-# 3. Create your local environment file
+### 3. Configure Environment Variables
+Copy the example environment file and configure your credentials:
+```bash
 cp .env.example .env
 ```
 
-Edit `.env` and set the minimum required variables for local development:
-
-```env
-# Use local SQLite — no external database needed
-DATABASE_PROVIDER=turso
-TURSO_DATABASE_URL=file:local.db
-
-# Use local disk storage — no cloud account needed
-STORAGE_PROVIDER=local
-STORAGE_DRIVER=local
-
-# Generate a secure secret:
-# node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-AUTH_SECRET=your_64_char_hex_secret_here
-
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+Generate your cryptographic secrets:
+```bash
+# Generate 32 random bytes for BETTER_AUTH_SECRET and AUTH_SECRET:
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
+### 4. Run the Development Server
 ```bash
-# 4. Push the database schema
-npm run db:push
-
-# 5. Start the development server (Turbopack)
 npm run dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000) — sign up at `/signup` to create your first account.
-
-### Database Schema Commands
-
-| Command | Provider |
-|---|---|
-| `npm run db:push` | Default (`drizzle.config.ts`) |
-| `npm run db:push:turso` | Turso / LibSQL |
-| `npm run db:push:d1` | Cloudflare D1 |
-| `npm run db:migrate` | Auto-migration script |
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-## Environment Variables
+## ⚙️ Configuration & Environment Variables
 
-A complete reference is available in [`.env.example`](.env.example). Below is a grouped summary.
+```env
+# =============================================================================
+# 🔐 Authentication (Better Auth & Core)
+# =============================================================================
+BETTER_AUTH_SECRET="your-32-byte-secret-hex"
+BETTER_AUTH_URL="http://localhost:3000"
+AUTH_SECRET="your-32-byte-secret-hex"
 
-### 1. Database
+# =============================================================================
+# 🛡️ ALTCHA Proof-of-Work Bot Defense
+# =============================================================================
+ALTCHA_HMAC_KEY="your-altcha-hmac-secret"
 
-| Variable | Required | Description |
-|---|---|---|
-| `DATABASE_PROVIDER` | Yes | `postgres` · `neon` · `supabase` · `turso` · `d1` |
-| `DATABASE_URL` | Postgres only | Full PostgreSQL connection string |
-| `TURSO_DATABASE_URL` | Turso only | `libsql://…turso.io` or `file:local.db` |
-| `TURSO_AUTH_TOKEN` | Turso remote | JWT auth token from Turso CLI |
+# =============================================================================
+# 🗄️ Database Configuration
+# Options: postgres | neon | supabase | turso | d1
+# =============================================================================
+DATABASE_PROVIDER="postgres"
+DATABASE_URL="postgresql://postgres:password@127.0.0.1:5432/linkforge"
 
-### 2. Authentication
+# Neon Serverless PostgreSQL:
+# DATABASE_PROVIDER="neon"
+# NEON_DATABASE_URL="postgresql://user:pass@ep-sample.us-east-2.aws.neon.tech/neondb?sslmode=require"
 
-| Variable | Required | Description |
-|---|---|---|
-| `AUTH_SECRET` | **Critical** | 32-byte hex secret for session signing and IP hashing |
-| `AUTH_PROVIDER` | Yes | `builtin` · `neon` · `supabase` · `clerk` · `nextauth` |
-| `DB_ENCRYPTION_KEY` | Optional | AES-256 key for at-rest column encryption (falls back to `AUTH_SECRET`) |
+# Turso SQLite:
+# DATABASE_PROVIDER="turso"
+# TURSO_DATABASE_URL="libsql://your-db.turso.io"
+# TURSO_AUTH_TOKEN="your-turso-token"
 
-### 3. Storage
+# =============================================================================
+# 📦 Object Storage Configuration
+# Options: local | b2 | r2 | s3 | minio | vercel-blob
+# =============================================================================
+STORAGE_PROVIDER="local"
+UPLOAD_DIR="./uploads"
 
-| Variable | Required | Description |
-|---|---|---|
-| `STORAGE_PROVIDER` / `STORAGE_DRIVER` | Yes | `local` · `b2` · `r2` · `s3` · `minio` · `vercel-blob` |
-| `B2_BUCKET_NAME` | B2 only | Backblaze B2 bucket name |
-| `B2_ENDPOINT` | B2 only | S3 endpoint (e.g. `s3.us-east-005.backblazeb2.com`) |
-| `B2_REGION` | B2 only | Region code (e.g. `us-east-005`) |
-| `B2_APPLICATION_KEY_ID` | B2 only | Application key ID |
-| `B2_APPLICATION_KEY` | B2 only | Application key secret |
-| `NEXT_PUBLIC_MAX_UPLOAD_MB` | Optional | Max upload size in MB (default `50`) |
-| `UPLOAD_DIR` | Local only | Local upload directory (default `./uploads`) |
+# Backblaze B2 (10 GB Free):
+# STORAGE_PROVIDER="b2"
+# B2_APPLICATION_KEY_ID="004..."
+# B2_APPLICATION_KEY="K004..."
+# B2_BUCKET_NAME="linkforge-assets"
+# B2_REGION="us-west-004"
 
-### 4. Deployment
-
-| Variable | Required | Description |
-|---|---|---|
-| `NEXT_PUBLIC_APP_URL` | Yes | Production URL without trailing slash |
-| `DEPLOYMENT_PLATFORM` | Optional | `vercel` · `cloudflare` · `netlify` · `railway` · `render` |
-| `APP_DOMAIN` | Optional | Custom root domain (e.g. `yourdomain.com`) |
-
-### 5. Analytics
-
-| Variable | Default | Description |
-|---|---|---|
-| `ANALYTICS_ENABLED` | `true` | Enable/disable event tracking |
-| `ANALYTICS_RETENTION_DAYS` | `30` | Days before raw events are pruned |
-| `API_CORS_ORIGINS` | `*` | Allowed origins for `/api/v1/*` endpoints |
-
----
-
-## Database Providers
-
-| Provider | Free Tier | Best For |
-|---|---|---|
-| **Neon** *(recommended for Vercel)* | 0.5 GB | Serverless Postgres, auto-scaling |
-| **Supabase** | 500 MB | Postgres + built-in auth + storage |
-| **Turso (LibSQL)** | 1 GB | Edge SQLite, ultra-low latency |
-| **Cloudflare D1** | 5 GB | Cloudflare Workers deployments |
-| **Local Postgres** | Unlimited | Self-hosted, full control |
-| **Local SQLite** | Unlimited | Development, Docker, zero-config |
-
----
-
-## Storage Providers
-
-| Provider | Free Tier | Notes |
-|---|---|---|
-| **Backblaze B2** | 10 GB | S3-compatible, private vault, presigned uploads |
-| **Cloudflare R2** | 10 GB | Zero egress fees, S3-compatible |
-| **AWS S3** | Pay-as-you-go | Industry standard, all regions |
-| **MinIO** | Unlimited | Self-hosted S3-compatible object storage |
-| **Vercel Blob** | 1 GB | Zero-config on Vercel deployments |
-| **Local Disk** | Unlimited | Default for development and Docker |
-
-Auto-detection is built in — if `B2_APPLICATION_KEY_ID` is present, B2 is selected automatically. Override any time with `STORAGE_DRIVER=local`.
-
----
-
-## Deployment
-
-### Vercel
-
-```bash
-npm run deploy:vercel
-```
-
-Set all environment variables in **Project Settings → Environment Variables**.  
-Mark `AUTH_SECRET`, `DB_ENCRYPTION_KEY`, and `B2_APPLICATION_KEY` as **Sensitive**.
-
-### Cloudflare Workers (Edge)
-
-```bash
-npm run deploy:cloudflare
-```
-
-Configure `wrangler.toml` with your Cloudflare account ID and D1 database binding.
-
-### Netlify
-
-```bash
-npm run deploy:netlify
-```
-
-### Docker (Self-Hosted)
-
-```bash
-# Build the production image
-docker build -t linkforge .
-
-# Run with local SQLite + disk storage
-docker run -p 3000:3000 \
-  -e AUTH_SECRET=your_secret \
-  -e DATABASE_PROVIDER=turso \
-  -e TURSO_DATABASE_URL=file:/data/local.db \
-  -e STORAGE_PROVIDER=local \
-  -e NEXT_PUBLIC_APP_URL=https://yourdomain.com \
-  -v linkforge-data:/data \
-  linkforge
-```
-
-A [`docker-compose.yml`](docker-compose.yml) is included for local multi-container setups.
-
-### Railway / Render
-
-Deploy using the Dockerfile directly. Set environment variables in the platform dashboard. Both platforms support persistent volumes for local storage mode.
-
----
-
-## API Reference
-
-### Public REST API (`/api/v1`)
-
-All endpoints require `Authorization: Bearer lfk_…` (generate from dashboard **Settings → API Keys**).
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/v1/profile` | Authenticated user's profile data |
-| `GET` | `/api/v1/links` | All links for the authenticated profile |
-
-### Internal API Routes
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET/POST/PATCH/DELETE` | `/api/links` | Link CRUD |
-| `GET/POST/PATCH` | `/api/profile` | Profile CRUD |
-| `GET/POST/DELETE` | `/api/blog` | Blog post management |
-| `GET/PATCH/DELETE` | `/api/blog/[postSlug]` | Single blog post |
-| `GET/POST/DELETE` | `/api/media` | Media library management |
-| `POST` | `/api/file` | Presigned upload ticket creation |
-| `POST` | `/api/files/complete` | Complete presigned upload |
-| `GET/POST/DELETE` | `/api/subscribers` | Subscriber management |
-| `POST` | `/api/subscribe` | Public subscribe endpoint |
-| `GET` | `/api/analytics` | Analytics data |
-| `GET/POST/DELETE` | `/api/integrations` | Platform integrations |
-| `GET/POST/DELETE` | `/api/keys` | API key management |
-| `GET/POST/DELETE` | `/api/webhooks` | Webhook management |
-| `GET/POST` | `/api/account` | Account settings |
-| `GET` | `/api/health` | System health check |
-| `GET/POST` | `/api/storage/cors` | B2 CORS configuration |
-| `POST` | `/api/auth/login` | Sign in |
-| `POST` | `/api/auth/signup` | Create account |
-| `POST` | `/api/auth/logout` | Sign out |
-| `POST` | `/api/auth/reset-password` | Password reset flow |
-| `GET` | `/api/username` | Check username availability |
-| `GET` | `/r/[id]` | Click-tracking redirect (records event → 307) |
-
-### Webhooks
-
-LinkForge sends HMAC-SHA256 signed `POST` requests to your configured endpoint on `click` and `view` events.
-
-```json
-{
-  "event": "click",
-  "profileId": "uuid",
-  "linkId": "uuid",
-  "timestamp": "2026-09-10T00:00:00Z"
-}
-```
-
-Verify authenticity using the `X-LinkForge-Signature` header with your webhook secret.
-
----
-
-## Project Structure
-
-```
-linkforge/
-├── src/
-│   ├── app/
-│   │   ├── (auth)/               # Login, signup, password reset pages
-│   │   ├── (dashboard)/          # Protected dashboard routes
-│   │   │   └── dashboard/
-│   │   │       ├── page.tsx      # Dashboard home (link editor + live preview)
-│   │   │       ├── analytics/    # Analytics dashboard
-│   │   │       ├── appearance/   # Theme & layout editor
-│   │   │       ├── blog/         # Blog studio
-│   │   │       ├── integrations/ # Integrations hub
-│   │   │       ├── links/        # Full-page link editor
-│   │   │       ├── media/        # Media library
-│   │   │       ├── settings/     # Account, API keys, webhooks, team
-│   │   │       ├── store/        # Creator studio (products, courses)
-│   │   │       └── subscribers/  # Subscriber management
-│   │   ├── (public)/
-│   │   │   └── [slug]/           # Public profile page
-│   │   │       └── blog/         # Public blog reader
-│   │   ├── api/                  # All API route handlers (20 groups)
-│   │   ├── docs/                 # In-app documentation pages
-│   │   ├── privacy/              # Privacy Policy page
-│   │   ├── terms/                # Terms of Service page
-│   │   └── page.tsx              # Public landing page
-│   ├── components/
-│   │   ├── appearance-editor.tsx     # Full theming UI (12 themes, custom design)
-│   │   ├── bio-renderer.tsx          # Public profile renderer (list + bento)
-│   │   ├── blog-studio.tsx           # Blog editor (markdown, draft/publish)
-│   │   ├── creator-studio.tsx        # Creator monetization (products, courses)
-│   │   ├── dashboard-shell.tsx       # Dashboard layout + collapsible sidebar
-│   │   ├── duckdb-analytics-view.tsx # DuckDB-powered analytics dashboard
-│   │   ├── integrations-hub.tsx      # 20+ platform integrations
-│   │   ├── links-editor.tsx          # Drag-and-drop link manager
-│   │   ├── media-manager.tsx         # File upload + media library
-│   │   ├── phone-preview.tsx         # Live mobile preview panel
-│   │   ├── settings-client.tsx       # Account, API keys, webhooks, team
-│   │   ├── analytics-charts.tsx      # Recharts visualization components
-│   │   └── landing/                  # Landing page section components
-│   ├── db/
-│   │   ├── schema.ts             # PostgreSQL schema (Drizzle)
-│   │   ├── schema.sqlite.ts      # SQLite schema (Turso / D1)
-│   │   ├── index.ts              # DB connection factory
-│   │   └── providers/            # Per-provider adapters
-│   ├── lib/
-│   │   ├── blog.ts               # Blog manifest service (dual-path resolution)
-│   │   ├── themes.ts             # 12 theme definitions
-│   │   ├── auth/                 # Auth helpers + provider abstraction
-│   │   ├── storage/              # Storage adapters (b2, r2, s3, local, blob)
-│   │   └── api.ts                # Shared API utilities + rate limiting
-│   └── config/
-│       └── storage.config.ts     # Storage provider selection + CORS helpers
-├── docs/                         # Developer documentation
-├── scripts/
-│   ├── auto-migrate.ts           # Cross-provider DB migration runner
-│   └── cleanup-uploads.ts        # Orphaned file cleanup utility
-├── tests/                        # Vitest test suite
-├── Dockerfile                    # Multi-stage production Docker image
-├── docker-compose.yml            # Local multi-container setup
-├── wrangler.toml                 # Cloudflare Workers configuration
-├── netlify.toml                  # Netlify configuration
-├── vercel.json                   # Vercel configuration
-├── drizzle.config.ts             # Drizzle config (Postgres)
-├── drizzle.config.turso.ts       # Drizzle config (Turso)
-├── drizzle.config.d1.ts          # Drizzle config (Cloudflare D1)
-└── .env.example                  # Complete environment variable reference
+# Cloudflare R2 (Zero Egress):
+# STORAGE_PROVIDER="r2"
+# R2_ACCOUNT_ID="..."
+# R2_ACCESS_KEY_ID="..."
+# R2_SECRET_ACCESS_KEY="..."
+# R2_BUCKET="linkforge"
 ```
 
 ---
 
-## Database Schema
+## 📋 Database Schema Reference (21 Tables)
 
-LinkForge uses **14 database tables**:
-
-| Table | Purpose |
-|---|---|
-| `users` | User accounts (email, password hash, avatar, role) |
-| `sessions` | Opaque session tokens with IP hash and expiry |
-| `password_reset_tokens` | Single-use password reset tokens (hashed) |
-| `profiles` | Public bio pages (slug, theme, layout, SEO, privacy, announcement) |
-| `links` | Individual link cards (type, schedule, pin, size, thumbnail) |
-| `events` | Raw analytics events (view/click, device, country, referrer) |
-| `analytics_rollups` | Compressed daily OLAP aggregates (98% space savings) |
-| `webhooks` | Outbound HTTP webhooks with HMAC signing secrets |
-| `api_keys` | Personal API keys (prefix displayed, SHA-256 hash stored only) |
-| `team_members` | Collaborative access (owner / editor / viewer) |
-| `media_files` | File metadata and storage URLs |
-| `upload_tickets` | Single-use presigned upload authorization records |
-| `subscribers` | Newsletter subscribers from public profile page |
-| `mail_outbox` | Dev-mode email queue (no SMTP required) |
-
----
-
-## Contributing
-
-Contributions, bug reports, and feature requests are welcome!
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Commit your changes: `git commit -m "feat: add your feature"`
-4. Push to the branch: `git push origin feature/your-feature`
-5. Open a pull request
-
-**Before submitting:**
-- Run `npm run typecheck` — must pass with 0 errors
-- Run `npm run lint` — must pass with 0 warnings
-- Run `npm run build` — must compile all routes successfully
-- Add tests in `tests/` for any new business logic
-
-**Code Style:**
-- TypeScript strict mode — no `any` types
-- All user-facing strings in English only
-- Error messages must be descriptive and actionable
-- Components default to Server Components; add `"use client"` only when needed
+| # | Table Name | Purpose & Primary Responsibilities |
+|---|---|---|
+| **1** | `users` | Primary user identity, role (`user`/`admin`), 2FA flag, account ban controls, encrypted PII. |
+| **2** | `sessions` | Active sessions, tokens, IP address, user-agent, active organization, impersonation audit. |
+| **3** | `accounts` | Better Auth OAuth links, provider accounts, and hashed credential pairs. |
+| **4** | `verifications` | One-time passwordless email and SMS verification tokens. |
+| **5** | `passkeys` | WebAuthn credentials (`credential_id`, `public_key`, `counter`, `transports`, `aaguid`). |
+| **6** | `two_factors` | Encrypted TOTP authenticator secrets, verified status, and recovery backup codes. |
+| **7** | `organizations` | Multi-tenant team workspaces (`name`, `slug`, `logo`, `metadata`). |
+| **8** | `members` | Organization memberships mapping users to workspace roles (`owner`, `admin`, `member`). |
+| **9** | `invitations` | Time-limited team invitations with role definitions and expiration timestamps. |
+| **10** | `profiles` | Bio page configuration, unique slug, theme, layout, SEO tags, custom domains. |
+| **11** | `links` | Bio cards & embeds, position, 12 types, pin state, active toggle, scheduling dates. |
+| **12** | `events` | High-throughput privacy-preserving views and clicks (salted SHA-256 IP hash, geo headers). |
+| **13** | `analytics_rollups` | Daily OLAP aggregate buckets (profile, date, device, country) — **98%+ DB space savings**. |
+| **14** | `subscribers` | Newsletter audience collected directly from creator bio profiles. |
+| **15** | `media_files` | Registered assets (PDFs, images, audio, video) with storage keys and public URLs. |
+| **16** | `upload_tickets` | Time-limited presigned upload tokens ensuring authenticated direct-to-cloud uploads. |
+| **17** | `webhooks` | Automated event delivery endpoints with HMAC-SHA256 signatures. |
+| **18** | `api_keys` | Developer REST access keys (prefix-indexed, hashed with SHA-256). |
+| **19** | `team_members` | Profile-level collaborators (`editor`, `analyst`). |
+| **20** | `mail_outbox` | Resilient local mail queue for asynchronous SMTP delivery. |
+| **21** | `password_reset_tokens` | Single-use, time-limited password recovery tokens. |
 
 ---
 
-## Documentation
+## 🌐 API Reference
 
-| Document | Location |
-|---|---|
-| Environment Variables Reference | [`.env.example`](.env.example) |
-| Authentication Guide | [`docs/auth.md`](docs/auth.md) |
-| Database Setup | [`docs/database.md`](docs/database.md) |
-| Storage Configuration | [`docs/storage.md`](docs/storage.md) |
-| Media Upload Guide | [`docs/media.md`](docs/media.md) |
-| Deployment Guide | [`docs/deployment.md`](docs/deployment.md) |
-| Security Architecture | [`docs/security.md`](docs/security.md) |
-| Environment Setup Guide | [`ENV_SETUP_GUIDE.md`](ENV_SETUP_GUIDE.md) |
+| Route | Method | Description |
+|---|---|---|
+| `/api/auth/[...all]` | `GET`, `POST` | Better Auth catch-all endpoint (Passkeys, 2FA, Orgs, Sessions) |
+| `/api/auth/altcha` | `GET`, `POST` | ALTCHA challenge generation and Proof-of-Work validation |
+| `/api/profile` | `GET`, `PATCH` | Fetch and update authenticated creator profile |
+| `/api/links` | `GET`, `POST` | Fetch and create bio links |
+| `/api/links/[id]` | `PATCH`, `DELETE` | Update link properties, schedule, or remove link |
+| `/api/links/reorder` | `POST` | Update display order of links via drag-and-drop |
+| `/api/blog` | `GET`, `POST` | Retrieve author post manifest or publish post to object storage |
+| `/api/blog/[postSlug]` | `GET`, `DELETE` | Fetch post markdown body or delete post object |
+| `/api/media/presign` | `POST` | Generate authenticated S3 presigned upload ticket |
+| `/api/media/complete` | `POST` | Commit upload ticket with magic byte verification |
+| `/api/file/[...key]` | `GET` | Stream private storage assets with HTTP 206 Range seeking |
+| `/api/analytics` | `GET` | Retrieve aggregate analytics and device breakdowns |
+| `/api/analytics/duckdb`| `GET` | Stream raw event parquet batches for in-browser OLAP |
+| `/api/health` | `GET` | Unauthenticated system and database health check probe |
 
 ---
 
-## License
+## ☁️ Multi-Cloud Deployment
 
-[MIT](LICENSE) © 2026 Sudhir Singh
+| Target | Recommended Setup | Commands |
+|---|---|---|
+| **Vercel** | Neon Postgres + Backblaze B2 | `vercel --prod` |
+| **Cloudflare Pages** | Cloudflare D1 + Cloudflare R2 | `npx opennextjs-cloudflare build && npx wrangler pages deploy` |
+| **Netlify** | Neon Postgres + Backblaze B2 | `netlify deploy --prod` |
+| **Railway** | Managed Postgres + S3 | Connect GitHub repo in Railway UI |
+| **Render** | Managed Postgres + S3 | Connect GitHub repo in Render UI |
+| **Docker** | Self-Hosted Compose | `docker compose up -d` |
 
 ---
 
-<div align="center">
+## 📚 Documentation Index
 
-Built with ❤️ using Next.js, Drizzle ORM, and Tailwind CSS.
+For in-depth architectural guides, refer to the [`docs/`](docs/) directory:
 
-**[⭐ Star this repo](https://github.com/SudhirDevOps1/LinkForge)** if LinkForge saves you time!
+* [**Authentication & Passkeys**](docs/auth.md) — Better Auth, WebAuthn, TOTP 2FA, and multi-tenant organizations.
+* [**Database Architecture**](docs/database.md) — 21-table schema, multi-dialect Drizzle setup, and auto-migration.
+* [**Storage Providers**](docs/storage.md) — Universal S3 adapter for Backblaze B2, Cloudflare R2, AWS S3, and MinIO.
+* [**Media & Upload Engine**](docs/media.md) — Presigned tickets, magic byte verification, and stream proxy.
+* [**Security Model**](docs/security.md) — ALTCHA PoW, dual-bucket rate limits, constant-time defenses, and encryption.
+* [**Serverless Daily Blog**](docs/daily-blog-b2.md) — Dual manifest auto-healing, S3 blog storage, and live markdown studio.
+* [**Creator Monetization**](docs/superprofile-monetization.md) — Courses, 1:1 mentorship calls, downloads, and direct payments.
+* [**Multi-Cloud Deployment**](docs/deployment.md) — Step-by-step guides for Vercel, Cloudflare, Netlify, Railway, and Docker.
+* [**Production Readiness**](docs/production.md) — Operational checklist, automated backups, and health monitoring.
 
-</div>
+---
+
+## 📄 License
+
+LinkForge is licensed under the [MIT License](LICENSE).  
+Contributions and pull requests are welcome!

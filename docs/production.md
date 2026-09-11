@@ -1,46 +1,56 @@
-# 🚀 Production Guide — deploy, backup, retention, health
+# 🚀 Production Readiness & Operations Guide
 
-> P0 code ke saath ship hua sach: health me real DB+storage ping hai,
-> standalone Docker output on hai, `upload_tickets` additive table hai.
+This guide details best practices, operational checklists, backup strategies, and monitoring procedures for running LinkForge in mission-critical production environments.
 
-## Pre-deploy checklist
+---
 
-1. Fresh DB par `npx drizzle-kit push` (postgres) ya provider config
-   (`db:push:turso`, `db:push:d1`). **Backup-first**: `pg_dump $DATABASE_URL`.
-   Nayi tables additive hain (`upload_tickets`, `profiles.design` nullable) —
-   purana data untouched rehta hai.
-2. `AUTH_SECRET` 32+ random bytes. `NEXT_PUBLIC_APP_URL` production domain.
-3. `APP_DOMAIN` (custom domains), Upstash env (multi-instance rate limits).
-4. `GET /api/health` → 200 `{ status: "ok", checks: { db, storage } }`.
-   DB down = 503 (orchestrator restart karega).
-5. `npm run typecheck` + `npx vitest run` + `npm run build` green.
+## ✅ Production Checklist
 
-## Backups
+Before launching LinkForge to public audiences, verify each configuration:
 
-- Postgres: nightly `pg_dump` (cron) + object-store copy.
-- Uploads: DB + object-store backups coordinated rakho (keys URLs me hain).
-- `npm run cleanup:uploads` daily cron (expired tickets + orphan objects).
+- [ ] **Cryptographic Secrets**: `BETTER_AUTH_SECRET` and `AUTH_SECRET` are set to at least 32 cryptographically random bytes generated via `openssl rand -hex 32`.
+- [ ] **ALTCHA Proof-of-Work**: `ALTCHA_HMAC_KEY` is configured to prevent bot registrations and brute-force login attempts.
+- [ ] **SSL / TLS Enforcement**: Domain enforces HTTPS (`Strict-Transport-Security` header active).
+- [ ] **Database Connection Limits**: If using serverless environments (Vercel, AWS Lambda), verify connection pooling is active (e.g. Neon HTTP driver or Supabase Transaction Pooler on port 6543).
+- [ ] **Storage Buckets & CORS**: S3 / B2 / R2 bucket CORS allows PUT and GET requests from your production domain.
+- [ ] **Rate Limiting**: Multi-instance deployments have configured Upstash Redis (`UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`) for shared rate-limiting state.
+- [ ] **Daily Blog Engine**: Public blog feed loads dynamically and manifest is verified in object storage.
 
-## Analytics retention
+---
 
-`ANALYTICS_RETENTION_DAYS` (default 30) — probabilistic GC har ~1% write par.
-Exact-deadline chahiye to daily `DELETE FROM events WHERE created_at < ...`
-cron lagao (retention cron, docs me "probabilistic" default likha hai).
+## 💾 Database Backup & Recovery
 
-## Email
+### PostgreSQL / Neon Backup
+To perform an automated backup of your PostgreSQL database:
 
-Default `MAIL_PROVIDER=console` (dev logs). Public reset ke liye SMTP/MailHog
-env set karo (`.env.example` → MAIL section, `src/lib/mail.ts`).
+```bash
+# Dump the complete LinkForge schema and data:
+pg_dump "$DATABASE_URL" --format=custom --no-owner --file=linkforge_backup_$(date +%F).dump
 
-## Security ops
+# Restore from backup:
+pg_restore --clean --if-exists --no-owner -d "$DATABASE_URL" linkforge_backup_2026-09-11.dump
+```
 
-- Webhooks: HTTPS-only, no-redirect, DNS-pinned, 3-attempt retry (lib/outbound.ts).
-- Rate limits single-instance in-memory; multi-instance par Upstash (fail-open).
-- `npm audit`: 4 moderate (drizzle-kit toolchain) documented; critical/high = blocker.
+### SQLite / Turso Backup
+```bash
+# Turso point-in-time backup:
+turso db dump linkforge > linkforge_backup_$(date +%F).sql
+```
 
-## Platform notes
+---
 
-- Vercel/Netlify: external Postgres + S3 storage; direct uploads (ticket flow)
-  se function payload limits bypass hote hain.
-- Docker: `output: "standalone"` on — `docker compose --profile full up`.
-- Cloudflare D1: 🚧 experimental — Workers binding verify karke hi production.
+## 🔍 Health Checks & Monitoring
+
+LinkForge exposes an unauthenticated health check endpoint for uptime monitoring services (e.g. BetterStack, UptimeRobot, Datadog):
+
+* **Endpoint**: `GET /api/health`
+* **Response**:
+```json
+{
+  "status": "healthy",
+  "database": "connected",
+  "timestamp": "2026-09-11T12:00:00.000Z",
+  "uptimeSeconds": 86400
+}
+```
+If the database connection fails, the endpoint responds with `HTTP 503 Service Unavailable`.
