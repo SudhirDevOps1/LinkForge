@@ -22,7 +22,7 @@ Runs on any database · Any object storage · Any cloud host · 100% self-hostab
 
 <br/>
 
-[**Live Demo**](https://inkorge-demo.vercel.app) · [**Documentation**](https://github.com/SudhirDevOps1/LinkForge/tree/main/docs) · [**Report Issue**](https://github.com/SudhirDevOps1/LinkForge/issues) · [**Request Feature**](https://github.com/SudhirDevOps1/LinkForge/issues)
+[**Live Demo**](https://inkorge-demo.vercel.app) · [**Interactive Web Docs**](/docs) · [**GitHub Docs**](docs/) · [**Troubleshooting & Errors**](docs/troubleshooting.md) · [**Report Issue**](https://github.com/SudhirDevOps1/LinkForge/issues)
 
 </div>
 
@@ -332,6 +332,7 @@ For in-depth architectural guides, refer to the [`docs/`](docs/) directory:
 * [**Serverless Daily Blog**](docs/daily-blog-b2.md) — Dual manifest auto-healing, S3 blog storage, and live markdown studio.
 * [**Creator Monetization**](docs/superprofile-monetization.md) — Courses, 1:1 mentorship calls, downloads, and direct payments.
 * [**Multi-Cloud Deployment**](docs/deployment.md) — Step-by-step guides for Vercel, Cloudflare, Netlify, Railway, and Docker.
+* [**Troubleshooting & Error Guide**](docs/troubleshooting.md) — Exhaustive 1-minute solutions for database migrations, DNS MX checks, CSRF, ALTCHA, and Webhook/Google Apps Script errors.
 * [**Production Readiness**](docs/production.md) — Operational checklist, automated backups, and health monitoring.
 
 ---

@@ -131,6 +131,7 @@ export default function LandingPage() {
           <a href="#calculator" className="transition-colors hover:text-white">Calculator</a>
           <a href="#deploy" className="transition-colors hover:text-white">Deploy</a>
           <a href="#free" className="transition-colors hover:text-white">Pricing</a>
+          <Link href="/docs" className="transition-colors hover:text-white">Docs</Link>
           <a href="https://github.com/SudhirDevOps1/LinkForge" target="_blank" rel="noreferrer" className="flex items-center gap-1.5 transition-colors hover:text-white">
             <GithubIcon className="h-4 w-4" /> GitHub
           </a>
@@ -463,7 +464,8 @@ export default function LandingPage() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Resources</p>
             <ul className="mt-4 space-y-2.5 text-sm">
-                            <li><Link href="/login" className="text-zinc-400 transition-colors hover:text-white">Log in</Link></li>
+              <li><Link href="/docs" className="text-zinc-400 transition-colors hover:text-white">Documentation</Link></li>
+              <li><Link href="/login" className="text-zinc-400 transition-colors hover:text-white">Log in</Link></li>
               <li><Link href="/signup" className="text-zinc-400 transition-colors hover:text-white">Sign up</Link></li>
               <li><a href="#faq" className="text-zinc-400 transition-colors hover:text-white">FAQ</a></li>
             </ul>
