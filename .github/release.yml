@@ -1,0 +1,24 @@
+changelog:
+  categories:
+    - title: "🚀 New Features & Enhancements"
+      labels:
+        - "enhancement"
+        - "feature"
+    - title: "🐛 Bug Fixes & Security"
+      labels:
+        - "bug"
+        - "fix"
+        - "security"
+    - title: "🪝 Webhooks & Integrations"
+      labels:
+        - "integration"
+        - "webhook"
+    - title: "📝 Documentation & Guides"
+      labels:
+        - "documentation"
+        - "docs"
+    - title: "🧰 Maintenance & Dependencies"
+      labels:
+        - "dependencies"
+        - "chore"
+        - "refactor"

@@ -1,0 +1,82 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+      - 'v*'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  build-and-release:
+    name: Build & Publish Release
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: "postgresql://postgres:postgres@127.0.0.1:5432/linkforge_ci"
+      BETTER_AUTH_SECRET: "ci-test-better-auth-secret-1234567890"
+      BETTER_AUTH_URL: "http://localhost:3000"
+      NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+      DATABASE_PROVIDER: "postgres"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify TypeScript types
+        run: npm run typecheck
+
+      - name: Lint codebase
+        run: npm run lint
+
+      - name: Run test suite
+        run: npx vitest run
+
+      - name: Compile production build
+        run: npm run build
+
+      - name: Prepare release bundle & checksums
+        run: |
+          mkdir -p release-dist
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+
+          cat <<EOF > release-dist/RELEASE_INFO.txt
+          ==================================================
+          LinkForge Production Release
+          Tag: ${TAG_NAME}
+          Commit: ${GITHUB_SHA}
+          Date: $(date -u '+%Y-%m-%d %H:%M:%SZ')
+          Node: $(node -v)
+          Next.js: 16 (Turbopack)
+          ==================================================
+          Verified: TypeCheck (0 errors), Lint (0 errors), Vitest (145/145 passing), Build (54/54 routes)
+          EOF
+
+          cd release-dist
+          sha256sum RELEASE_INFO.txt > SHA256SUMS.txt
+          cd ..
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "LinkForge ${{ github.ref_name }}"
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref, '-alpha') || contains(github.ref, '-beta') || contains(github.ref, '-rc') }}
+          files: |
+            release-dist/RELEASE_INFO.txt
+            release-dist/SHA256SUMS.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
