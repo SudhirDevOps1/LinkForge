@@ -45,6 +45,7 @@ import {
   IndianRupee,
   Layers,
   ListOrdered,
+  Loader2,
   Maximize2,
   MessageCircle,
   MousePointerClick,
@@ -162,6 +163,8 @@ function SortableLinkRow({
   onDuplicate,
   onShowQr,
   onZoomImage,
+  onFetchOg,
+  isFetchingOg,
 }: {
   link: Link & { clickCount?: number };
   onEdit: () => void;
@@ -170,6 +173,8 @@ function SortableLinkRow({
   onDuplicate: () => void;
   onShowQr: () => void;
   onZoomImage: (url: string, title: string) => void;
+  onFetchOg?: () => void;
+  isFetchingOg?: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: link.id });
@@ -255,6 +260,24 @@ function SortableLinkRow({
 
       {/* Action Toolbar */}
       <div className="flex items-center gap-1 ml-auto shrink-0">
+        {/* Quick Fetch OG button for links without thumbnails */}
+        {!link.thumbnailUrl && link.url.startsWith("http") && onFetchOg && (
+          <button
+            type="button"
+            onClick={onFetchOg}
+            disabled={isFetchingOg}
+            title="Auto-fetch OpenGraph image & metadata"
+            className="hidden sm:inline-flex items-center gap-1 rounded-xl px-2 py-1 text-[11px] font-medium text-violet-300 bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/20 transition-all focus-ring disabled:opacity-50"
+          >
+            {isFetchingOg ? (
+              <Loader2 className="h-3 w-3 animate-spin text-violet-400" />
+            ) : (
+              <Sparkles className="h-3 w-3 text-violet-400" />
+            )}
+            <span>Fetch OG</span>
+          </button>
+        )}
+
         {/* QR Code generator */}
         <button
           type="button"
@@ -353,10 +376,92 @@ export function LinksEditor({
   const [waPhone, setWaPhone] = useState("");
   const [waMessage, setWaMessage] = useState("");
 
+  // OpenGraph Scraper state
+  const [scraping, setScraping] = useState(false);
+  const [fetchingLinkIds, setFetchingLinkIds] = useState<Set<string>>(new Set());
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
+
+  async function scrapeUrlMetadata(targetUrl?: string, overwrite = false) {
+    const raw = (targetUrl || form.url).trim();
+    if (!raw || (!raw.startsWith("http://") && !raw.startsWith("https://"))) return;
+
+    setScraping(true);
+    try {
+      const res = await fetch("/api/links/scrape", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: raw }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || "Failed to auto-fetch metadata");
+        return;
+      }
+      const data = await res.json();
+      setForm((prev) => ({
+        ...prev,
+        title: (overwrite || !prev.title.trim()) && data.title ? data.title : prev.title,
+        description: (overwrite || !prev.description.trim()) && data.description ? data.description : prev.description,
+        thumbnailUrl: data.thumbnailUrl || prev.thumbnailUrl,
+        type: prev.type === "link" && data.detectedType ? data.detectedType : prev.type,
+        icon: (prev.icon === "link" || !prev.icon) && data.detectedIcon ? data.detectedIcon : prev.icon,
+      }));
+      toast.success("✨ OpenGraph metadata & image preview auto-detected!");
+    } catch {
+      toast.error("Could not scrape link preview");
+    } finally {
+      setScraping(false);
+    }
+  }
+
+  async function fetchOgForExistingLink(link: Link) {
+    if (!link.url || (!link.url.startsWith("http://") && !link.url.startsWith("https://"))) {
+      toast.info("Only web URLs (http/https) can be scraped");
+      return;
+    }
+    setFetchingLinkIds((prev) => new Set(prev).add(link.id));
+    try {
+      const res = await fetch("/api/links/scrape", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: link.url }),
+      });
+      if (!res.ok) throw new Error("Scrape failed");
+      const data = await res.json();
+      if (!data.thumbnailUrl && !data.description) {
+        toast.info("No OpenGraph image found for this website");
+        return;
+      }
+
+      const patchPayload: Record<string, unknown> = {};
+      if (data.thumbnailUrl && !link.thumbnailUrl) patchPayload.thumbnailUrl = data.thumbnailUrl;
+      if (data.description && !link.description) patchPayload.description = data.description;
+      if (data.detectedIcon && (link.icon === "link" || !link.icon)) patchPayload.icon = data.detectedIcon;
+
+      if (Object.keys(patchPayload).length > 0) {
+        const { link: updated } = await api(`/api/links/${link.id}`, {
+          method: "PATCH",
+          body: JSON.stringify(patchPayload),
+        });
+        setLinks((prev) => prev.map((l) => (l.id === link.id ? (updated as Link) : l)));
+        toast.success(`✨ OG Preview saved for "${link.title}"!`);
+      } else {
+        toast.info("Link already has up-to-date metadata");
+      }
+    } catch {
+      toast.error("Failed to auto-fetch OG metadata");
+    } finally {
+      setFetchingLinkIds((prev) => {
+        const next = new Set(prev);
+        next.delete(link.id);
+        return next;
+      });
+    }
+  }
 
   async function api(path: string, init?: RequestInit) {
     const res = await fetch(path, {
@@ -798,6 +903,8 @@ export function LinksEditor({
                       onDuplicate={() => duplicateLink(link)}
                       onShowQr={() => setQrModalLink({ url: link.url, title: link.title })}
                       onZoomImage={(url, title) => setZoomImage({ url, title })}
+                      onFetchOg={() => fetchOgForExistingLink(link)}
+                      isFetchingOg={fetchingLinkIds.has(link.id)}
                     />
                   ))}
                 </div>
@@ -880,11 +987,38 @@ export function LinksEditor({
             </Field>
 
             <Field label="Destination URL" hint="https://... or upi:// or wa.me/...">
-              <Input
-                placeholder="https://..."
-                value={form.url}
-                onChange={(e) => setForm({ ...form, url: e.target.value })}
-              />
+              <div className="flex gap-2">
+                <Input
+                  placeholder="https://..."
+                  value={form.url}
+                  onChange={(e) => setForm({ ...form, url: e.target.value })}
+                  onBlur={() => {
+                    if (!form.title.trim() && (form.url.startsWith("http://") || form.url.startsWith("https://"))) {
+                      scrapeUrlMetadata(form.url);
+                    }
+                  }}
+                  className="flex-1"
+                />
+                <button
+                  type="button"
+                  disabled={scraping || (!form.url.startsWith("http://") && !form.url.startsWith("https://"))}
+                  onClick={() => scrapeUrlMetadata(form.url, true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-violet-600/20 hover:bg-violet-600/30 text-violet-300 border border-violet-500/30 disabled:opacity-40 disabled:cursor-not-allowed transition-all shrink-0"
+                  title="Auto-fetch OpenGraph image, title, and description"
+                >
+                  {scraping ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <span>Fetching...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-3.5 w-3.5 text-violet-400" />
+                      <span>Auto-Fetch OG</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </Field>
 
             {/* Specialized UPI Generator Helper */}
@@ -1153,6 +1287,45 @@ export function LinksEditor({
                 onChange={(e) => setForm({ ...form, thumbnailUrl: e.target.value })}
               />
             </Field>
+
+            {/* Live OpenGraph Preview Card */}
+            {form.thumbnailUrl.trim() && (
+              <div className="sm:col-span-2 p-3.5 rounded-2xl border border-violet-500/20 bg-violet-950/20 backdrop-blur-md space-y-2.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-zinc-200 flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5 text-violet-400" />
+                    OpenGraph Image Preview
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, thumbnailUrl: "" })}
+                    className="text-[11px] text-zinc-400 hover:text-red-400 transition-colors"
+                  >
+                    ✕ Remove Image
+                  </button>
+                </div>
+                <div className="relative overflow-hidden rounded-xl border border-white/10 aspect-video max-h-48 w-full bg-black/50 group/thumb">
+                  <img
+                    src={form.thumbnailUrl}
+                    alt={form.title || "Preview"}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover/thumb:scale-105"
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = "none";
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/30 pointer-events-none" />
+                  <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between pointer-events-none">
+                    <div className="min-w-0 pr-2">
+                      <p className="text-xs font-semibold text-white truncate">{form.title || "Link Card Title"}</p>
+                      <p className="text-[10px] text-zinc-300 truncate opacity-80">{form.description || form.url}</p>
+                    </div>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-violet-500/40 text-violet-200 border border-violet-400/40 shrink-0">
+                      OG Ready
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Advanced Options: Pin + Schedule + Expiry */}
             <div className="sm:col-span-2 rounded-2xl border border-white/10 bg-white/[0.02] p-4 space-y-4">

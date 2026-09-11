@@ -87,6 +87,82 @@ function spotifyEmbedUrl(url: string): string | null {
   return m ? `https://open.spotify.com/embed/${m[1]}/${m[2]}?utm_source=generator&theme=0` : null;
 }
 
+export function getEffectiveThumbnail(link: Link): string | null {
+  if (link.thumbnailUrl && link.thumbnailUrl.trim()) return link.thumbnailUrl.trim();
+  const rawUrl = link.url || "";
+  const yId = youtubeId(rawUrl);
+  if (yId) return `https://img.youtube.com/vi/${yId}/hqdefault.jpg`;
+  const ghMatch = /github\.com\/([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_.-]+)/.exec(rawUrl);
+  if (ghMatch && !["settings", "pricing", "explore", "trending", "features", "marketplace"].includes(ghMatch[1])) {
+    return `https://opengraph.githubassets.com/1/${ghMatch[1]}/${ghMatch[2]}`;
+  }
+  return null;
+}
+
+export function getLinkDomain(rawUrl: string): string {
+  try {
+    if (rawUrl.startsWith("mailto:")) return "Email";
+    if (rawUrl.startsWith("tel:")) return "Call";
+    if (rawUrl.startsWith("upi:")) return "UPI Pay";
+    const u = new URL(rawUrl);
+    return u.hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+}
+
+export function getBrandTheme(link: Link, defaultAccent: string): { color: string; label: string; iconId?: string } {
+  const t = (link.type || "").toLowerCase();
+  const raw = (link.url || "").toLowerCase();
+  const icon = (link.icon || "").toLowerCase();
+
+  if (t === "youtube" || raw.includes("youtube.com") || raw.includes("youtu.be") || icon === "youtube") {
+    return { color: "#FF0000", label: "YouTube", iconId: "youtube" };
+  }
+  if (t === "github" || raw.includes("github.com") || icon === "github") {
+    return { color: "#8b5cf6", label: "GitHub", iconId: "github" };
+  }
+  if (t === "instagram" || raw.includes("instagram.com") || icon === "instagram") {
+    return { color: "#E1306C", label: "Instagram", iconId: "instagram" };
+  }
+  if (t === "linkedin" || raw.includes("linkedin.com") || icon === "linkedin") {
+    return { color: "#0A66C2", label: "LinkedIn", iconId: "linkedin" };
+  }
+  if (t === "telegram" || raw.includes("t.me") || raw.includes("telegram") || icon === "telegram") {
+    return { color: "#26A5E4", label: "Telegram", iconId: "telegram" };
+  }
+  if (t === "email" || raw.startsWith("mailto:") || raw.includes("mail.google.com") || icon === "gmail" || icon === "mail") {
+    return { color: "#EA4335", label: "Gmail", iconId: "gmail" };
+  }
+  if (t === "facebook" || raw.includes("facebook.com") || icon === "facebook") {
+    return { color: "#1877F2", label: "Facebook", iconId: "facebook" };
+  }
+  if (t === "whatsapp" || raw.includes("wa.me") || icon === "whatsapp") {
+    return { color: "#25D366", label: "WhatsApp", iconId: "whatsapp" };
+  }
+  if (t === "discord" || raw.includes("discord.gg") || raw.includes("discord.com") || icon === "discord") {
+    return { color: "#5865F2", label: "Discord", iconId: "discord" };
+  }
+  if (t === "spotify" || raw.includes("spotify.com") || icon === "spotify") {
+    return { color: "#1DB954", label: "Spotify", iconId: "spotify" };
+  }
+  if (t === "x" || t === "twitter" || raw.includes("twitter.com") || raw.includes("x.com") || icon === "twitter" || icon === "x") {
+    return { color: "#1DA1F2", label: "X", iconId: "twitter" };
+  }
+  if (t === "twitch" || raw.includes("twitch.tv") || icon === "twitch") {
+    return { color: "#9146FF", label: "Twitch", iconId: "twitch" };
+  }
+  if (t === "substack" || raw.includes("substack.com") || icon === "substack") {
+    return { color: "#FF6719", label: "Substack", iconId: "substack" };
+  }
+  if (t === "upi" || raw.startsWith("upi:") || icon === "upi") {
+    return { color: "#097939", label: "UPI Pay", iconId: "upi" };
+  }
+
+  const dom = getLinkDomain(link.url);
+  return { color: defaultAccent, label: dom ? dom.split(".")[0] : "Link" };
+}
+
 export type MediaType =
   | "youtube"
   | "spotify"
@@ -1533,6 +1609,10 @@ export function BioRenderer({
             const isShimmer = d?.attentionEffect === "shimmer";
 
             const activeHoverClass = d?.cardHover3D ? "" : hoverClass;
+            const effectiveThumbnail = getEffectiveThumbnail(link);
+            const brandTheme = getBrandTheme(link, accent);
+            const domain = getLinkDomain(link.url);
+
             return (
               <div
                 key={link.id}
@@ -1565,17 +1645,58 @@ export function BioRenderer({
                     className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_3s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent"
                   />
                 )}
-                {/* 1. Optional Custom Cover / Thumbnail */}
-                {link.thumbnailUrl && mediaType !== "image" && (
-                  <div className="mb-3 overflow-hidden rounded-xl border border-white/10 max-h-48 w-full bg-black/30">
-                    { }
+
+                {/* Subtle Ambient Brand Radial Glow (Eliminates empty black void) */}
+                {!effectiveThumbnail && (
+                  <div
+                    aria-hidden
+                    className="pointer-events-none absolute -top-10 -right-10 w-36 h-36 rounded-full blur-2xl opacity-35 group-hover:opacity-60 transition-opacity duration-500"
+                    style={{
+                      background: `radial-gradient(circle, ${brandTheme.color}66 0%, transparent 70%)`,
+                    }}
+                  />
+                )}
+
+                {/* Subtle Brand Watermark Logo in background */}
+                {!effectiveThumbnail && brandTheme.iconId && (
+                  <div
+                    aria-hidden
+                    className="pointer-events-none absolute -right-3 -bottom-3 text-white/[0.04] group-hover:text-white/[0.08] transition-colors duration-300 scale-[2.2] select-none"
+                  >
+                    <BrandIcon id={brandTheme.iconId} className="w-16 h-16" />
+                  </div>
+                )}
+
+                {/* 1. Rich OpenGraph / Media Cover Banner */}
+                {effectiveThumbnail && mediaType !== "image" && (
+                  <a
+                    href={hrefFor(link)}
+                    target={trackClicks ? "_blank" : undefined}
+                    rel="noopener noreferrer"
+                    className="group/cover block relative mb-3 overflow-hidden rounded-xl border border-white/10 aspect-video max-h-52 w-full bg-black/40 shadow-sm"
+                  >
                     <img
-                      src={link.thumbnailUrl}
+                      src={effectiveThumbnail}
                       alt={link.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover/cover:scale-105"
                       loading="lazy"
                     />
-                  </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none" />
+                    {/* Floating Glassmorphic Domain Pill */}
+                    {domain && (
+                      <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-md border border-white/15 text-[10px] font-mono text-zinc-200 shadow-md">
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: brandTheme.color }} />
+                        <span>{domain}</span>
+                        <span className="text-zinc-400">↗</span>
+                      </div>
+                    )}
+                    {/* Bottom banner title overlay */}
+                    <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-white pointer-events-none">
+                      <span className="text-[11px] font-medium tracking-wide drop-shadow-md truncate opacity-90">
+                        {link.title}
+                      </span>
+                    </div>
+                  </a>
                 )}
 
                 {/* 2. Top Title Row (Clickable) */}
@@ -1961,22 +2082,22 @@ export function BioRenderer({
                   href={hrefFor(link)}
                   target={trackClicks ? "_blank" : undefined}
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3.5"
+                  className="flex items-center gap-3.5 relative z-10 w-full"
                 >
                   <span
-                    className="flex shrink-0 items-center justify-center rounded-xl border"
+                    className="flex shrink-0 items-center justify-center rounded-xl border transition-transform duration-200 group-hover:scale-105"
                     style={{
                       width: iconBox,
                       height: iconBox,
-                      borderColor: iconBorderForCard(effectiveLinkIconColor),
-                      color: effectiveLinkIconColor,
-                      background: iconBgForCard(effectiveLinkIconColor),
+                      borderColor: iconBorderForCard(effectiveLinkIconColor || brandTheme.color),
+                      color: effectiveLinkIconColor || brandTheme.color,
+                      background: iconBgForCard(effectiveLinkIconColor || brandTheme.color),
                     }}
                   >
                     {linkIcon(link, undefined, iconSize)}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <p
                         className={`truncate font-semibold ${link.size === "feature" ? "text-lg" : "text-sm"}`}
                         style={{
@@ -2027,14 +2148,28 @@ export function BioRenderer({
                       <p className="mt-0.5 line-clamp-2 text-xs" style={{ color: v.muted }}>
                         {link.description}
                       </p>
+                    ) : domain ? (
+                      <p className="mt-0.5 text-[11px] font-mono truncate opacity-60" style={{ color: v.muted }}>
+                        {domain}
+                      </p>
                     ) : null}
                   </div>
-                  <span
-                    className="text-xs opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:opacity-80"
-                    style={{ color: accent }}
-                  >
-                    →
-                  </span>
+                  {/* Right-Side Action Pill Badge */}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span
+                      className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium font-mono px-2.5 py-1 rounded-full border bg-white/[0.04] text-zinc-300 transition-all duration-200 group-hover:border-white/20 group-hover:bg-white/[0.08]"
+                      style={{ borderColor: v.border }}
+                    >
+                      <span>{brandTheme.label}</span>
+                      <span className="opacity-70 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform">↗</span>
+                    </span>
+                    <span
+                      className="text-xs transition-all duration-200 group-hover:translate-x-1 sm:hidden"
+                      style={{ color: brandTheme.color || accent }}
+                    >
+                      →
+                    </span>
+                  </div>
                 </a>
                 )}
 
