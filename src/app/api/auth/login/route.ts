@@ -30,5 +30,22 @@ export const POST = handle(async (req: Request) => {
     return json({ twoFactorRedirect: true, email: res.user.email });
   }
 
-  return json({ user: { id: res.user.id, email: res.user.email, name: res.user.name } });
+  const response = json({ user: { id: res.user.id, email: res.user.email, name: res.user.name } });
+
+  // Forward Better Auth session headers for full compatibility with client plugins
+  try {
+    const { auth } = await import("@/lib/auth/better-auth");
+    const baRes = await auth.api.signInEmail({
+      body: { email: input.email, password: input.password },
+      asResponse: true,
+    });
+    const setCookies = baRes.headers.getSetCookie ? baRes.headers.getSetCookie() : [baRes.headers.get("set-cookie")].filter(Boolean) as string[];
+    for (const cookie of setCookies) {
+      if (cookie) response.headers.append("set-cookie", cookie);
+    }
+  } catch (baErr) {
+    console.warn("[login] Better Auth cookie bridge notice:", (baErr as Error).message);
+  }
+
+  return response;
 });

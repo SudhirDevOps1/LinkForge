@@ -13,10 +13,12 @@ import { autoMigrate } from "@/db/auto-migrate";
 import { profiles, subscribers } from "@/db/schema";
 import { ApiError, guardRateLimit, handle, json, parseOrThrow } from "@/lib/api";
 import { verifyEmailMx } from "@/lib/email-verifier";
+import { verifyAltchaSolution } from "@/lib/altcha";
 
 const subscribeSchema = z.object({
   slug: z.string().trim().min(1).max(100),
   email: z.string().trim().email().min(5).max(254),
+  altcha: z.string().trim().optional(),
 });
 
 export const POST = handle(async (req: Request) => {
@@ -26,10 +28,18 @@ export const POST = handle(async (req: Request) => {
   // Auto-migrate ensures subscribers table exists on Neon / Postgres / SQLite
   await autoMigrate();
 
-  const { slug, email } = parseOrThrow(
+  const { slug, email, altcha } = parseOrThrow(
     subscribeSchema,
     await req.json().catch(() => ({}))
   );
+
+  // 0. Proof-of-Work anti-bot protection (ALTCHA)
+  if (altcha) {
+    const altchaRes = verifyAltchaSolution(altcha);
+    if (!altchaRes.verified) {
+      throw new ApiError(400, altchaRes.error || "Security verification failed. Please complete the challenge.");
+    }
+  }
 
   // 1. Check profile exists and is published
   const [profile] = await db

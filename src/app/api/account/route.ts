@@ -40,10 +40,17 @@ export const PATCH = handle(async (req: Request) => {
       }
       const matches = await verifyPassword(input.currentPassword, user.passwordHash);
       if (!matches) {
-        throw new ApiError(401, "Current password galat hai");
+        throw new ApiError(401, "Current password is incorrect.");
       }
     }
     updates.passwordHash = await hashPassword(input.newPassword);
+    try {
+      const { auth } = await import("@/lib/auth/better-auth");
+      const ctx = await auth.$context;
+      const baPassword = await ctx.password.hash(input.newPassword);
+      const { accounts } = await import("@/db/schema");
+      await db.update(accounts).set({ password: baPassword, updatedAt: new Date() }).where(eq(accounts.userId, user.id));
+    } catch {}
   }
 
   if (Object.keys(updates).length > 0) {

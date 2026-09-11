@@ -6,9 +6,10 @@
 // Elegant glassmorphism subscribe box with real-time MX DNS verification,
 // disposable email filtering, and smooth state transitions.
 // =============================================================================
-import { Check, Loader2, Mail, Sparkles } from "lucide-react";
+import { Check, Loader2, Mail, Sparkles, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { AltchaWidget } from "@/components/auth/AltchaWidget";
 
 export function NewsletterSubscribe({
   slug,
@@ -20,6 +21,7 @@ export function NewsletterSubscribe({
   accentColor?: string;
 }) {
   const [email, setEmail] = useState("");
+  const [altchaToken, setAltchaToken] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -29,6 +31,13 @@ export function NewsletterSubscribe({
     e.preventDefault();
     if (!email.trim() || submitting) return;
 
+    if (!altchaToken) {
+      toast.error("Please complete the ALTCHA anti-bot challenge below.");
+      setIsError(true);
+      setStatusMessage("Please verify you are human with the ALTCHA security check below.");
+      return;
+    }
+
     setSubmitting(true);
     setStatusMessage(null);
     setIsError(false);
@@ -37,7 +46,7 @@ export function NewsletterSubscribe({
       const res = await fetch("/api/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug, email: email.trim() }),
+        body: JSON.stringify({ slug, email: email.trim(), altcha: altchaToken }),
       });
 
       const data = (await res.json().catch(() => ({}))) as {
@@ -93,33 +102,46 @@ export function NewsletterSubscribe({
           <span>{statusMessage}</span>
         </div>
       ) : (
-        <form onSubmit={handleSubscribe} className="mt-3 flex flex-col sm:flex-row gap-2">
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              if (isError) setIsError(false);
-            }}
-            placeholder="your.email@example.com"
-            required
-            disabled={submitting}
-            className="flex-1 rounded-xl border border-white/10 bg-black/40 px-3.5 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-violet-400 transition-all disabled:opacity-50"
-          />
-          <button
-            type="submit"
-            disabled={submitting || !email.trim()}
-            className="inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold text-white shadow-lg transition-all duration-200 hover:brightness-110 active:scale-95 disabled:opacity-50 cursor-pointer shrink-0"
-            style={{ background: accentColor }}
-          >
-            {submitting ? (
-              <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Verifying MX…
-              </>
-            ) : (
-              "Subscribe"
-            )}
-          </button>
+        <form onSubmit={handleSubscribe} className="mt-3 space-y-2.5">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (isError) setIsError(false);
+              }}
+              placeholder="your.email@example.com"
+              required
+              disabled={submitting}
+              className="flex-1 rounded-xl border border-white/10 bg-black/40 px-3.5 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-violet-400 transition-all disabled:opacity-50"
+            />
+            <button
+              type="submit"
+              disabled={submitting || !email.trim()}
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold text-white shadow-lg transition-all duration-200 hover:brightness-110 active:scale-95 disabled:opacity-50 cursor-pointer shrink-0"
+              style={{ background: accentColor }}
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Verifying MX…
+                </>
+              ) : (
+                "Subscribe"
+              )}
+            </button>
+          </div>
+
+          {/* 🛡️ ALTCHA Proof-of-Work Challenge for Newsletter Anti-Spam */}
+          <div className="pt-1">
+            <AltchaWidget
+              onVerify={(token) => {
+                setAltchaToken(token);
+                if (isError) setIsError(false);
+              }}
+              onExpire={() => setAltchaToken(null)}
+            />
+          </div>
         </form>
       )}
 
@@ -130,7 +152,9 @@ export function NewsletterSubscribe({
       ) : null}
 
       <div className="mt-2.5 flex items-center justify-between text-[10px] text-zinc-500">
-        <span>🔒 Zero Spam · Real MX Verified</span>
+        <span className="flex items-center gap-1">
+          <ShieldCheck className="h-3 w-3 text-emerald-400" /> Real MX & ALTCHA Protected
+        </span>
         <span>Unsubscribe anytime</span>
       </div>
     </div>

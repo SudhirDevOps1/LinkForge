@@ -8,18 +8,10 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { admin, anonymous, organization, phoneNumber, twoFactor } from "better-auth/plugins";
 import { passkey } from "@better-auth/passkey";
+import { isSqliteProvider } from "@/config/db.config";
 import { db } from "@/db";
-import {
-  accounts,
-  invitations,
-  members,
-  organizations,
-  passkeys,
-  sessions,
-  twoFactors,
-  users,
-  verifications,
-} from "@/db/schema";
+import * as pgSchema from "@/db/schema";
+import * as sqliteSchema from "@/db/schema.sqlite";
 
 const rpId =
   process.env.AUTH_RP_ID ||
@@ -33,6 +25,28 @@ const rpId =
       })()
     : "localhost");
 
+const s = isSqliteProvider ? sqliteSchema : pgSchema;
+const betterAuthSchema = {
+  user: s.users,
+  users: s.users,
+  session: s.sessions,
+  sessions: s.sessions,
+  account: s.accounts,
+  accounts: s.accounts,
+  verification: s.verifications,
+  verifications: s.verifications,
+  passkey: s.passkeys,
+  passkeys: s.passkeys,
+  twoFactor: s.twoFactors,
+  twoFactors: s.twoFactors,
+  organization: s.organizations,
+  organizations: s.organizations,
+  member: s.members,
+  members: s.members,
+  invitation: s.invitations,
+  invitations: s.invitations,
+};
+
 export const auth = betterAuth({
   appName: "LinkForge",
   baseURL: process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
@@ -43,18 +57,9 @@ export const auth = betterAuth({
     process.env.SESSION_SECRET ||
     "linkforge-better-auth-secure-secret-entropy-32b",
   database: drizzleAdapter(db, {
-    provider: "pg",
-    schema: {
-      user: users,
-      session: sessions,
-      account: accounts,
-      verification: verifications,
-      passkey: passkeys,
-      twoFactor: twoFactors,
-      organization: organizations,
-      member: members,
-      invitation: invitations,
-    },
+    provider: isSqliteProvider ? "sqlite" : "pg",
+    schema: betterAuthSchema,
+    usePlural: true,
   }),
   emailAndPassword: {
     enabled: true,
@@ -107,7 +112,7 @@ export const auth = betterAuth({
   ],
   advanced: {
     database: {
-      generateId: "uuid",
+      generateId: () => crypto.randomUUID(),
     },
   },
 });

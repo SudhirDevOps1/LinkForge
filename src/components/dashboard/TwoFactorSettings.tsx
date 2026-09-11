@@ -6,6 +6,7 @@
 import { Check, Copy, KeyRound, QrCode, Shield, ShieldAlert, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { QRCodeSVG } from "qrcode.react";
 import { Badge, Button, Card, Field, Input } from "@/components/ui";
 import { authClient } from "@/lib/auth/auth-client";
 
@@ -214,8 +215,15 @@ export function TwoFactorSettings({ initialEnabled = false }: TwoFactorSettingsP
             </div>
           </div>
 
+          {totpURI && (
+            <div className="flex flex-col items-center justify-center p-4 bg-white rounded-2xl shadow-md w-fit mx-auto">
+              <QRCodeSVG value={totpURI} size={180} level="M" />
+              <p className="mt-2 text-[10px] font-semibold text-zinc-700 uppercase tracking-wider">Scan with Camera or App</p>
+            </div>
+          )}
+
           <div className="rounded-xl border border-white/10 bg-black/40 p-3 text-xs">
-            <p className="text-[11px] font-medium text-zinc-400">Setup Key / URI:</p>
+            <p className="text-[11px] font-medium text-zinc-400">Setup Key / Manual URI:</p>
             <code className="mt-1 block break-all font-mono text-[11px] text-emerald-200">
               {totpURI}
             </code>

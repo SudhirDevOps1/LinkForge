@@ -125,12 +125,15 @@ export const POST = handle(async (req: Request) => {
     })
     .where(eq(users.id, user.id));
 
-  // Sync Better Auth accounts table if present
+  // Sync Better Auth accounts table with scrypt hash if present
   try {
+    const { auth } = await import("@/lib/auth/better-auth");
+    const ctx = await auth.$context;
+    const baPassword = await ctx.password.hash(newPassword);
     await db
       .update(accounts)
       .set({
-        password: newHash,
+        password: baPassword,
         updatedAt: new Date(),
       })
       .where(eq(accounts.userId, user.id));

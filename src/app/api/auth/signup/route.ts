@@ -29,8 +29,26 @@ export const POST = handle(async (req: Request) => {
     userAgent: req.headers.get("user-agent") ?? undefined,
   });
   await setSessionCookie(session.id, session.expiresAt);
-  return json(
+
+  const response = json(
     { user: { id: user.id, email: user.email, name: user.name } },
     { status: 201 },
   );
+
+  // Forward Better Auth session headers for full compatibility with client plugins
+  try {
+    const { auth } = await import("@/lib/auth/better-auth");
+    const baRes = await auth.api.signInEmail({
+      body: { email: input.email, password: input.password },
+      asResponse: true,
+    });
+    const setCookies = baRes.headers.getSetCookie ? baRes.headers.getSetCookie() : [baRes.headers.get("set-cookie")].filter(Boolean) as string[];
+    for (const cookie of setCookies) {
+      if (cookie) response.headers.append("set-cookie", cookie);
+    }
+  } catch (baErr) {
+    console.warn("[signup] Better Auth cookie bridge notice:", (baErr as Error).message);
+  }
+
+  return response;
 });

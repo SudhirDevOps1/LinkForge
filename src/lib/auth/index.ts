@@ -8,6 +8,7 @@
 // (lib/auth/external.ts) load hote hain jo same unified user model par map
 // karte hain.
 // =============================================================================
+import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { eq, or } from "drizzle-orm";
 import { decryptEmail, decryptField, encryptEmail, encryptField } from "@/lib/db-cipher";
@@ -114,14 +115,17 @@ export async function signUp(input: {
     })
     .returning();
 
-  // Better Auth account sync (credential provider)
+  // Better Auth account sync (credential provider with scrypt hash)
   try {
+    const { auth } = await import("./better-auth");
+    const ctx = await auth.$context;
+    const baPassword = await ctx.password.hash(input.password);
     await db.insert(accounts).values({
       id: crypto.randomUUID(),
       userId: user.id,
       accountId: user.id,
       providerId: "credential",
-      password: user.passwordHash,
+      password: baPassword,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -178,11 +182,33 @@ export async function setSessionCookie(token: string, expiresAt: Date) {
     path: "/",
     expires: expiresAt,
   });
+
+  // Seamless Better Auth session cookie bridge
+  try {
+    const secret =
+      process.env.BETTER_AUTH_SECRET ||
+      process.env.AUTH_SECRET ||
+      process.env.SESSION_SECRET ||
+      "linkforge-better-auth-secure-secret-entropy-32b";
+    const signature = crypto.createHmac("sha256", secret).update(token).digest("base64");
+    const signedValue = `${token}.${encodeURIComponent(signature)}`;
+    jar.set("better-auth.session_token", signedValue, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      expires: expiresAt,
+    });
+  } catch (err) {
+    console.warn("[auth] Failed to set Better Auth session cookie:", (err as Error).message);
+  }
 }
 
 export async function clearSessionCookie() {
   const jar = await cookies();
   jar.delete(SESSION_COOKIE);
+  jar.delete("better-auth.session_token");
+  jar.delete("better-auth.session_data");
 }
 
 export async function signIn(input: {
@@ -220,13 +246,31 @@ export async function signIn(input: {
     }
   }
 
-  if (!user?.passwordHash) {
-    // Constant-time mitigation: equalize response time against timing-based user enumeration
-    await verifyPassword(input.password, DUMMY_HASH);
-    throw new ApiError(401, "Invalid email or password");
+  let passwordOk = false;
+  if (user?.passwordHash) {
+    passwordOk = await verifyPassword(input.password, user.passwordHash);
   }
-  const ok = await verifyPassword(input.password, user.passwordHash);
-  if (!ok) {
+  if (!passwordOk && user) {
+    // Check accounts table (Better Auth scrypt hash)
+    try {
+      const [acc] = await db.select().from(accounts).where(eq(accounts.userId, user.id)).limit(1);
+      if (acc?.password) {
+        const { auth } = await import("./better-auth");
+        const ctx = await auth.$context;
+        passwordOk = await ctx.password.verify({ password: input.password, hash: acc.password });
+        if (passwordOk && !user.passwordHash) {
+          // Sync bcrypt passwordHash back to users table
+          const newBcrypt = await hashPassword(input.password);
+          await db.update(users).set({ passwordHash: newBcrypt }).where(eq(users.id, user.id));
+        }
+      }
+    } catch {}
+  }
+
+  if (!passwordOk) {
+    if (!user?.passwordHash) {
+      await verifyPassword(input.password, DUMMY_HASH);
+    }
     throw new ApiError(401, "Invalid email or password");
   }
 
@@ -234,8 +278,11 @@ export async function signIn(input: {
     throw new ApiError(403, "Account suspended: " + (user.banReason || "Please contact administrator."));
   }
 
-  // Ensure accounts row is synced for Better Auth plugins
+  // Ensure accounts row is synced with Better Auth scrypt hash for plugins (like 2FA)
   try {
+    const { auth } = await import("./better-auth");
+    const ctx = await auth.$context;
+    const baPassword = await ctx.password.hash(input.password);
     const existingAcc = await db.select({ id: accounts.id }).from(accounts).where(eq(accounts.userId, user.id)).limit(1);
     if (existingAcc.length === 0) {
       await db.insert(accounts).values({
@@ -243,10 +290,12 @@ export async function signIn(input: {
         userId: user.id,
         accountId: user.id,
         providerId: "credential",
-        password: user.passwordHash,
+        password: baPassword,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
+    } else {
+      await db.update(accounts).set({ password: baPassword, updatedAt: new Date() }).where(eq(accounts.userId, user.id));
     }
   } catch {
     // Non-fatal account sync
