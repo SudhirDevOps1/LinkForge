@@ -403,7 +403,7 @@ const HOVER_EFFECTS = [
   { id: "none", label: "Static", desc: "No hover motion" },
 ];
 
-type StudioTab = "presets" | "themes" | "typography" | "colors" | "cards" | "motion";
+type StudioTab = "presets" | "themes" | "typography" | "colors" | "cards" | "motion" | "advanced";
 
 export function AppearanceEditor({
   profile: initialProfile,
@@ -450,6 +450,42 @@ export function AppearanceEditor({
   const [avatarShape, setAvatarShape] = useState(initialDesign.avatarShape ?? "circle");
   const [avatarRing, setAvatarRing] = useState(initialDesign.avatarRing ?? false);
 
+  // Advanced typography
+  const [customFontName, setCustomFontName] = useState(initialDesign.customFontName ?? "");
+  const [letterSpacing, setLetterSpacing] = useState(initialDesign.letterSpacing ?? 0);
+  const [lineHeight, setLineHeight] = useState(initialDesign.lineHeight ?? 1.5);
+
+  // Per-element colors
+  const [nameColor, setNameColor] = useState(initialDesign.nameColor ?? "");
+  const [bioColor, setBioColor] = useState(initialDesign.bioColor ?? "");
+  const [linkTextColor, setLinkTextColor] = useState(initialDesign.linkTextColor ?? "");
+  const [linkIconColor, setLinkIconColor] = useState(initialDesign.linkIconColor ?? "");
+  const [linkBorderColor, setLinkBorderColor] = useState(initialDesign.linkBorderColor ?? "");
+  const [cardTintColor, setCardTintColor] = useState(initialDesign.cardTintColor ?? "");
+  const [borderColor, setBorderColor] = useState(initialDesign.borderColor ?? "");
+
+  // Advanced card
+  const [cardOpacity, setCardOpacity] = useState(initialDesign.cardOpacity ?? 1.0);
+  const [cardPadding, setCardPadding] = useState(initialDesign.cardPadding ?? "default");
+  const [iconBgStyle, setIconBgStyle] = useState(initialDesign.iconBgStyle ?? "transparent");
+
+  // Advanced motion
+  const [transitionSpeed, setTransitionSpeed] = useState(initialDesign.transitionSpeed ?? "normal");
+  const [hoverDuration, setHoverDuration] = useState(initialDesign.hoverDuration ?? 200);
+  const [staggerDelay, setStaggerDelay] = useState(initialDesign.staggerDelay ?? 45);
+  const [hoverEasing, setHoverEasing] = useState(initialDesign.hoverEasing ?? "ease");
+  const [scrollReveal, setScrollReveal] = useState(initialDesign.scrollReveal ?? false);
+
+  // Advanced code
+  const [customCss, setCustomCss] = useState(initialDesign.customCss ?? "");
+  const [extraBodyClass, setExtraBodyClass] = useState(initialDesign.extraBodyClass ?? "");
+  const [cssExportCopied, setCssExportCopied] = useState(false);
+  const [showAdvancedColors, setShowAdvancedColors] = useState(false);
+  const [gradientMode, setGradientMode] = useState<"solid" | "linear" | "radial">("solid");
+  const [gradientAngle, setGradientAngle] = useState(135);
+  const [gradientStop1, setGradientStop1] = useState("#8b5cf6");
+  const [gradientStop2, setGradientStop2] = useState("#06b6d4");
+
   const [saving, setSaving] = useState(false);
   const [viewMode, setViewMode] = useState<"editor" | "preview">("editor");
 
@@ -474,7 +510,27 @@ export function AppearanceEditor({
     entranceAnimation !== (initialDesign.entranceAnimation ?? "fade") ||
     attentionEffect !== (initialDesign.attentionEffect ?? "none") ||
     avatarShape !== (initialDesign.avatarShape ?? "circle") ||
-    avatarRing !== (initialDesign.avatarRing ?? false);
+    avatarRing !== (initialDesign.avatarRing ?? false) ||
+    customFontName !== (initialDesign.customFontName ?? "") ||
+    letterSpacing !== (initialDesign.letterSpacing ?? 0) ||
+    lineHeight !== (initialDesign.lineHeight ?? 1.5) ||
+    nameColor !== (initialDesign.nameColor ?? "") ||
+    bioColor !== (initialDesign.bioColor ?? "") ||
+    linkTextColor !== (initialDesign.linkTextColor ?? "") ||
+    linkIconColor !== (initialDesign.linkIconColor ?? "") ||
+    linkBorderColor !== (initialDesign.linkBorderColor ?? "") ||
+    cardTintColor !== (initialDesign.cardTintColor ?? "") ||
+    borderColor !== (initialDesign.borderColor ?? "") ||
+    cardOpacity !== (initialDesign.cardOpacity ?? 1.0) ||
+    cardPadding !== (initialDesign.cardPadding ?? "default") ||
+    iconBgStyle !== (initialDesign.iconBgStyle ?? "transparent") ||
+    transitionSpeed !== (initialDesign.transitionSpeed ?? "normal") ||
+    hoverDuration !== (initialDesign.hoverDuration ?? 200) ||
+    staggerDelay !== (initialDesign.staggerDelay ?? 45) ||
+    hoverEasing !== (initialDesign.hoverEasing ?? "ease") ||
+    scrollReveal !== (initialDesign.scrollReveal ?? false) ||
+    customCss !== (initialDesign.customCss ?? "") ||
+    extraBodyClass !== (initialDesign.extraBodyClass ?? "");
 
   const dirty = themeDirty || designDirty;
 
@@ -504,6 +560,26 @@ export function AppearanceEditor({
       attentionEffect,
       avatarShape,
       avatarRing,
+      customFontName: customFontName || undefined,
+      letterSpacing: letterSpacing !== 0 ? letterSpacing : undefined,
+      lineHeight: lineHeight !== 1.5 ? lineHeight : undefined,
+      nameColor: nameColor || undefined,
+      bioColor: bioColor || undefined,
+      linkTextColor: linkTextColor || undefined,
+      linkIconColor: linkIconColor || undefined,
+      linkBorderColor: linkBorderColor || undefined,
+      cardTintColor: cardTintColor || undefined,
+      borderColor: borderColor || undefined,
+      cardOpacity: cardOpacity !== 1.0 ? cardOpacity : undefined,
+      cardPadding: cardPadding !== "default" ? cardPadding : undefined,
+      iconBgStyle: iconBgStyle !== "transparent" ? iconBgStyle : undefined,
+      transitionSpeed: transitionSpeed !== "normal" ? transitionSpeed : undefined,
+      hoverDuration,
+      staggerDelay,
+      hoverEasing: hoverEasing !== "ease" ? hoverEasing : undefined,
+      scrollReveal: scrollReveal || undefined,
+      customCss: customCss || undefined,
+      extraBodyClass: extraBodyClass || undefined,
     },
   };
 
@@ -526,6 +602,21 @@ export function AppearanceEditor({
     setAttentionEffect(p.attentionEffect);
     setAvatarShape(p.avatarShape);
     setAvatarRing(p.avatarRing);
+    setCustomFontName("");
+    setLetterSpacing(0);
+    setLineHeight(1.5);
+    setTransitionSpeed("normal");
+    setHoverEasing("ease");
+    setNameColor("");
+    setBioColor("");
+    setLinkTextColor("");
+    setLinkIconColor("");
+    setLinkBorderColor("");
+    setCardTintColor("");
+    setBorderColor("");
+    setCardOpacity(1.0);
+    setCardPadding("default");
+    setIconBgStyle("transparent");
     toast.success(`Applied "${p.name}" preset! Look at the preview.`);
   }
 
@@ -570,6 +661,26 @@ export function AppearanceEditor({
             attentionEffect,
             avatarShape,
             avatarRing,
+            customFontName: customFontName || undefined,
+            letterSpacing: letterSpacing !== 0 ? letterSpacing : undefined,
+            lineHeight: lineHeight !== 1.5 ? lineHeight : undefined,
+            nameColor: nameColor || undefined,
+            bioColor: bioColor || undefined,
+            linkTextColor: linkTextColor || undefined,
+            linkIconColor: linkIconColor || undefined,
+            linkBorderColor: linkBorderColor || undefined,
+            cardTintColor: cardTintColor || undefined,
+            borderColor: borderColor || undefined,
+            cardOpacity: cardOpacity !== 1.0 ? cardOpacity : undefined,
+            cardPadding: cardPadding !== "default" ? cardPadding : undefined,
+            iconBgStyle: iconBgStyle !== "transparent" ? iconBgStyle : undefined,
+            transitionSpeed: transitionSpeed !== "normal" ? transitionSpeed : undefined,
+            hoverDuration,
+            staggerDelay,
+            hoverEasing: hoverEasing !== "ease" ? hoverEasing : undefined,
+            scrollReveal: scrollReveal || undefined,
+            customCss: customCss || undefined,
+            extraBodyClass: extraBodyClass || undefined,
           }),
         });
         const data = (await res.json().catch(() => ({}))) as { error?: string };
@@ -607,6 +718,26 @@ export function AppearanceEditor({
     setAttentionEffect("none");
     setAvatarShape("circle");
     setAvatarRing(false);
+    setCustomFontName("");
+    setLetterSpacing(0);
+    setLineHeight(1.5);
+    setNameColor("");
+    setBioColor("");
+    setLinkTextColor("");
+    setLinkIconColor("");
+    setLinkBorderColor("");
+    setCardTintColor("");
+    setBorderColor("");
+    setCardOpacity(1.0);
+    setCardPadding("default");
+    setIconBgStyle("transparent");
+    setTransitionSpeed("normal");
+    setHoverDuration(200);
+    setStaggerDelay(45);
+    setHoverEasing("ease");
+    setScrollReveal(false);
+    setCustomCss("");
+    setExtraBodyClass("");
     toast.info("Reset to default styling.");
   }
 
@@ -699,6 +830,7 @@ export function AppearanceEditor({
               { id: "cards" as const, label: "Cards & Surfaces", icon: Layers },
               { id: "motion" as const, label: "Figma Motion & Avatars", icon: Zap },
               { id: "themes" as const, label: "Themes & Bento", icon: LayoutGrid },
+              { id: "advanced" as const, label: "⚡ Advanced", icon: Sliders },
             ].map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -923,6 +1055,93 @@ export function AppearanceEditor({
                   className="w-full accent-violet-500"
                 />
               </div>
+
+              {/* Custom Google Font Loader */}
+              <div className="pt-4 border-t border-white/5 space-y-2">
+                <label className="text-xs font-semibold text-zinc-300 block">Custom Google Font</label>
+                <p className="text-[11px] text-zinc-500">Type any Google Font name to load it dynamically (overrides Font Family above).</p>
+                <div className="flex items-center gap-2 p-2 rounded-xl border border-white/10 bg-zinc-900/60">
+                  <input
+                    type="text"
+                    value={customFontName}
+                    placeholder="e.g. Nunito, Roboto Condensed, DM Sans..."
+                    onChange={(e) => setCustomFontName(e.target.value.replace(/[^a-zA-Z0-9 ]/g, "").slice(0, 60))}
+                    className="flex-1 bg-transparent text-xs text-zinc-200 outline-none placeholder:text-zinc-600"
+                  />
+                  {customFontName && (
+                    <button type="button" onClick={() => setCustomFontName("")} className="text-zinc-500 hover:text-zinc-200 text-xs px-1.5">✕</button>
+                  )}
+                </div>
+              </div>
+
+              {/* Extended Font Weight — Light + Black */}
+              <div className="pt-4 border-t border-white/5">
+                <label className="text-xs font-semibold text-zinc-300 block mb-2">Extended Font Weight</label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {[
+                    { id: "light", label: "Light 300" },
+                    { id: "normal", label: "Normal 400" },
+                    { id: "medium", label: "Medium 500" },
+                    { id: "semibold", label: "Semi 600" },
+                    { id: "bold", label: "Bold 700" },
+                    { id: "black", label: "Black 900" },
+                  ].map((w) => (
+                    <button
+                      key={w.id}
+                      type="button"
+                      onClick={() => setFontWeight(w.id)}
+                      className={cn(
+                        "px-2.5 py-1.5 rounded-lg border text-[11px] font-medium text-center transition-all",
+                        fontWeight === w.id
+                          ? "border-violet-400 bg-violet-500/20 text-white"
+                          : "border-white/10 text-zinc-400 hover:text-zinc-200 hover:bg-white/5",
+                      )}
+                    >
+                      {w.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Letter Spacing Slider */}
+              <div className="pt-4 border-t border-white/5">
+                <div className="flex items-center justify-between text-xs mb-2">
+                  <span className="font-semibold text-zinc-300">Letter Spacing</span>
+                  <span className="font-mono text-violet-400">{letterSpacing > 0 ? `+${letterSpacing.toFixed(3)}` : letterSpacing.toFixed(3)}em</span>
+                </div>
+                <input
+                  type="range"
+                  min={-0.05}
+                  max={0.15}
+                  step={0.005}
+                  value={letterSpacing}
+                  onChange={(e) => setLetterSpacing(Number.parseFloat(e.target.value))}
+                  className="w-full accent-violet-500"
+                />
+                <div className="flex justify-between text-[10px] text-zinc-600 mt-1">
+                  <span>Tight</span><span>Normal</span><span>Wide</span><span>Widest</span>
+                </div>
+              </div>
+
+              {/* Line Height Slider */}
+              <div className="pt-4 border-t border-white/5">
+                <div className="flex items-center justify-between text-xs mb-2">
+                  <span className="font-semibold text-zinc-300">Line Height</span>
+                  <span className="font-mono text-violet-400">{lineHeight.toFixed(2)}x</span>
+                </div>
+                <input
+                  type="range"
+                  min={1.2}
+                  max={2.1}
+                  step={0.05}
+                  value={lineHeight}
+                  onChange={(e) => setLineHeight(Number.parseFloat(e.target.value))}
+                  className="w-full accent-violet-500"
+                />
+                <div className="flex justify-between text-[10px] text-zinc-600 mt-1">
+                  <span>Tight 1.2</span><span>Normal 1.5</span><span>Loose 1.8</span><span>2.1</span>
+                </div>
+              </div>
             </div>
           )}
 
@@ -1036,6 +1255,165 @@ export function AppearanceEditor({
                       <p className="text-[10px] text-zinc-400 mt-0.5">{eff.desc}</p>
                     </button>
                   ))}
+                </div>
+              </div>
+
+              {/* Per-Element Color Overrides */}
+              <div className="pt-4 border-t border-white/5 space-y-3">
+                <button
+                  type="button"
+                  onClick={() => setShowAdvancedColors(!showAdvancedColors)}
+                  className="flex items-center justify-between w-full text-xs font-semibold text-zinc-300 hover:text-white transition-colors"
+                >
+                  <span>Element Color Overrides</span>
+                  <span className="text-zinc-500 text-[10px]">{showAdvancedColors ? "▲ Collapse" : "▼ Expand"}</span>
+                </button>
+                {showAdvancedColors && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {[
+                      { label: "Display Name Color", value: nameColor, set: setNameColor, placeholder: "#ffffff" },
+                      { label: "Bio Text Color", value: bioColor, set: setBioColor, placeholder: "#a1a1aa" },
+                      { label: "Link Card Text", value: linkTextColor, set: setLinkTextColor, placeholder: "#ffffff" },
+                      { label: "Link Card Icon", value: linkIconColor, set: setLinkIconColor, placeholder: "accent" },
+                      { label: "Card Border Color", value: linkBorderColor, set: setLinkBorderColor, placeholder: "auto" },
+                      { label: "Card Tint Overlay", value: cardTintColor, set: setCardTintColor, placeholder: "none" },
+                      { label: "Global Border Override", value: borderColor, set: setBorderColor, placeholder: "auto" },
+                    ].map((item) => (
+                      <div key={item.label}>
+                        <label className="text-[11px] font-semibold text-zinc-400 block mb-1">{item.label}</label>
+                        <div className="flex items-center gap-2 p-2 rounded-xl border border-white/10 bg-zinc-900/60">
+                          <input
+                            type="color"
+                            value={item.value || "#8b5cf6"}
+                            onChange={(e) => item.set(e.target.value)}
+                            className="w-8 h-8 rounded-lg border-0 cursor-pointer bg-transparent shrink-0"
+                          />
+                          <input
+                            type="text"
+                            value={item.value}
+                            placeholder={item.placeholder}
+                            onChange={(e) => item.set(e.target.value)}
+                            className="flex-1 bg-transparent text-xs font-mono text-zinc-200 outline-none uppercase"
+                          />
+                          {item.value && (
+                            <button type="button" onClick={() => item.set("")} className="text-zinc-500 hover:text-zinc-200 text-xs px-1">✕</button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Gradient Background Builder */}
+              <div className="pt-4 border-t border-white/5 space-y-3">
+                <label className="text-xs font-semibold text-zinc-300 block">Gradient Background Builder</label>
+                <div className="flex gap-2">
+                  {(["solid", "linear", "radial"] as const).map((mode) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => setGradientMode(mode)}
+                      className={cn(
+                        "flex-1 py-1.5 rounded-lg border text-[11px] font-semibold transition-all capitalize",
+                        gradientMode === mode
+                          ? "border-violet-400 bg-violet-500/20 text-white"
+                          : "border-white/10 text-zinc-400 hover:text-zinc-200 hover:bg-white/5",
+                      )}
+                    >
+                      {mode}
+                    </button>
+                  ))}
+                </div>
+                {gradientMode !== "solid" && (
+                  <div className="space-y-3 p-3 rounded-xl bg-zinc-900/60 border border-white/10">
+                    <div
+                      className="h-10 rounded-lg border border-white/10"
+                      style={{
+                        background: gradientMode === "linear"
+                          ? `linear-gradient(${gradientAngle}deg, ${gradientStop1}, ${gradientStop2})`
+                          : `radial-gradient(circle, ${gradientStop1}, ${gradientStop2})`,
+                      }}
+                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      {([
+                        { label: "Stop 1", value: gradientStop1, set: setGradientStop1, other: gradientStop2 },
+                        { label: "Stop 2", value: gradientStop2, set: setGradientStop2, other: gradientStop1 },
+                      ] as const).map((stop, stopIdx) => (
+                        <div key={stop.label}>
+                          <label className="text-[10px] text-zinc-500 block mb-1">{stop.label}</label>
+                          <div className="flex items-center gap-2 p-2 rounded-lg border border-white/10 bg-zinc-900/60">
+                            <input
+                              type="color"
+                              value={stop.value}
+                              onChange={(e) => {
+                                stop.set(e.target.value);
+                                const s1 = stopIdx === 0 ? e.target.value : gradientStop1;
+                                const s2 = stopIdx === 1 ? e.target.value : gradientStop2;
+                                setBackground(gradientMode === "linear"
+                                  ? `linear-gradient(${gradientAngle}deg, ${s1}, ${s2})`
+                                  : `radial-gradient(circle, ${s1}, ${s2})`
+                                );
+                              }}
+                              className="w-7 h-7 rounded border-0 cursor-pointer bg-transparent"
+                            />
+                            <span className="text-xs font-mono text-zinc-300">{stop.value}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {gradientMode === "linear" && (
+                      <div>
+                        <div className="flex justify-between text-[10px] text-zinc-500 mb-1">
+                          <span>Angle</span>
+                          <span className="font-mono text-violet-400">{gradientAngle}°</span>
+                        </div>
+                        <input
+                          type="range"
+                          min={0}
+                          max={360}
+                          step={15}
+                          value={gradientAngle}
+                          onChange={(e) => {
+                            const angle = Number(e.target.value);
+                            setGradientAngle(angle);
+                            setBackground(`linear-gradient(${angle}deg, ${gradientStop1}, ${gradientStop2})`);
+                          }}
+                          className="w-full accent-violet-500"
+                        />
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setBackground(gradientMode === "linear"
+                        ? `linear-gradient(${gradientAngle}deg, ${gradientStop1}, ${gradientStop2})`
+                        : `radial-gradient(circle, ${gradientStop1}, ${gradientStop2})`
+                      )}
+                      className="w-full py-1.5 text-xs font-semibold rounded-lg border border-violet-400/40 bg-violet-500/10 text-violet-300 hover:bg-violet-500/20 transition-all"
+                    >
+                      Apply Gradient as Background
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Card Opacity Slider */}
+              <div className="pt-4 border-t border-white/5">
+                <div className="flex items-center justify-between text-xs mb-2">
+                  <span className="font-semibold text-zinc-300">Card Opacity / Transparency</span>
+                  <span className="font-mono text-violet-400">{Math.round(cardOpacity * 100)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min={0.3}
+                  max={1.0}
+                  step={0.05}
+                  value={cardOpacity}
+                  onChange={(e) => setCardOpacity(Number.parseFloat(e.target.value))}
+                  className="w-full accent-violet-500"
+                />
+                <div className="flex justify-between text-[10px] text-zinc-600 mt-1">
+                  <span>30% Transparent</span><span>100% Opaque</span>
                 </div>
               </div>
             </div>
@@ -1191,6 +1569,84 @@ export function AppearanceEditor({
                   </div>
                 </div>
               </div>
+
+              {/* Card Padding Preset */}
+              <div className="pt-4 border-t border-white/5 space-y-2.5">
+                <label className="text-xs font-semibold text-zinc-300">Card Inner Padding</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { id: "compact", label: "Compact", desc: "8px" },
+                    { id: "default", label: "Default", desc: "14px" },
+                    { id: "spacious", label: "Spacious", desc: "20px" },
+                    { id: "roomy", label: "Roomy", desc: "28px" },
+                  ].map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => setCardPadding(p.id)}
+                      className={cn(
+                        "p-2 rounded-xl border text-center transition-all",
+                        cardPadding === p.id
+                          ? "border-violet-400 bg-violet-500/15 ring-1 ring-violet-400"
+                          : "border-white/10 hover:border-white/20 bg-zinc-900/60",
+                      )}
+                    >
+                      <p className="text-xs font-semibold text-zinc-200">{p.label}</p>
+                      <p className="text-[10px] text-zinc-500">{p.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Border Color Override */}
+              <div className="pt-4 border-t border-white/5 space-y-2">
+                <label className="text-xs font-semibold text-zinc-300 block">Border Color Override</label>
+                <div className="flex items-center gap-2.5 p-2 rounded-xl border border-white/10 bg-zinc-900/60">
+                  <input
+                    type="color"
+                    value={borderColor || accent || "#8b5cf6"}
+                    onChange={(e) => setBorderColor(e.target.value)}
+                    className="w-9 h-9 rounded-lg border-0 cursor-pointer bg-transparent"
+                  />
+                  <input
+                    type="text"
+                    value={borderColor}
+                    placeholder="Auto (from card style)"
+                    onChange={(e) => setBorderColor(e.target.value)}
+                    className="flex-1 bg-transparent text-xs font-mono text-zinc-200 outline-none uppercase"
+                  />
+                  {borderColor && (
+                    <button type="button" onClick={() => setBorderColor("")} className="text-zinc-500 hover:text-zinc-200 text-xs px-1">✕ Reset</button>
+                  )}
+                </div>
+              </div>
+
+              {/* Icon Background Style */}
+              <div className="pt-4 border-t border-white/5 space-y-2.5">
+                <label className="text-xs font-semibold text-zinc-300">Icon Background Fill</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: "transparent", label: "Transparent", desc: "No fill" },
+                    { id: "tinted", label: "Tinted", desc: "Accent 10%" },
+                    { id: "accent", label: "Accent Fill", desc: "Solid accent" },
+                  ].map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => setIconBgStyle(s.id)}
+                      className={cn(
+                        "p-2.5 rounded-xl border text-center transition-all",
+                        iconBgStyle === s.id
+                          ? "border-violet-400 bg-violet-500/15 ring-1 ring-violet-400"
+                          : "border-white/10 hover:border-white/20 bg-zinc-900/60",
+                      )}
+                    >
+                      <p className="text-xs font-semibold text-zinc-200">{s.label}</p>
+                      <p className="text-[10px] text-zinc-500">{s.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 
@@ -1332,6 +1788,110 @@ export function AppearanceEditor({
                   </button>
                 </div>
               </div>
+
+              {/* Transition Speed */}
+              <div className="pt-4 border-t border-white/5 space-y-2.5">
+                <label className="text-xs font-semibold text-zinc-300">Global Transition Speed</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { id: "instant", label: "Instant", desc: "0ms" },
+                    { id: "fast", label: "Fast", desc: "150ms" },
+                    { id: "normal", label: "Normal", desc: "250ms" },
+                    { id: "slow", label: "Slow", desc: "400ms" },
+                  ].map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => setTransitionSpeed(s.id)}
+                      className={cn(
+                        "p-2 rounded-xl border text-center transition-all",
+                        transitionSpeed === s.id
+                          ? "border-violet-400 bg-violet-500/15 ring-1 ring-violet-400"
+                          : "border-white/10 hover:border-white/20 bg-zinc-900/60",
+                      )}
+                    >
+                      <p className="text-xs font-semibold text-zinc-200">{s.label}</p>
+                      <p className="text-[10px] text-zinc-500 font-mono">{s.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Hover Easing Curve */}
+              <div className="pt-4 border-t border-white/5 space-y-2.5">
+                <label className="text-xs font-semibold text-zinc-300">Hover Easing Curve</label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { id: "ease", label: "Ease", desc: "Natural smooth" },
+                    { id: "spring", label: "Spring", desc: "Elastic bounce" },
+                    { id: "linear", label: "Linear", desc: "Constant speed" },
+                    { id: "bounce", label: "Bounce", desc: "Playful rebound" },
+                  ].map((e) => (
+                    <button
+                      key={e.id}
+                      type="button"
+                      onClick={() => setHoverEasing(e.id)}
+                      className={cn(
+                        "p-2.5 rounded-xl border text-left transition-all",
+                        hoverEasing === e.id
+                          ? "border-violet-400 bg-violet-500/15 ring-1 ring-violet-400"
+                          : "border-white/10 hover:border-white/20 bg-zinc-900/60",
+                      )}
+                    >
+                      <p className="text-xs font-semibold text-zinc-200">{e.label}</p>
+                      <p className="text-[10px] text-zinc-500">{e.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Stagger Delay */}
+              <div className="pt-4 border-t border-white/5">
+                <div className="flex items-center justify-between text-xs mb-2">
+                  <span className="font-semibold text-zinc-300">Card Entrance Stagger Delay</span>
+                  <span className="font-mono text-violet-400">{staggerDelay}ms per card</span>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {[0, 20, 45, 80].map((ms) => (
+                    <button
+                      key={ms}
+                      type="button"
+                      onClick={() => setStaggerDelay(ms)}
+                      className={cn(
+                        "py-1.5 rounded-lg border text-[11px] font-semibold text-center transition-all",
+                        staggerDelay === ms
+                          ? "border-violet-400 bg-violet-500/20 text-white"
+                          : "border-white/10 text-zinc-400 hover:text-zinc-200 hover:bg-white/5",
+                      )}
+                    >
+                      {ms}ms
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Scroll Reveal Toggle */}
+              <div className="flex items-center justify-between p-3 rounded-xl border border-white/10 bg-zinc-900/60">
+                <div>
+                  <p className="text-xs font-semibold text-zinc-200">Scroll Reveal Animation</p>
+                  <p className="text-[11px] text-zinc-400">Trigger entrance animations when cards scroll into view</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setScrollReveal(!scrollReveal)}
+                  className={cn(
+                    "w-11 h-6 rounded-full transition-colors relative",
+                    scrollReveal ? "bg-violet-600" : "bg-zinc-800",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "absolute top-1 w-4 h-4 rounded-full bg-white transition-transform",
+                      scrollReveal ? "left-6" : "left-1",
+                    )}
+                  />
+                </button>
+              </div>
             </div>
           )}
 
@@ -1405,6 +1965,94 @@ export function AppearanceEditor({
                     </button>
                   );
                 })}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 7: Advanced — Custom CSS, CSS Variables Export, Body Classes */}
+          {activeTab === "advanced" && (
+            <div className="p-6 rounded-2xl border border-white/10 bg-zinc-900/40 space-y-6">
+              <div>
+                <h2 className="text-base font-semibold text-zinc-100 flex items-center gap-2">
+                  <Sliders className="w-4 h-4 text-violet-400" />
+                  Advanced Customization
+                </h2>
+                <p className="text-xs text-zinc-400 mt-1">
+                  Custom CSS injection, CSS variable export, and extra body class names for power users.
+                </p>
+              </div>
+
+              {/* Custom CSS Injection */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-zinc-300">Custom CSS Injection</label>
+                  <span className="text-[10px] font-mono text-zinc-500">{customCss.length}/4000 chars</span>
+                </div>
+                <p className="text-[11px] text-amber-400/80 bg-amber-500/[0.08] border border-amber-500/20 rounded-lg px-3 py-2">
+                  ⚠️ CSS is injected directly into your live public bio page. @import and javascript: are automatically stripped.
+                </p>
+                <textarea
+                  value={customCss}
+                  onChange={(e) => setCustomCss(e.target.value.slice(0, 4000))}
+                  placeholder={"/* Example: */\n.lf-card { box-shadow: 0 0 30px #8b5cf666; }\nh1 { letter-spacing: 0.1em; }"}
+                  rows={8}
+                  className="w-full bg-zinc-950 border border-white/10 rounded-xl p-3 text-xs font-mono text-zinc-200 outline-none resize-y placeholder:text-zinc-600 focus:border-violet-400/50 transition-colors"
+                />
+              </div>
+
+              {/* CSS Variables Export */}
+              <div className="pt-4 border-t border-white/5 space-y-2">
+                <label className="text-xs font-semibold text-zinc-300 block">Export CSS Variables Snapshot</label>
+                <p className="text-[11px] text-zinc-500">Copy your current design settings as CSS custom properties.</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const vars = [
+                      `--lf-accent: ${accent || "#8b5cf6"};`,
+                      `--lf-background: ${background || "#050508"};`,
+                      `--lf-radius: ${buttonShape === "sharp" ? "0px" : buttonShape === "soft" ? "12px" : buttonShape === "pill" ? "9999px" : "18px"};`,
+                      `--lf-font-family: ${fontFamily};`,
+                      `--lf-font-weight: ${fontWeight};`,
+                      `--lf-card-style: ${cardStyle};`,
+                      `--lf-border-width: ${borderWidth}px;`,
+                      `--lf-card-opacity: ${cardOpacity};`,
+                      `--lf-letter-spacing: ${letterSpacing}em;`,
+                      `--lf-line-height: ${lineHeight};`,
+                      nameColor ? `--lf-name-color: ${nameColor};` : null,
+                      bioColor ? `--lf-bio-color: ${bioColor};` : null,
+                      linkTextColor ? `--lf-link-text: ${linkTextColor};` : null,
+                      linkIconColor ? `--lf-link-icon: ${linkIconColor};` : null,
+                    ].filter(Boolean).join("\n");
+                    navigator.clipboard.writeText(`:root {\n${vars}\n}`);
+                    setCssExportCopied(true);
+                    setTimeout(() => setCssExportCopied(false), 2000);
+                  }}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-xl border text-xs font-semibold transition-all",
+                    cssExportCopied
+                      ? "border-emerald-400 bg-emerald-500/15 text-emerald-300"
+                      : "border-white/10 bg-white/5 text-zinc-300 hover:border-white/20 hover:text-white",
+                  )}
+                >
+                  {cssExportCopied ? <Check className="w-3.5 h-3.5" /> : <Palette className="w-3.5 h-3.5" />}
+                  {cssExportCopied ? "Copied to clipboard!" : "Copy CSS Variables"}
+                </button>
+              </div>
+
+              {/* Extra Body Classes */}
+              <div className="pt-4 border-t border-white/5 space-y-2">
+                <label className="text-xs font-semibold text-zinc-300 block">Extra Body CSS Classes</label>
+                <p className="text-[11px] text-zinc-500">Space-separated class names appended to your bio page body. Letters, numbers, dashes, underscores only.</p>
+                <div className="flex items-center gap-2 p-2 rounded-xl border border-white/10 bg-zinc-900/60">
+                  <input
+                    type="text"
+                    value={extraBodyClass}
+                    placeholder="e.g. dark-mode custom-theme premium-user"
+                    onChange={(e) => setExtraBodyClass(e.target.value.replace(/[^a-zA-Z0-9 _-]/g, "").slice(0, 80))}
+                    className="flex-1 bg-transparent text-xs text-zinc-200 outline-none placeholder:text-zinc-600 font-mono"
+                  />
+                  <span className="text-[10px] text-zinc-600 font-mono shrink-0">{extraBodyClass.length}/80</span>
+                </div>
               </div>
             </div>
           )}

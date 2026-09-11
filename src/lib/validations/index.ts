@@ -228,7 +228,7 @@ export const designPrefsSchema = z.object({
   radiusPx: z.number().int().min(0).max(28).optional(),
   fontScale: z.number().min(0.85).max(1.25).optional(),
   iconSize: z.number().int().min(16).max(36).optional(),
-  fontFamily: z.string().max(40).optional(),
+  fontFamily: z.string().max(80).optional(),
   fontStyle: z.string().max(40).optional(),
   fontWeight: z.string().max(40).optional(),
   textShadow: z.string().max(40).optional(),
@@ -243,6 +243,31 @@ export const designPrefsSchema = z.object({
   attentionEffect: z.string().max(40).optional(),
   avatarShape: z.string().max(40).optional(),
   avatarRing: z.boolean().optional(),
+  // Advanced typography
+  customFontName: z.string().max(60).optional(),
+  letterSpacing: z.number().min(-0.05).max(0.15).optional(),
+  lineHeight: z.number().min(1.2).max(2.1).optional(),
+  // Per-element colors
+  nameColor: z.string().max(9).optional(),
+  bioColor: z.string().max(9).optional(),
+  linkTextColor: z.string().max(9).optional(),
+  linkIconColor: z.string().max(9).optional(),
+  linkBorderColor: z.string().max(9).optional(),
+  cardTintColor: z.string().max(9).optional(),
+  borderColor: z.string().max(9).optional(),
+  // Advanced card controls
+  cardOpacity: z.number().min(0.3).max(1.0).optional(),
+  cardPadding: z.string().max(40).optional(),
+  iconBgStyle: z.string().max(40).optional(),
+  // Advanced motion controls
+  transitionSpeed: z.string().max(40).optional(),
+  hoverDuration: z.number().min(0).max(600).optional(),
+  staggerDelay: z.number().min(0).max(150).optional(),
+  hoverEasing: z.string().max(40).optional(),
+  scrollReveal: z.boolean().optional(),
+  // Advanced code injection
+  customCss: z.string().max(4000).optional(),
+  extraBodyClass: z.string().max(80).optional(),
 });
 
 // ---- Media ticket flow (presign → PUT → complete) ---------------------------

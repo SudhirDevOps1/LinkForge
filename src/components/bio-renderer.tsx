@@ -331,9 +331,22 @@ export function BioRenderer({
     "urbanist": "'Urbanist', sans-serif",
     "montserrat": "'Montserrat', sans-serif",
   };
-  const activeFontFamily = d?.fontFamily ? fontFamilies[d.fontFamily] : undefined;
-  
-  // Text Casing, Letter Spacing & Weight
+
+  // Custom Google Font: if customFontName is set, use it (overrides fontFamily list)
+  let activeFontFamily: string | undefined;
+  if (d?.customFontName) {
+    const sanitized = d.customFontName.trim();
+    activeFontFamily = `'${sanitized}', sans-serif`;
+  } else if (d?.fontFamily) {
+    activeFontFamily = fontFamilies[d.fontFamily];
+  }
+
+  // Custom Google Font URL injected into the page head at runtime
+  const customFontLinkHref = d?.customFontName
+    ? `https://fonts.googleapis.com/css2?family=${encodeURIComponent(d.customFontName.trim())}:wght@300;400;500;600;700;900&display=swap`
+    : null;
+
+  // Text Casing
   const textTransform =
     d?.fontStyle === "uppercase"
       ? "uppercase"
@@ -343,15 +356,23 @@ export function BioRenderer({
           ? "lowercase"
           : undefined;
 
-  const letterSpacing =
-    d?.fontStyle === "wide"
-      ? "0.08em"
-      : d?.fontStyle === "widest"
-        ? "0.15em"
-        : d?.fontStyle === "tight"
-          ? "-0.03em"
-          : undefined;
+  // Letter Spacing: new numeric field takes priority over legacy fontStyle presets
+  const letterSpacingValue: string | undefined =
+    typeof d?.letterSpacing === "number"
+      ? `${d.letterSpacing}em`
+      : d?.fontStyle === "wide"
+        ? "0.08em"
+        : d?.fontStyle === "widest"
+          ? "0.15em"
+          : d?.fontStyle === "tight"
+            ? "-0.03em"
+            : undefined;
 
+  // Line Height: new numeric field
+  const lineHeightValue: number | undefined =
+    typeof d?.lineHeight === "number" ? d.lineHeight : undefined;
+
+  // Font Weight (extended: light, normal, medium, semibold, bold, black)
   const fontWeightClass =
     d?.fontWeight === "light"
       ? "font-light"
@@ -361,9 +382,11 @@ export function BioRenderer({
           ? "font-medium"
           : d?.fontWeight === "semibold"
             ? "font-semibold"
-            : d?.fontWeight === "bold"
-              ? "font-bold"
-              : "font-bold";
+            : d?.fontWeight === "black"
+              ? "font-black"
+              : d?.fontWeight === "bold"
+                ? "font-bold"
+                : "font-bold";
 
   // Title Glow / Shadow
   let textShadowStyle: string | undefined = undefined;
@@ -401,6 +424,58 @@ export function BioRenderer({
         : d?.blurStrength === "high"
           ? "blur(24px)"
           : "blur(14px)";
+
+  // Per-element color tokens
+  const effectiveNameColor = d?.nameColor || undefined;
+  const effectiveBioColor = d?.bioColor || v.muted;
+  const effectiveLinkTextColor = d?.linkTextColor || undefined;
+  const effectiveLinkIconColor = d?.linkIconColor || accent;
+  const effectiveLinkBorderColor = d?.linkBorderColor || undefined;
+  const effectiveBorderColor = d?.borderColor || undefined;
+
+  // Card advanced controls
+  const cardOpacity = d?.cardOpacity ?? 1.0;
+  const cardPaddingMap: Record<string, string> = {
+    compact: "8px",
+    default: "14px",
+    spacious: "20px",
+    roomy: "28px",
+  };
+  const cardPaddingValue = d?.cardPadding ? (cardPaddingMap[d.cardPadding] ?? "14px") : undefined;
+
+  // Icon background style
+  const iconBgStyle = d?.iconBgStyle ?? "transparent";
+  const iconBgForCard = (iconColor: string) => {
+    if (iconBgStyle === "accent") return iconColor;
+    if (iconBgStyle === "tinted") return `${iconColor}18`;
+    return "transparent";
+  };
+  const iconBorderForCard = (iconColor: string) => {
+    if (iconBgStyle === "accent") return "transparent";
+    if (iconBgStyle === "tinted") return `${iconColor}35`;
+    return `${iconColor}35`;
+  };
+
+  // Motion: transition speed
+  const transitionDurationMs =
+    d?.transitionSpeed === "instant" ? 0
+      : d?.transitionSpeed === "fast" ? 150
+        : d?.transitionSpeed === "slow" ? 400
+          : d?.hoverDuration ?? 200;
+  const transitionDuration = `${transitionDurationMs}ms`;
+
+  // Easing curve
+  const easingMap: Record<string, string> = {
+    spring: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+    linear: "linear",
+    bounce: "cubic-bezier(0.68, -0.55, 0.265, 1.55)",
+    ease: "ease",
+  };
+  const transitionEasing = easingMap[d?.hoverEasing ?? "ease"] ?? "ease";
+  const transitionValue = `all ${transitionDuration} ${transitionEasing}`;
+
+  // Stagger delay (ms per card)
+  const staggerMs = d?.staggerDelay ?? 45;
 
   // Card Hover Effect
   const hoverClass =
@@ -448,23 +523,23 @@ export function BioRenderer({
 
   const cardStyleFor = (hover = false): React.CSSProperties => {
     let surfaceBg = hover ? v.surfaceHover : v.surface;
-    let borderColor = v.border;
+    let borderColor = effectiveLinkBorderColor || effectiveBorderColor || v.border;
     let shadow: string | undefined = undefined;
 
     if (effectiveCardStyle === "solid") {
       surfaceBg = hover ? "#1c1c28" : "#12121c";
-      borderColor = hover ? `${accent}66` : "rgba(255,255,255,0.12)";
+      borderColor = effectiveLinkBorderColor || effectiveBorderColor || (hover ? `${accent}66` : "rgba(255,255,255,0.12)");
     } else if (effectiveCardStyle === "neon") {
       surfaceBg = hover ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.4)";
-      borderColor = accent;
+      borderColor = effectiveLinkBorderColor || effectiveBorderColor || accent;
       shadow = `0 0 18px ${accent}45`;
     } else if (effectiveCardStyle === "neumorphic") {
       surfaceBg = hover ? "#161622" : "#101018";
-      borderColor = "rgba(255,255,255,0.06)";
+      borderColor = effectiveLinkBorderColor || effectiveBorderColor || "rgba(255,255,255,0.06)";
       shadow = `0 14px 28px -6px rgba(0,0,0,0.7)`;
     } else if (effectiveCardStyle === "minimal") {
       surfaceBg = hover ? "rgba(255,255,255,0.04)" : "transparent";
-      borderColor = hover ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.08)";
+      borderColor = effectiveLinkBorderColor || effectiveBorderColor || (hover ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.08)");
     }
 
     if (d?.shadowStrength === "none") {
@@ -477,8 +552,13 @@ export function BioRenderer({
       shadow = `0 0 24px ${accent}45, 0 10px 30px rgba(0,0,0,0.5)`;
     }
 
+    // Apply cardTintColor as an overlay gradient on top of surface
+    const bgWithTint = d?.cardTintColor
+      ? `linear-gradient(${d.cardTintColor}22, ${d.cardTintColor}22), ${surfaceBg}`
+      : surfaceBg;
+
     return {
-      background: surfaceBg,
+      background: bgWithTint,
       borderColor,
       borderWidth: cardBorderWidth,
       borderStyle: "solid",
@@ -486,8 +566,12 @@ export function BioRenderer({
       backdropFilter: effectiveCardStyle === "glass" ? blurFilter : undefined,
       WebkitBackdropFilter: effectiveCardStyle === "glass" ? blurFilter : undefined,
       boxShadow: shadow ?? (v.cardStyle === "shadow" ? `0 10px 34px -12px ${accent}55` : undefined),
+      opacity: cardOpacity !== 1.0 ? cardOpacity : undefined,
+      padding: cardPaddingValue,
+      transition: transitionValue,
     };
   };
+
 
   const spanClass = (size: string) =>
     !isBento
@@ -502,15 +586,26 @@ export function BioRenderer({
 
   return (
     <div
-      className={`theme-font-${v.font} relative min-h-screen w-full transition-colors duration-300 overflow-x-hidden`}
+      className={`theme-font-${v.font} relative min-h-screen w-full transition-colors duration-300 overflow-x-hidden${d?.extraBodyClass ? ` ${d.extraBodyClass}` : ""}`}
       style={{
         background: backgroundStyle,
         backgroundSize: bgEffect === "dots" ? "24px 24px" : undefined,
         color: v.text,
         fontFamily: activeFontFamily,
-        letterSpacing,
+        letterSpacing: letterSpacingValue,
+        lineHeight: lineHeightValue,
       }}
     >
+      {/* Dynamic Google Font loader for custom font names */}
+      {customFontLinkHref && (
+        // eslint-disable-next-line @next/next/no-page-custom-font
+        <link rel="stylesheet" href={customFontLinkHref} />
+      )}
+      {/* Custom CSS injection (sanitized server-side) */}
+      {d?.customCss && (
+        // eslint-disable-next-line react/no-danger
+        <style dangerouslySetInnerHTML={{ __html: d.customCss }} />
+      )}
       {/* Ambient background light orbs for balanced widescreen and desktop presentation */}
       <div
         aria-hidden
@@ -580,15 +675,17 @@ export function BioRenderer({
             fontSize: fontScale !== 1 ? `calc(1.5rem * ${fontScale})` : undefined,
             textTransform: textTransform as React.CSSProperties["textTransform"],
             textShadow: textShadowStyle,
+            color: effectiveNameColor,
           }}
         >
           {profile.displayName}
         </h1>
         {profile.bio ? (
-          <p className="mt-2 max-w-md text-center text-sm sm:text-base leading-relaxed transition-all" style={{ color: v.muted }}>
+          <p className="mt-2 max-w-md text-center text-sm sm:text-base leading-relaxed transition-all" style={{ color: effectiveBioColor }}>
             {profile.bio}
           </p>
         ) : null}
+
 
         {/* ✍️ Daily Blog / Journal Link */}
         {profile.slug ? (
@@ -635,10 +732,10 @@ export function BioRenderer({
             return (
               <div
                 key={link.id}
-                className={`group relative overflow-hidden flex flex-col justify-center border p-4 transition-all duration-200 ${hoverClass} ${spanClass(link.size)} ${entranceClass} ${attentionClass}`}
+                className={`group relative overflow-hidden flex flex-col justify-center border p-4 ${hoverClass} ${spanClass(link.size)} ${entranceClass} ${attentionClass}`}
                 style={{
                   ...cardStyleFor(false),
-                  animationDelay: `${idx * 45}ms`,
+                  animationDelay: `${idx * staggerMs}ms`,
                 }}
                 onMouseEnter={(e) => Object.assign(e.currentTarget.style, cardStyleFor(true))}
                 onMouseLeave={(e) => Object.assign(e.currentTarget.style, cardStyleFor(false))}
@@ -975,9 +1072,9 @@ export function BioRenderer({
                     style={{
                       width: iconBox,
                       height: iconBox,
-                      borderColor: v.border,
-                      color: accent,
-                      background: v.surface,
+                      borderColor: iconBorderForCard(effectiveLinkIconColor),
+                      color: effectiveLinkIconColor,
+                      background: iconBgForCard(effectiveLinkIconColor),
                     }}
                   >
                     {linkIcon(link, undefined, iconSize)}
@@ -987,7 +1084,7 @@ export function BioRenderer({
                       <p
                         className={`truncate font-semibold ${link.size === "feature" ? "text-lg" : "text-sm"}`}
                         style={{
-                          color: v.text,
+                          color: effectiveLinkTextColor || v.text,
                           ...(fontScale !== 1
                             ? {
                                 fontSize: `calc(${link.size === "feature" ? "1.125rem" : "0.875rem"} * ${fontScale})`,
