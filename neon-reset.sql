@@ -7,12 +7,14 @@
 -- 3. Left sidebar me "SQL Editor" par click karein.
 -- 4. Yeh poori script copy karke editor me paste karein.
 -- 5. "Run" (green button) par click karein.
--- Result: Database clean ho jayega aur saare 14 tables + indexes ready ho jayenge!
+-- Result: Database clean ho jayega aur saare 16 tables + indexes ready ho jayenge!
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
 -- STEP 1: PURANE TABLES KO SAFELY DROP KAREIN (CASCADE CLEANUP)
 -- -----------------------------------------------------------------------------
+DROP TABLE IF EXISTS "verifications" CASCADE;
+DROP TABLE IF EXISTS "accounts" CASCADE;
 DROP TABLE IF EXISTS "subscribers" CASCADE;
 DROP TABLE IF EXISTS "analytics_rollups" CASCADE;
 DROP TABLE IF EXISTS "upload_tickets" CASCADE;
@@ -34,7 +36,7 @@ DROP TABLE IF EXISTS "users" CASCADE;
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- -----------------------------------------------------------------------------
--- STEP 3: SARE 14 TABLES + INDEXES CREATE KAREIN
+-- STEP 3: SARE 16 TABLES + INDEXES CREATE KAREIN
 -- -----------------------------------------------------------------------------
 
 -- 1. Users
@@ -42,23 +44,30 @@ CREATE TABLE "users" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   "email" text NOT NULL,
   "name" text NOT NULL DEFAULT '',
+  "email_verified" boolean NOT NULL DEFAULT false,
+  "image" text,
   "password_hash" text,
   "avatar_url" text,
   "role" text NOT NULL DEFAULT 'user',
-  "created_at" timestamp with time zone NOT NULL DEFAULT now()
+  "created_at" timestamp with time zone NOT NULL DEFAULT now(),
+  "updated_at" timestamp with time zone NOT NULL DEFAULT now()
 );
 CREATE UNIQUE INDEX "users_email_idx" ON "users" ("email");
 
--- 2. Sessions (Lucia-style token store)
+-- 2. Sessions (Built-in & Better Auth token store)
 CREATE TABLE "sessions" (
   "id" text PRIMARY KEY,
   "user_id" uuid NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+  "token" text NOT NULL DEFAULT '',
+  "ip_address" text,
   "user_agent" text,
   "ip_hash" text,
   "expires_at" timestamp with time zone NOT NULL,
-  "created_at" timestamp with time zone NOT NULL DEFAULT now()
+  "created_at" timestamp with time zone NOT NULL DEFAULT now(),
+  "updated_at" timestamp with time zone NOT NULL DEFAULT now()
 );
 CREATE INDEX "sessions_user_idx" ON "sessions" ("user_id");
+CREATE INDEX "sessions_token_idx" ON "sessions" ("token");
 
 -- 3. Password Reset Tokens
 CREATE TABLE "password_reset_tokens" (
@@ -236,6 +245,36 @@ CREATE TABLE "subscribers" (
 );
 CREATE UNIQUE INDEX "subscribers_profile_email_idx" ON "subscribers" ("profile_id", "email");
 CREATE INDEX "subscribers_profile_idx" ON "subscribers" ("profile_id");
+
+-- 15. Accounts (Better Auth OAuth / Credential accounts)
+CREATE TABLE "accounts" (
+  "id" text PRIMARY KEY,
+  "user_id" uuid NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+  "account_id" text NOT NULL,
+  "provider_id" text NOT NULL,
+  "access_token" text,
+  "refresh_token" text,
+  "id_token" text,
+  "access_token_expires_at" timestamp with time zone,
+  "refresh_token_expires_at" timestamp with time zone,
+  "scope" text,
+  "password" text,
+  "created_at" timestamp with time zone NOT NULL DEFAULT now(),
+  "updated_at" timestamp with time zone NOT NULL DEFAULT now()
+);
+CREATE INDEX "accounts_user_idx" ON "accounts" ("user_id");
+CREATE UNIQUE INDEX "accounts_provider_account_idx" ON "accounts" ("provider_id", "account_id");
+
+-- 16. Verifications (Better Auth email/phone verification tokens)
+CREATE TABLE "verifications" (
+  "id" text PRIMARY KEY,
+  "identifier" text NOT NULL,
+  "value" text NOT NULL,
+  "expires_at" timestamp with time zone NOT NULL,
+  "created_at" timestamp with time zone NOT NULL DEFAULT now(),
+  "updated_at" timestamp with time zone NOT NULL DEFAULT now()
+);
+CREATE INDEX "verifications_identifier_idx" ON "verifications" ("identifier");
 
 -- -----------------------------------------------------------------------------
 -- STEP 4: VERIFICATION QUERY

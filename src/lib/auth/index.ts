@@ -15,6 +15,7 @@ import { cookies } from "next/headers";
 import { SESSION_COOKIE, SESSION_TTL_DAYS, authProvider } from "@/config/auth.config";
 import { db } from "@/db";
 import {
+  accounts,
   passwordResetTokens,
   profiles,
   sessions,
@@ -34,6 +35,8 @@ export interface SessionContext {
 }
 
 const BCRYPT_ROUNDS = 10;
+// Constant-time dummy hash: prevents timing-based user enumeration attacks
+const DUMMY_HASH = "$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUU1234567890";
 
 // ---- Passwords ---------------------------------------------------------------
 export async function hashPassword(password: string, rounds = BCRYPT_ROUNDS) {
@@ -91,7 +94,7 @@ export async function signUp(input: {
     }
   }
   if (existing.length > 0) {
-    throw new ApiError(409, "Is email se account pehle se exists karta hai");
+    throw new ApiError(409, "An account with this email address already exists. Please sign in instead.");
   }
   if (authProvider !== "builtin") {
     const { signUpExternal } = await import("./external");
@@ -105,9 +108,26 @@ export async function signUp(input: {
       email,
       name: input.name.trim(),
       passwordHash: await hashPassword(input.password),
+      emailVerified: false,
       createdAt: new Date(),
+      updatedAt: new Date(),
     })
     .returning();
+
+  // Better Auth account sync (credential provider)
+  try {
+    await db.insert(accounts).values({
+      id: crypto.randomUUID(),
+      userId: user.id,
+      accountId: user.id,
+      providerId: "credential",
+      password: user.passwordHash,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+  } catch (syncErr) {
+    console.warn("[auth] account sync notice:", (syncErr as Error).message);
+  }
 
   // Har user ke liye ek default profile (bio page) banao
   const slug = await allocateSlug(input.name || email.split("@")[0]);
@@ -134,12 +154,15 @@ export async function createSession(
     .insert(sessions)
     .values({
       id: token,
+      token,
       userId,
       userAgent: meta?.userAgent?.slice(0, 300) ?? null,
+      ipAddress: meta?.ip ?? null,
       // Privacy-first: salted hash (AUTH_SECRET salt) — raw IP kabhi store nahi.
       ipHash: meta?.ip ? hashIp(meta.ip) : null,
       expiresAt,
       createdAt: new Date(),
+      updatedAt: new Date(),
     })
     .returning();
   return session;
@@ -198,10 +221,14 @@ export async function signIn(input: {
   }
 
   if (!user?.passwordHash) {
-    throw new ApiError(401, "Galat email ya password");
+    // Constant-time mitigation: equalize response time against timing-based user enumeration
+    await verifyPassword(input.password, DUMMY_HASH);
+    throw new ApiError(401, "Invalid email or password");
   }
   const ok = await verifyPassword(input.password, user.passwordHash);
-  if (!ok) throw new ApiError(401, "Galat email ya password");
+  if (!ok) {
+    throw new ApiError(401, "Invalid email or password");
+  }
   const session = await createSession(user.id, {
     ip: input.ip,
     userAgent: input.userAgent,
@@ -212,10 +239,15 @@ export async function signIn(input: {
 
 export async function signOut(): Promise<void> {
   const jar = await cookies();
-  const token = jar.get(SESSION_COOKIE)?.value;
+  const token =
+    jar.get(SESSION_COOKIE)?.value ||
+    jar.get("better-auth.session_token")?.value ||
+    jar.get("__Secure-better-auth.session_token")?.value;
   if (token) {
-    await db.delete(sessions).where(eq(sessions.id, token));
+    await db.delete(sessions).where(or(eq(sessions.id, token), eq(sessions.token, token)));
     await clearSessionCookie();
+    jar.delete("better-auth.session_token");
+    jar.delete("__Secure-better-auth.session_token");
   }
 }
 
@@ -227,17 +259,20 @@ export async function signOutEverywhere(userId: string): Promise<void> {
 // ---- Current session -----------------------------------------------------------
 export async function getSessionUser(): Promise<SessionContext | null> {
   const jar = await cookies();
-  const token = jar.get(SESSION_COOKIE)?.value;
+  const token =
+    jar.get(SESSION_COOKIE)?.value ||
+    jar.get("better-auth.session_token")?.value ||
+    jar.get("__Secure-better-auth.session_token")?.value;
   if (!token) return null;
   const [row] = await db
     .select({ session: sessions, user: users })
     .from(sessions)
     .innerJoin(users, eq(users.id, sessions.userId))
-    .where(eq(sessions.id, token))
+    .where(or(eq(sessions.id, token), eq(sessions.token, token)))
     .limit(1);
   if (!row) return null;
   if (row.session.expiresAt.getTime() < Date.now()) {
-    await db.delete(sessions).where(eq(sessions.id, token));
+    await db.delete(sessions).where(or(eq(sessions.id, token), eq(sessions.token, token)));
     return null;
   }
   let [profile] = await db
@@ -305,7 +340,7 @@ export async function resetPassword(token: string, newPassword: string) {
     .where(eq(passwordResetTokens.tokenHash, tokenHash))
     .limit(1);
   if (!row || row.usedAt || row.expiresAt.getTime() < Date.now()) {
-    throw new ApiError(400, "Reset link invalid ya expire ho chuka hai");
+    throw new ApiError(400, "Password reset link is invalid or has expired. Please request a new one.");
   }
   await db
     .update(users)

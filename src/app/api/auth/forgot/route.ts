@@ -1,24 +1,32 @@
 // ✉️ POST /api/auth/forgot — password reset link (mail outbox / SMTP)
 import { db } from "@/db";
 import { mailOutbox } from "@/db/schema";
-import { assertSameOrigin, guardRateLimit, handle, json, parseOrThrow } from "@/lib/api";
+import { ApiError, assertSameOrigin, guardRateLimitDual, handle, json, parseOrThrow } from "@/lib/api";
 import { createPasswordReset } from "@/lib/auth";
 import { forgotSchema } from "@/lib/validations";
+import { verifyAltchaSolution } from "@/lib/altcha";
 
 export const POST = handle(async (req: Request) => {
   assertSameOrigin(req);
-  await guardRateLimit(req, "auth:forgot", 5);
-  const { email } = parseOrThrow(forgotSchema, await req.json().catch(() => ({})));
-  const token = await createPasswordReset(email);
+  const input = parseOrThrow(forgotSchema, await req.json().catch(() => ({})));
+
+  // Strict rate limit: max 5 requests per 15 minutes per IP, max 3 per email
+  await guardRateLimitDual(req, "auth:forgot", input.email, 5, 3, 15 * 60_000);
+
+  // Verify Proof-of-Work anti-bot protection
+  const altchaRes = verifyAltchaSolution(input.altcha);
+  if (!altchaRes.verified) {
+    throw new ApiError(400, altchaRes.error || "Security verification failed. Please complete the challenge.");
+  }
+
+  const token = await createPasswordReset(input.email);
 
   if (token) {
-    // Self-hosted friendly: email provider na ho to outbox table me queue hota hai.
-    // SMTP provider integrate karne ke liye lib/mail.ts me adapter jodein.
     const baseUrl =
       process.env.NEXT_PUBLIC_APP_URL ??
       `${req.headers.get("x-forwarded-proto") ?? "http"}://${req.headers.get("host")}`;
     await db.insert(mailOutbox).values({
-      toEmail: email.toLowerCase().trim(),
+      toEmail: input.email.toLowerCase().trim(),
       subject: "LinkForge — Password reset",
       body: `Reset your password: ${baseUrl}/reset-password?token=${token}\n\nThis link will expire in 1 hour.`,
     });

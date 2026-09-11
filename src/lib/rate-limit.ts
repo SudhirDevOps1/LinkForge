@@ -11,6 +11,7 @@ export interface RateLimitResult {
   limit: number;
   remaining: number;
   resetAt: number; // epoch ms
+  retryAfterSeconds: number;
 }
 
 interface Bucket {
@@ -36,15 +37,24 @@ function checkMemory(key: string, limit: number, windowMs: number, now: number):
   if (!existing || existing.resetAt <= now) {
     const resetAt = now + windowMs;
     store.set(key, { count: 1, resetAt });
-    return { success: true, limit, remaining: limit - 1, resetAt };
+    return {
+      success: true,
+      limit,
+      remaining: limit - 1,
+      resetAt,
+      retryAfterSeconds: 0,
+    };
   }
   existing.count += 1;
   const remaining = Math.max(0, limit - existing.count);
+  const isSuccess = existing.count <= limit;
+  const retryAfterSeconds = isSuccess ? 0 : Math.max(1, Math.ceil((existing.resetAt - now) / 1000));
   return {
-    success: existing.count <= limit,
+    success: isSuccess,
     limit,
     remaining,
     resetAt: existing.resetAt,
+    retryAfterSeconds,
   };
 }
 
@@ -78,11 +88,15 @@ async function checkUpstash(
     if (!res.ok) return null;
     const data = (await res.json()) as Array<{ result: number }>;
     const count = Number(data?.[0]?.result ?? 1);
+    const isSuccess = count <= limit;
+    const resetAt = (Math.floor(Date.now() / windowMs) + 1) * windowMs;
+    const retryAfterSeconds = isSuccess ? 0 : Math.max(1, Math.ceil((resetAt - Date.now()) / 1000));
     return {
-      success: count <= limit,
+      success: isSuccess,
       limit,
       remaining: Math.max(0, limit - count),
-      resetAt: (Math.floor(Date.now() / windowMs) + 1) * windowMs,
+      resetAt,
+      retryAfterSeconds,
     };
   } catch {
     return null; // Redis down → memory fallback (availability > strictness)
@@ -104,6 +118,34 @@ export async function rateLimit(
   const upstash = await checkUpstash(key, limit, windowMs);
   if (upstash) return upstash;
   return checkMemory(key, limit, windowMs, now);
+}
+
+/**
+ * Dual-bucket rate limiter: enforces both IP-level and account-level limits.
+ * Protects against distributed botnets rotating IPs against a single targeted email.
+ */
+export async function rateLimitDual(
+  ipKey: string,
+  accountKey?: string | null,
+  ipLimit = 10,
+  accountLimit = 5,
+  windowMs = 15 * 60_000, // 15-minute brute-force window
+): Promise<RateLimitResult> {
+  // 1. Enforce IP-level rate limit
+  const ipResult = await rateLimit(ipKey, ipLimit, windowMs);
+  if (!ipResult.success) {
+    return ipResult;
+  }
+
+  // 2. Enforce Account-level rate limit (if target account key provided)
+  if (accountKey) {
+    const accResult = await rateLimit(accountKey, accountLimit, windowMs);
+    if (!accResult.success) {
+      return accResult;
+    }
+  }
+
+  return ipResult;
 }
 
 /** Request se best-effort client IP nikaalo */

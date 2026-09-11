@@ -78,20 +78,28 @@ export const signupSchema = z.object({
     .max(128)
     .regex(/[a-zA-Z]/, "Password must contain at least one letter")
     .regex(/[0-9]/, "Password must contain at least one number"),
+  altcha: z.string().trim().optional(),
 });
 
 export const loginSchema = z.object({
-  email: z.string().trim().toLowerCase().email().max(254),
-  password: z.string().min(1).max(128),
+  email: z.string().trim().toLowerCase().email("Please enter a valid email address").max(254),
+  password: z.string().min(1, "Password is required").max(128),
+  altcha: z.string().trim().optional(),
 });
 
 export const forgotSchema = z.object({
-  email: z.string().trim().toLowerCase().email().max(254),
+  email: z.string().trim().toLowerCase().email("Please enter a valid email address").max(254),
+  altcha: z.string().trim().optional(),
 });
 
 export const resetSchema = z.object({
-  token: z.string().min(16).max(128),
-  password: z.string().min(8).max(128),
+  token: z.string().min(16, "Invalid reset token").max(128),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters long")
+    .max(128)
+    .regex(/[a-zA-Z]/, "Password must contain at least one letter")
+    .regex(/[0-9]/, "Password must contain at least one number"),
 });
 
 // ---- Profile ----------------------------------------------------------------

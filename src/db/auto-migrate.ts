@@ -221,7 +221,43 @@ const PG_MIGRATIONS = [
   `CREATE UNIQUE INDEX IF NOT EXISTS "subscribers_profile_email_idx" ON "subscribers" ("profile_id", "email");`,
   `CREATE INDEX IF NOT EXISTS "subscribers_profile_idx" ON "subscribers" ("profile_id");`,
 
+  // 15. Accounts (Better Auth)
+  `CREATE TABLE IF NOT EXISTS "accounts" (
+    "id" text PRIMARY KEY,
+    "user_id" uuid NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+    "account_id" text NOT NULL,
+    "provider_id" text NOT NULL,
+    "access_token" text,
+    "refresh_token" text,
+    "id_token" text,
+    "access_token_expires_at" timestamp with time zone,
+    "refresh_token_expires_at" timestamp with time zone,
+    "scope" text,
+    "password" text,
+    "created_at" timestamp with time zone NOT NULL DEFAULT now(),
+    "updated_at" timestamp with time zone NOT NULL DEFAULT now()
+  );`,
+  `CREATE INDEX IF NOT EXISTS "accounts_user_idx" ON "accounts" ("user_id");`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "accounts_provider_account_idx" ON "accounts" ("provider_id", "account_id");`,
+
+  // 16. Verifications (Better Auth)
+  `CREATE TABLE IF NOT EXISTS "verifications" (
+    "id" text PRIMARY KEY,
+    "identifier" text NOT NULL,
+    "value" text NOT NULL,
+    "expires_at" timestamp with time zone NOT NULL,
+    "created_at" timestamp with time zone NOT NULL DEFAULT now(),
+    "updated_at" timestamp with time zone NOT NULL DEFAULT now()
+  );`,
+  `CREATE INDEX IF NOT EXISTS "verifications_identifier_idx" ON "verifications" ("identifier");`,
+
   // Safe non-destructive column sync (in case tables existed previously from older schema)
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "email_verified" boolean NOT NULL DEFAULT false;`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "image" text;`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "updated_at" timestamp with time zone NOT NULL DEFAULT now();`,
+  `ALTER TABLE "sessions" ADD COLUMN IF NOT EXISTS "token" text NOT NULL DEFAULT '';`,
+  `ALTER TABLE "sessions" ADD COLUMN IF NOT EXISTS "ip_address" text;`,
+  `ALTER TABLE "sessions" ADD COLUMN IF NOT EXISTS "updated_at" timestamp with time zone NOT NULL DEFAULT now();`,
   `ALTER TABLE "profiles" ADD COLUMN IF NOT EXISTS "design" jsonb;`,
   `ALTER TABLE "profiles" ADD COLUMN IF NOT EXISTS "og_image_url" text;`,
   `ALTER TABLE "profiles" ADD COLUMN IF NOT EXISTS "profile_password" text;`,
@@ -433,7 +469,43 @@ const SQLITE_MIGRATIONS = [
   `CREATE UNIQUE INDEX IF NOT EXISTS "subscribers_profile_email_idx" ON "subscribers" ("profile_id", "email");`,
   `CREATE INDEX IF NOT EXISTS "subscribers_profile_idx" ON "subscribers" ("profile_id");`,
 
+  // 15. Accounts (Better Auth)
+  `CREATE TABLE IF NOT EXISTS "accounts" (
+    "id" text PRIMARY KEY NOT NULL,
+    "user_id" text NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+    "account_id" text NOT NULL,
+    "provider_id" text NOT NULL,
+    "access_token" text,
+    "refresh_token" text,
+    "id_token" text,
+    "access_token_expires_at" integer,
+    "refresh_token_expires_at" integer,
+    "scope" text,
+    "password" text,
+    "created_at" integer NOT NULL,
+    "updated_at" integer NOT NULL
+  );`,
+  `CREATE INDEX IF NOT EXISTS "accounts_user_idx" ON "accounts" ("user_id");`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "accounts_provider_account_idx" ON "accounts" ("provider_id", "account_id");`,
+
+  // 16. Verifications (Better Auth)
+  `CREATE TABLE IF NOT EXISTS "verifications" (
+    "id" text PRIMARY KEY NOT NULL,
+    "identifier" text NOT NULL,
+    "value" text NOT NULL,
+    "expires_at" integer NOT NULL,
+    "created_at" integer NOT NULL,
+    "updated_at" integer NOT NULL
+  );`,
+  `CREATE INDEX IF NOT EXISTS "verifications_identifier_idx" ON "verifications" ("identifier");`,
+
   // Safe non-destructive column sync for SQLite (zero data loss — adds missing columns if tables were created earlier)
+  `ALTER TABLE "users" ADD COLUMN "email_verified" integer NOT NULL DEFAULT 0;`,
+  `ALTER TABLE "users" ADD COLUMN "image" text;`,
+  `ALTER TABLE "users" ADD COLUMN "updated_at" integer;`,
+  `ALTER TABLE "sessions" ADD COLUMN "token" text NOT NULL DEFAULT '';`,
+  `ALTER TABLE "sessions" ADD COLUMN "ip_address" text;`,
+  `ALTER TABLE "sessions" ADD COLUMN "updated_at" integer;`,
   `ALTER TABLE "profiles" ADD COLUMN "design" text;`,
   `ALTER TABLE "profiles" ADD COLUMN "og_image_url" text;`,
   `ALTER TABLE "profiles" ADD COLUMN "profile_password" text;`,
