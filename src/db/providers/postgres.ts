@@ -14,12 +14,13 @@ export function createPostgresDb() {
       ? (process.env.SUPABASE_DATABASE_URL ?? process.env.DATABASE_URL)
       : process.env.DATABASE_URL;
 
-  if (!connectionString) {
-    throw new Error("DATABASE_URL is required for the postgres/supabase provider");
-  }
+  // Build/CI safe fallback: pg.Pool is lazy and does not open TCP sockets until pool.query()
+  const effectiveConnString =
+    connectionString ||
+    "postgresql://postgres:postgres@127.0.0.1:5432/linkforge_placeholder";
 
   const pool =
-    globalForDb.__linkforgePgPool ?? new Pool({ connectionString });
+    globalForDb.__linkforgePgPool ?? new Pool({ connectionString: effectiveConnString });
   if (process.env.NODE_ENV !== "production") {
     globalForDb.__linkforgePgPool = pool;
   }

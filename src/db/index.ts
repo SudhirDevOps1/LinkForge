@@ -48,11 +48,17 @@ export function getDb(): Db {
       cached = createPostgresDb();
   }
 
-  // Auto-migrate tables in background on first db connection in runtime
+  // Auto-migrate tables in background on first db connection in runtime (skip in build/CI)
+  const isBuildPhase =
+    process.env.NEXT_PHASE === "phase-production-build" ||
+    Boolean(process.env.CI) ||
+    !process.env.DATABASE_URL;
+
   if (
     !migrationStarted &&
     typeof window === "undefined" &&
-    process.env.NODE_ENV !== "test"
+    process.env.NODE_ENV !== "test" &&
+    !isBuildPhase
   ) {
     migrationStarted = true;
     import("./auto-migrate")
