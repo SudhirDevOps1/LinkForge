@@ -1,6 +1,7 @@
 // 🔍 /api/links/scrape — Scrapes OpenGraph metadata, title, description, and images
 import { ApiError, assertSameOrigin, guardRateLimit, handle, json } from "@/lib/api";
 import { requireUser } from "@/lib/auth";
+import { safeFetch } from "@/lib/outbound";
 
 // SSRF safety check to block loopback and private networks
 function isSafeUrl(rawUrl: string): boolean {
@@ -139,9 +140,9 @@ export const POST = handle(async (req: Request) => {
       let thumbnail = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 
       try {
-        const oembedRes = await fetch(
+        const oembedRes = await safeFetch(
           `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`,
-          { signal: AbortSignal.timeout(4000) }
+          { timeoutMs: 4000 }
         );
         if (oembedRes.ok) {
           const data = (await oembedRes.json()) as { title?: string; author_name?: string; thumbnail_url?: string };
@@ -169,9 +170,9 @@ export const POST = handle(async (req: Request) => {
   // 3. 🎵 Spotify Embed & OEmbed
   if (hostname === "open.spotify.com") {
     try {
-      const oembedRes = await fetch(
+      const oembedRes = await safeFetch(
         `https://open.spotify.com/oembed?url=${encodeURIComponent(targetUrl)}`,
-        { signal: AbortSignal.timeout(4000) }
+        { timeoutMs: 4000 }
       );
       if (oembedRes.ok) {
         const data = (await oembedRes.json()) as { title?: string; thumbnail_url?: string };
@@ -193,15 +194,16 @@ export const POST = handle(async (req: Request) => {
 
   // 4. 🌐 Generic Webpage HTML Metadata Scraper
   try {
-    const res = await fetch(targetUrl, {
+    const res = await safeFetch(targetUrl, {
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 (compatible; LinkForge-Bot/1.0; +https://linkforge.dev)",
         Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
         "Accept-Language": "en-US,en;q=0.5",
       },
-      redirect: "follow",
-      signal: AbortSignal.timeout(6000),
+      followSafeRedirects: true,
+      maxRedirects: 3,
+      timeoutMs: 6000,
     });
 
     if (!res.ok) {

@@ -2,6 +2,7 @@
 import { z } from "zod";
 import { ApiError, guardRateLimit, handle, json, parseOrThrow } from "@/lib/api";
 import { requireUser } from "@/lib/auth";
+import { safeFetch } from "@/lib/outbound";
 
 const querySchema = z.object({
   url: z.string().trim().url(),
@@ -21,8 +22,8 @@ export const GET = handle(async (req: Request) => {
   try {
     // 1. YouTube oEmbed
     if (type === "youtube" || url.includes("youtube.com") || url.includes("youtu.be")) {
-      const res = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`, {
-        signal: AbortSignal.timeout(6000),
+      const res = await safeFetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`, {
+        timeoutMs: 6000,
       });
       if (res.ok) {
         const data = await res.json();
@@ -38,8 +39,8 @@ export const GET = handle(async (req: Request) => {
 
     // 2. Spotify oEmbed
     if (type === "spotify" || url.includes("spotify.com")) {
-      const res = await fetch(`https://open.spotify.com/oembed?url=${encodeURIComponent(url)}`, {
-        signal: AbortSignal.timeout(6000),
+      const res = await safeFetch(`https://open.spotify.com/oembed?url=${encodeURIComponent(url)}`, {
+        timeoutMs: 6000,
       });
       if (res.ok) {
         const data = await res.json();
@@ -64,9 +65,10 @@ export const GET = handle(async (req: Request) => {
         if (parts[1]) feedUrl = `https://medium.com/feed/${parts[1]}`;
       }
 
-      const res = await fetch(feedUrl, {
+      const res = await safeFetch(feedUrl, {
         headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) LinkForge/1.0" },
-        signal: AbortSignal.timeout(8000),
+        timeoutMs: 8000,
+        followSafeRedirects: true,
       });
 
       if (res.ok) {
@@ -104,9 +106,10 @@ export const GET = handle(async (req: Request) => {
     }
 
     // 4. Generic page metadata fallback
-    const pageRes = await fetch(url, {
+    const pageRes = await safeFetch(url, {
       headers: { "User-Agent": "Mozilla/5.0 LinkForge-Bot/1.0" },
-      signal: AbortSignal.timeout(6000),
+      timeoutMs: 6000,
+      followSafeRedirects: true,
     });
     if (pageRes.ok) {
       const html = await pageRes.text();
