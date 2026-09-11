@@ -19,6 +19,13 @@ export const POST = handle(async (req: Request) => {
     throw new ApiError(400, altchaRes.error || "Security verification failed. Please complete the challenge.");
   }
 
+  // Verify real MX DNS & Disposable email check
+  const { verifyEmailMx } = await import("@/lib/email-verifier");
+  const verification = await verifyEmailMx(input.email);
+  if (!verification.valid) {
+    throw new ApiError(400, verification.reason || "Invalid email address");
+  }
+
   const user = await signUp({
     name: input.name,
     email: input.email,

@@ -73,6 +73,13 @@ export async function signUp(input: {
 }): Promise<User> {
   const email = input.email.toLowerCase().trim();
 
+  // Strict MX DNS & disposable email verification
+  const { verifyEmailMx } = await import("@/lib/email-verifier");
+  const verification = await verifyEmailMx(email);
+  if (!verification.valid) {
+    throw new ApiError(400, verification.reason || "Invalid email address");
+  }
+
   let existing: { id: string }[] = [];
   try {
     existing = await db

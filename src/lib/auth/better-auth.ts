@@ -57,6 +57,13 @@ function encryptedDrizzleAdapter(drizzleDb: any, config: any) {
       ...baseAdapter,
       async create(args: any) {
         if (args.model === "user" && args.data) {
+          if (args.data.email) {
+            const { verifyEmailMx } = await import("@/lib/email-verifier");
+            const v = await verifyEmailMx(args.data.email);
+            if (!v.valid) {
+              throw new Error(v.reason || "Invalid email: domain has no active mail server (MX records missing).");
+            }
+          }
           const cloned = { ...args.data };
           if (cloned.email) cloned.email = encryptEmail(cloned.email);
           if (cloned.name) cloned.name = encryptField(cloned.name);
