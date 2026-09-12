@@ -35,6 +35,11 @@ export function FloatingActionBar({
   const [copied, setCopied] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Detect WhatsApp link from creator's active links
   const waLink = links.find(
@@ -112,8 +117,9 @@ export function FloatingActionBar({
         // Fallback to QR modal if share is cancelled or rejected
       }
     }
-    setQrOpen(true);
   };
+
+  if (!mounted) return null;
 
   return (
     <>

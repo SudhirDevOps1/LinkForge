@@ -289,7 +289,7 @@ function SortableLinkRow({
           {link.scheduledAt && new Date(link.scheduledAt) > new Date() && (
             <span className="shrink-0 rounded-md bg-blue-500/20 px-1.5 py-0.5 text-[10px] font-medium text-blue-300 border border-blue-500/30 flex items-center gap-1">
               <Clock className="h-2.5 w-2.5" />
-              <span>Scheduled ({new Date(link.scheduledAt).toLocaleDateString()})</span>
+              <span suppressHydrationWarning>Scheduled ({new Date(link.scheduledAt).toISOString().slice(0, 10)})</span>
             </span>
           )}
           {link.expiresAt && (
@@ -301,7 +301,7 @@ function SortableLinkRow({
             ) : (
               <span className="shrink-0 rounded-md bg-zinc-700/40 px-1.5 py-0.5 text-[10px] font-medium text-zinc-300 border border-zinc-600/30 flex items-center gap-1">
                 <Clock className="h-2.5 w-2.5" />
-                <span>Expires {new Date(link.expiresAt).toLocaleDateString()}</span>
+                <span suppressHydrationWarning>Expires {new Date(link.expiresAt).toISOString().slice(0, 10)}</span>
               </span>
             )
           )}

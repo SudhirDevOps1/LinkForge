@@ -1030,6 +1030,27 @@ export function BioRenderer({
     return true;
   });
 
+  // 📜 Scroll Reveal Animation Observer
+  useEffect(() => {
+    if (!d?.scrollReveal) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.setAttribute("data-visible", "true");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { rootMargin: "0px 0px -40px 0px", threshold: 0.1 }
+    );
+
+    const elements = document.querySelectorAll(".lf-scroll-reveal");
+    elements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [d?.scrollReveal, filteredLinks]);
+
   const downloadVCard = () => {
     playClick();
     const name = profile.displayName || "Creator";
@@ -1145,6 +1166,25 @@ export function BioRenderer({
       {/* Custom CSS injection (sanitized server-side) */}
       {d?.customCss && (
         <style dangerouslySetInnerHTML={{ __html: d.customCss }} />
+      )}
+      {/* 📜 Scroll Reveal Animation Styles */}
+      {d?.scrollReveal && (
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+              .lf-scroll-reveal {
+                opacity: 0;
+                transform: translateY(24px);
+                transition: opacity 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+                will-change: opacity, transform;
+              }
+              .lf-scroll-reveal[data-visible="true"] {
+                opacity: 1;
+                transform: translateY(0);
+              }
+            `,
+          }}
+        />
       )}
       {/* 🖱️ Interactive Custom Cursor Tracking */}
       {d?.cursorEffect && d.cursorEffect !== "none" && cursorPos && cursorVisible && (
@@ -1627,11 +1667,12 @@ export function BioRenderer({
             const spotlightClass = link.isSpotlight
               ? "ring-2 ring-violet-400/80 shadow-[0_0_25px_rgba(139,92,246,0.35)] animate-pulse-subtle"
               : "";
+            const scrollRevealClass = d?.scrollReveal ? "lf-scroll-reveal" : "";
 
             return (
               <div
                 key={link.id}
-                className={`group relative overflow-hidden flex flex-col justify-center border p-4 ${activeHoverClass} ${spanClass(link.size)} ${entranceClass} ${attentionClass} ${spotlightClass}`}
+                className={`group relative overflow-hidden flex flex-col justify-center border p-4 ${activeHoverClass} ${spanClass(link.size)} ${entranceClass} ${attentionClass} ${spotlightClass} ${scrollRevealClass}`}
                 style={{
                   ...cardStyleFor(false),
                   animationDelay: `${idx * staggerMs}ms`,

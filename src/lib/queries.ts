@@ -25,8 +25,17 @@ export async function getBioBySlug(slug: string): Promise<BioBundle | null> {
       .orderBy(asc(links.position));
     return { profile, links: profileLinks };
   } catch (err: unknown) {
-    const msg = ((err as Error)?.message || "").toLowerCase();
-    if (msg.includes("does not exist") || msg.includes("column") || msg.includes("relation") || msg.includes("no such column")) {
+    const msg = (((err as Error)?.message || "") + " " + String(err)).toLowerCase();
+    if (
+      msg.includes("does not exist") ||
+      msg.includes("column") ||
+      msg.includes("relation") ||
+      msg.includes("no such column") ||
+      msg.includes("no such table") ||
+      msg.includes("sqlite_error") ||
+      msg.includes("undefined_column") ||
+      msg.includes("undefined_table")
+    ) {
       try {
         const { autoMigrate } = await import("@/db/auto-migrate");
         await autoMigrate(true);
@@ -65,8 +74,17 @@ export async function getBioByDomain(domain: string): Promise<BioBundle | null> 
       .orderBy(asc(links.position));
     return { profile, links: profileLinks };
   } catch (err: unknown) {
-    const msg = ((err as Error)?.message || "").toLowerCase();
-    if (msg.includes("does not exist") || msg.includes("column") || msg.includes("relation") || msg.includes("no such column")) {
+    const msg = (((err as Error)?.message || "") + " " + String(err)).toLowerCase();
+    if (
+      msg.includes("does not exist") ||
+      msg.includes("column") ||
+      msg.includes("relation") ||
+      msg.includes("no such column") ||
+      msg.includes("no such table") ||
+      msg.includes("sqlite_error") ||
+      msg.includes("undefined_column") ||
+      msg.includes("undefined_table")
+    ) {
       try {
         const { autoMigrate } = await import("@/db/auto-migrate");
         await autoMigrate(true);

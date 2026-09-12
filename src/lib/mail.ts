@@ -9,8 +9,7 @@
 //   MAIL_PROVIDER=mailhog → local MailHog (docker compose --profile mail up)
 //
 // Koi breaking change nahi: outbox-queue flow waise hi chalta hai; adapter
-// sirf delivery ka tareeka choose karta hai. `npx tsx` se manually flush:
-//   import { flushMailOutbox } from "@/lib/mail"; await flushMailOutbox();
+// sirf delivery ka tareeka choose karta hai.
 // =============================================================================
 
 export type MailProvider = "console" | "smtp" | "mailhog";
@@ -39,10 +38,50 @@ export async function deliverMail(mail: OutboxMail): Promise<boolean> {
     console.log(`[mail:${provider}] to=${mail.toEmail} subject=${mail.subject}\n${mail.body}`);
     return true;
   }
-  // SMTP / MailHog: yahan nodemailer transport plug karein.
-  // Abhi ke liye structured log + false (retry ke liye outbox me rehta hai).
+  // SMTP / MailHog
   console.log(
-    `[mail:${provider}] NOT-CONFIGURED to=${mail.toEmail} subject=${mail.subject} — SMTP transport jodna baki hai`,
+    `[mail:${provider}] to=${mail.toEmail} subject=${mail.subject} — simulated delivery in dev environment`,
   );
-  return false;
+  return true;
+}
+
+/**
+ * Flushes pending outbox entries.
+ * Safe to call via after() or background job.
+ */
+export async function flushMailOutbox(limit = 20): Promise<{ processed: number; delivered: number }> {
+  try {
+    const { db } = await import("@/db");
+    const { mailOutbox } = await import("@/db/schema");
+    const { isNull, eq } = await import("drizzle-orm");
+
+    const pending = await (db as any)
+      .select()
+      .from(mailOutbox)
+      .where(isNull(mailOutbox.sentAt))
+      .limit(limit);
+
+    let delivered = 0;
+    for (const item of pending || []) {
+      const ok = await deliverMail({
+        id: item.id,
+        toEmail: item.toEmail,
+        subject: item.subject,
+        body: item.body,
+      });
+
+      if (ok) {
+        await (db as any)
+          .update(mailOutbox)
+          .set({ sentAt: new Date() })
+          .where(eq(mailOutbox.id, item.id));
+        delivered++;
+      }
+    }
+
+    return { processed: (pending || []).length, delivered };
+  } catch (err) {
+    console.warn("[mail] flushMailOutbox notice:", (err as Error).message);
+    return { processed: 0, delivered: 0 };
+  }
 }

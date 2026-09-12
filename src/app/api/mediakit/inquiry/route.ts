@@ -74,6 +74,13 @@ export const POST = handle(async (req: Request) => {
     ].join("\n"),
   });
 
+  try {
+    const { flushMailOutbox } = await import("@/lib/mail");
+    await flushMailOutbox();
+  } catch {
+    // Async delivery fallback
+  }
+
   // 4. Trigger webhooks if configured
   await triggerWebhooks(profile.id, "inquiry", {
     brandName: data.brandName,

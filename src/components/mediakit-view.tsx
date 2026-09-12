@@ -263,25 +263,29 @@ export function MediaKitView({ profile, stats }: MediaKitProps) {
                 <Globe2 className="w-4 h-4 text-violet-400" />
                 <span>Top Audience Demographics</span>
               </div>
-              <div className="space-y-2.5">
-                {stats.countries.slice(0, 4).map((country) => {
-                  const pct = Math.round((country.value / totalCountryViews) * 100);
-                  return (
-                    <div key={country.name} className="space-y-1">
-                      <div className="flex justify-between text-xs font-medium text-zinc-300">
-                        <span>{country.name || "Global"}</span>
-                        <span className="font-mono text-zinc-400">{pct}%</span>
+              {stats.countries.length > 0 ? (
+                <div className="space-y-2.5">
+                  {stats.countries.slice(0, 4).map((country) => {
+                    const pct = Math.round((country.value / totalCountryViews) * 100);
+                    return (
+                      <div key={country.name} className="space-y-1">
+                        <div className="flex justify-between text-xs font-medium text-zinc-300">
+                          <span>{country.name || "Global"}</span>
+                          <span className="font-mono text-zinc-400">{pct}%</span>
+                        </div>
+                        <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-violet-500"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
                       </div>
-                      <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-violet-500"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-xs text-zinc-500 italic py-4 text-center">Audience demographic data will appear as visitors view your bio.</p>
+              )}
             </div>
 
             {/* Top Platforms & Devices */}
@@ -290,18 +294,33 @@ export function MediaKitView({ profile, stats }: MediaKitProps) {
                 <Smartphone className="w-4 h-4 text-violet-400" />
                 <span>Device Breakdown</span>
               </div>
-              <div className="grid grid-cols-2 gap-3 pt-2">
-                <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02] text-center space-y-1">
-                  <Smartphone className="w-6 h-6 text-zinc-400 mx-auto" />
-                  <p className="text-lg font-bold text-white">68%</p>
-                  <p className="text-[11px] text-zinc-500">Mobile & Tablet</p>
+              {stats.devices.length > 0 ? (
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  {(() => {
+                    const totalDeviceViews = stats.devices.reduce((acc, d) => acc + d.value, 0) || 1;
+                    const mobCount = (stats.devices.find((d) => d.name.toLowerCase() === "mobile")?.value ?? 0) + (stats.devices.find((d) => d.name.toLowerCase() === "tablet")?.value ?? 0);
+                    const deskCount = stats.devices.find((d) => d.name.toLowerCase() === "desktop")?.value ?? 0;
+                    const mobPct = Math.round((mobCount / totalDeviceViews) * 100);
+                    const deskPct = Math.round((deskCount / totalDeviceViews) * 100);
+                    return (
+                      <>
+                        <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02] text-center space-y-1">
+                          <Smartphone className="w-6 h-6 text-zinc-400 mx-auto" />
+                          <p className="text-lg font-bold text-white">{mobPct}%</p>
+                          <p className="text-[11px] text-zinc-500">Mobile & Tablet</p>
+                        </div>
+                        <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02] text-center space-y-1">
+                          <Laptop className="w-6 h-6 text-zinc-400 mx-auto" />
+                          <p className="text-lg font-bold text-white">{deskPct}%</p>
+                          <p className="text-[11px] text-zinc-500">Desktop & Laptop</p>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
-                <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02] text-center space-y-1">
-                  <Laptop className="w-6 h-6 text-zinc-400 mx-auto" />
-                  <p className="text-lg font-bold text-white">32%</p>
-                  <p className="text-[11px] text-zinc-500">Desktop & Workstation</p>
-                </div>
-              </div>
+              ) : (
+                <p className="text-xs text-zinc-500 italic py-4 text-center">Device telemetry will register with incoming bio traffic.</p>
+              )}
             </div>
           </div>
         </div>

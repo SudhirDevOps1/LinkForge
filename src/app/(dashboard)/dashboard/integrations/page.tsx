@@ -19,7 +19,7 @@ export default async function IntegrationsPage() {
           Import and preview GitHub repositories, digital products, calendar bookings, and rich media in your bio with one click.
         </p>
       </div>
-      <IntegrationsHub defaultGithubUser="SudhirDevOps1" />
+      <IntegrationsHub defaultGithubUser={ctx.profile.slug || ""} />
     </div>
   );
 }

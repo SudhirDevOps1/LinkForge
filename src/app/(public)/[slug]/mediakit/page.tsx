@@ -66,29 +66,13 @@ export default async function MediaKitPage({ params }: Ctx) {
     };
   } catch {}
 
-  // Fallback defaults for new accounts with 0 traffic so the media kit looks professional
-  const totalViews = Math.max(summary.views, 1250);
-  const uniqueVisitors = Math.max(summary.uniqueVisitors, 840);
-  const totalClicks = Math.max(summary.clicks, 160);
-  const ctr = summary.ctr > 0 ? summary.ctr : Math.round((totalClicks / totalViews) * 1000) / 10;
-
-  const countries =
-    summary.countries.length > 0
-      ? summary.countries
-      : [
-          { name: "India", value: 64 },
-          { name: "United States", value: 18 },
-          { name: "United Kingdom", value: 7 },
-          { name: "Germany", value: 5 },
-        ];
-
-  const devices =
-    summary.devices.length > 0
-      ? summary.devices
-      : [
-          { name: "Mobile", value: 68 },
-          { name: "Desktop", value: 32 },
-        ];
+  // Real creator telemetry (no fake/fabricated metrics)
+  const totalViews = summary.views;
+  const uniqueVisitors = summary.uniqueVisitors;
+  const totalClicks = summary.clicks;
+  const ctr = summary.ctr;
+  const countries = summary.countries;
+  const devices = summary.devices;
 
   return (
     <MediaKitView

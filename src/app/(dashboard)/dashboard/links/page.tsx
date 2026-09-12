@@ -14,11 +14,36 @@ export default async function LinksPage() {
   const { profile } = ctx;
   if (!profile) redirect("/dashboard/settings");
 
-  const profileLinks = await db
-    .select()
-    .from(links)
-    .where(eq(links.profileId, profile.id))
-    .orderBy(asc(links.position));
+  let profileLinks;
+  try {
+    profileLinks = await db
+      .select()
+      .from(links)
+      .where(eq(links.profileId, profile.id))
+      .orderBy(asc(links.position));
+  } catch (err: unknown) {
+    const msg = (((err as Error)?.message || "") + " " + String(err)).toLowerCase();
+    if (
+      msg.includes("does not exist") ||
+      msg.includes("column") ||
+      msg.includes("relation") ||
+      msg.includes("no such column") ||
+      msg.includes("no such table") ||
+      msg.includes("sqlite_error") ||
+      msg.includes("undefined_column") ||
+      msg.includes("undefined_table")
+    ) {
+      const { autoMigrate } = await import("@/db/auto-migrate");
+      await autoMigrate(true);
+      profileLinks = await db
+        .select()
+        .from(links)
+        .where(eq(links.profileId, profile.id))
+        .orderBy(asc(links.position));
+    } else {
+      throw err;
+    }
+  }
 
   // Query clicks count per link
   const clicksMap = new Map<string, number>();
@@ -39,7 +64,7 @@ export default async function LinksPage() {
     // Graceful fallback
   }
 
-  const enrichedLinks = profileLinks.map((l) => ({
+  const enrichedLinks = (profileLinks ?? []).map((l) => ({
     ...l,
     clicks: clicksMap.get(l.id) ?? 0,
   }));

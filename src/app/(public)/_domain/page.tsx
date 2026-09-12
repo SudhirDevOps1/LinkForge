@@ -1,14 +1,22 @@
 // 🌐 Custom domain renderer — middleware pointed domains ko yahan rewrite karta
 // hai; host header se profile resolve hota hai.
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import { after } from "next/server";
 import { notFound } from "next/navigation";
 import Script from "next/script";
+import Link from "next/link";
 import { BioRenderer } from "@/components/bio-renderer";
+import { ProfilePasswordGate } from "@/components/profile-password-gate";
+import { FloatingActionBar } from "@/components/floating-action-bar";
+import { NewsletterSubscribe } from "@/components/newsletter-subscribe";
+import { ShareButton } from "@/components/share-button";
+import { QRCodeButton } from "@/components/qr-code";
+import { VCardButton } from "@/components/vcard-button";
 import { trackEvent } from "@/lib/analytics";
 import { parseDesign } from "@/lib/design";
 import { getBioByDomain } from "@/lib/queries";
 import { triggerWebhooks } from "@/lib/webhooks";
+import { getTheme } from "@/lib/themes";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +27,38 @@ export default async function CustomDomainPage() {
   if (!bio || !bio.profile.isPublished) notFound();
 
   const { profile, links } = bio;
+
+  // 🔒 Password gate check for custom domain
+  if (profile.profilePassword) {
+    const jar = await cookies();
+    const unlocked = jar.get(`pf_unlock_${profile.id}`);
+    if (!unlocked) {
+      return (
+        <ProfilePasswordGate
+          slug={profile.slug}
+          displayName={profile.displayName}
+          avatarUrl={profile.avatarUrl}
+        />
+      );
+    }
+  }
+
+  // 🗓️ Filter out expired / not-yet-scheduled links
+  const now = new Date();
+  const visibleLinks = links.filter((link) => {
+    if (!link.isActive) return false;
+    if (link.scheduledAt && new Date(link.scheduledAt) > now) return false;
+    if (link.expiresAt && new Date(link.expiresAt) <= now) return false;
+    return true;
+  });
+
+  // 📌 Pinned links first, then by position
+  visibleLinks.sort((a, b) => {
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
+    return a.position - b.position;
+  });
+
   after(async () => {
     await trackEvent({
       profileId: profile.id,
@@ -30,11 +70,33 @@ export default async function CustomDomainPage() {
       profileSlug: profile.slug,
       via: "custom-domain",
       host,
+      linkCount: visibleLinks.length,
     });
   });
 
+  const theme = getTheme(profile.theme);
+  const ann = profile.announcement as { text: string; emoji?: string; url?: string; expiresAt?: string } | null;
+  const showAnnouncement = ann && (!ann.expiresAt || new Date(ann.expiresAt) > now);
+  const profileUrl = `https://${host}`;
+
   return (
     <>
+      <meta name="theme-color" content={theme.swatch[0]} />
+
+      {/* 📢 Announcement Banner */}
+      {showAnnouncement && (
+        <div className="w-full bg-violet-600 px-4 py-2.5 text-center text-sm font-medium text-white">
+          {ann!.emoji && <span className="mr-1.5">{ann!.emoji}</span>}
+          {ann!.url ? (
+            <a href={ann!.url} target="_blank" rel="noreferrer" className="underline underline-offset-2">
+              {ann!.text}
+            </a>
+          ) : (
+            ann!.text
+          )}
+        </div>
+      )}
+
       {profile.metaPixelId && (
         <Script id="meta-pixel" strategy="afterInteractive">
           {`
@@ -87,7 +149,50 @@ export default async function CustomDomainPage() {
           hidePublicStats: profile.hidePublicStats ?? false,
           upiId: profile.upiId,
         }}
-        links={links}
+        links={visibleLinks}
+        footerSlot={
+          <div key="custom-domain-footer-slot" className="w-full flex flex-col gap-4 mt-6">
+            <NewsletterSubscribe
+              key="newsletter-subscribe-widget-custom"
+              slug={profile.slug}
+              displayName={profile.displayName}
+              accentColor={theme.vars.accent}
+            />
+            <div key="social-share-dock-custom" className="flex items-center gap-2 mt-2">
+              <div className="flex-1">
+                <ShareButton
+                  url={profileUrl}
+                  title={`${profile.displayName} | LinkForge`}
+                />
+              </div>
+              <QRCodeButton url={profileUrl} displayName={profile.displayName} />
+              <VCardButton
+                displayName={profile.displayName}
+                slug={profile.slug}
+                bio={profile.bio}
+                avatarUrl={profile.avatarUrl}
+              />
+            </div>
+            {/* 💼 Creator Media Kit & Sponsorships */}
+            <div className="w-full text-center pt-1">
+              <Link
+                href={`/${profile.slug}/mediakit`}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Verified Media Kit & Sponsorships →</span>
+              </Link>
+            </div>
+          </div>
+        }
+      />
+      <FloatingActionBar
+        displayName={profile.displayName}
+        slug={profile.slug}
+        bio={profile.bio ?? undefined}
+        avatarUrl={profile.avatarUrl}
+        links={visibleLinks}
+        accentColor={theme.vars.accent}
       />
     </>
   );

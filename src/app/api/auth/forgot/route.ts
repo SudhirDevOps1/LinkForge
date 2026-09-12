@@ -30,6 +30,12 @@ export const POST = handle(async (req: Request) => {
       subject: "LinkForge — Password reset",
       body: `Reset your password: ${baseUrl}/reset-password?token=${token}\n\nThis link will expire in 1 hour.`,
     });
+    try {
+      const { flushMailOutbox } = await import("@/lib/mail");
+      await flushMailOutbox();
+    } catch {
+      // Async delivery fallback
+    }
   }
 
   // User-enumeration se bachne ke liye hamesha same response
