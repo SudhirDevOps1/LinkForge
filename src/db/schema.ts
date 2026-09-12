@@ -182,6 +182,8 @@ export const links = pgTable(
     thumbnailUrl: text("thumbnail_url"),
     // 📌 Pin / 🗓️ Scheduling / ⏰ Expiry
     isPinned: boolean("is_pinned").notNull().default(false), // pinned links render first
+    badge: text("badge"), // custom badge chip e.g. "🔥 NEW", "⚡ SALE"
+    isSpotlight: boolean("is_spotlight").notNull().default(false), // animated pulse / spotlight effect
     scheduledAt: timestamp("scheduled_at", { withTimezone: true }), // show only AFTER this date
     expiresAt: timestamp("expires_at", { withTimezone: true }),      // hide AFTER this date
     createdAt: timestamp("created_at", { withTimezone: true })

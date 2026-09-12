@@ -15,6 +15,7 @@ import { ShareButton } from "@/components/share-button";
 import { ProfilePasswordGate } from "@/components/profile-password-gate";
 import { QRCodeButton } from "@/components/qr-code";
 import { VCardButton } from "@/components/vcard-button";
+import { FloatingActionBar } from "@/components/floating-action-bar";
 import { trackEvent } from "@/lib/analytics";
 import { parseDesign } from "@/lib/design";
 import { getBioBySlug } from "@/lib/queries";
@@ -280,6 +281,14 @@ export default async function PublicBioPage({ params }: Ctx) {
           </div>
         }
 
+      />
+      <FloatingActionBar
+        displayName={profile.displayName}
+        slug={profile.slug}
+        bio={profile.bio ?? undefined}
+        avatarUrl={profile.avatarUrl}
+        links={visibleLinks}
+        accentColor={theme.vars.accent}
       />
     </>
   );

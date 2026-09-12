@@ -175,6 +175,8 @@ export const links = sqliteTable(
     thumbnailUrl: text("thumbnail_url"),
     // 📌 Pin / 🗓️ Scheduling / ⏰ Expiry
     isPinned: integer("is_pinned", { mode: "boolean" }).notNull().default(false),
+    badge: text("badge"),
+    isSpotlight: integer("is_spotlight", { mode: "boolean" }).notNull().default(false),
     scheduledAt: integer("scheduled_at", { mode: "timestamp_ms" }),
     expiresAt: integer("expires_at", { mode: "timestamp_ms" }),
     createdAt: ts("created_at"),

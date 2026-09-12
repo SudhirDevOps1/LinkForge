@@ -30,12 +30,14 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
+  AlertCircle,
   Calendar,
   Check,
   Clock,
   Copy,
   CopyPlus,
   Download,
+  Flame,
   ExternalLink,
   Eye,
   EyeOff,
@@ -59,6 +61,7 @@ import {
   Sparkles,
   Trash2,
   X,
+  Zap,
   ZoomIn,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -118,6 +121,8 @@ interface LinkFormState {
   isPinned: boolean;
   scheduledAt: string;
   expiresAt: string;
+  badge: string;
+  isSpotlight: boolean;
 }
 
 const emptyForm: LinkFormState = {
@@ -131,6 +136,8 @@ const emptyForm: LinkFormState = {
   isPinned: false,
   scheduledAt: "",
   expiresAt: "",
+  badge: "",
+  isSpotlight: false,
 };
 
 // Clean display title for UUID / storage paths
@@ -160,16 +167,18 @@ function SortableLinkRow({
   onEdit,
   onDelete,
   onToggle,
+  onTogglePin,
   onDuplicate,
   onShowQr,
   onZoomImage,
   onFetchOg,
   isFetchingOg,
 }: {
-  link: Link & { clickCount?: number };
+  link: Link & { clickCount?: number; clicks?: number };
   onEdit: () => void;
   onDelete: () => void;
   onToggle: (active: boolean) => void;
+  onTogglePin: () => void;
   onDuplicate: () => void;
   onShowQr: () => void;
   onZoomImage: (url: string, title: string) => void;
@@ -182,6 +191,7 @@ function SortableLinkRow({
   const isImg = isImageResource(link);
   const displayTitle = cleanDisplayTitle(link.title, link.url, link.type);
   const imageUrl = link.thumbnailUrl || link.url;
+  const clickCount = link.clicks ?? link.clickCount ?? 0;
 
   function copyUrl(e: React.MouseEvent) {
     e.stopPropagation();
@@ -238,28 +248,83 @@ function SortableLinkRow({
 
       {/* Title & URL details */}
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
           <p className="truncate text-sm font-semibold text-white group-hover:text-violet-200 transition-colors">
             {displayTitle}
           </p>
           {link.isPinned && (
-            <span className="shrink-0 rounded-md bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-amber-300 border border-amber-500/30">
-              ★ PINNED
+            <span className="shrink-0 rounded-md bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-amber-300 border border-amber-500/30 flex items-center gap-1">
+              <Pin className="h-2.5 w-2.5 fill-amber-300" />
+              <span>PINNED</span>
+            </span>
+          )}
+          {link.isSpotlight && (
+            <span className="shrink-0 rounded-md bg-amber-400/20 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-amber-200 border border-amber-400/40 animate-pulse flex items-center gap-1">
+              <Zap className="h-2.5 w-2.5" />
+              <span>SPOTLIGHT</span>
+            </span>
+          )}
+          {link.badge && (
+            <span className="shrink-0 rounded-md bg-pink-500/20 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-pink-300 border border-pink-500/30">
+              {link.badge}
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2 mt-0.5">
-          <p className="truncate text-xs text-zinc-400 font-mono max-w-[180px] sm:max-w-[320px]">
+        <div className="flex flex-wrap items-center gap-2 mt-1">
+          <p className="truncate text-xs text-zinc-400 font-mono max-w-[180px] sm:max-w-[280px]">
             {link.url}
           </p>
           <span className="shrink-0 rounded-full bg-white/5 px-2 py-0.2 text-[10px] font-medium uppercase tracking-wider text-zinc-400 border border-white/5">
             {link.type}
           </span>
+          {/* Real-Time Aggregate Click Counter */}
+          <span
+            className="shrink-0 rounded-full bg-violet-500/10 px-2 py-0.5 text-[10px] font-semibold text-violet-300 border border-violet-500/20 flex items-center gap-1"
+            title={`${clickCount} total clicks`}
+          >
+            <Flame className="h-3 w-3 text-orange-400 fill-orange-400" />
+            <span>{clickCount} {clickCount === 1 ? "click" : "clicks"}</span>
+          </span>
+          {/* Scheduling & Expiry Status */}
+          {link.scheduledAt && new Date(link.scheduledAt) > new Date() && (
+            <span className="shrink-0 rounded-md bg-blue-500/20 px-1.5 py-0.5 text-[10px] font-medium text-blue-300 border border-blue-500/30 flex items-center gap-1">
+              <Clock className="h-2.5 w-2.5" />
+              <span>Scheduled ({new Date(link.scheduledAt).toLocaleDateString()})</span>
+            </span>
+          )}
+          {link.expiresAt && (
+            new Date(link.expiresAt) < new Date() ? (
+              <span className="shrink-0 rounded-md bg-red-500/20 px-1.5 py-0.5 text-[10px] font-medium text-red-300 border border-red-500/30 flex items-center gap-1">
+                <AlertCircle className="h-2.5 w-2.5" />
+                <span>Expired</span>
+              </span>
+            ) : (
+              <span className="shrink-0 rounded-md bg-zinc-700/40 px-1.5 py-0.5 text-[10px] font-medium text-zinc-300 border border-zinc-600/30 flex items-center gap-1">
+                <Clock className="h-2.5 w-2.5" />
+                <span>Expires {new Date(link.expiresAt).toLocaleDateString()}</span>
+              </span>
+            )
+          )}
         </div>
       </div>
 
       {/* Action Toolbar */}
       <div className="flex items-center gap-1 ml-auto shrink-0">
+        {/* 1-Click Pin / Unpin */}
+        <button
+          type="button"
+          onClick={onTogglePin}
+          title={link.isPinned ? "Unpin link" : "Pin link to top"}
+          className={cn(
+            "rounded-xl p-2 transition-colors focus-ring",
+            link.isPinned
+              ? "text-amber-300 bg-amber-500/15 hover:bg-amber-500/25"
+              : "text-zinc-400 hover:bg-white/10 hover:text-white"
+          )}
+        >
+          <Pin className={cn("h-4 w-4", link.isPinned && "fill-amber-300")} />
+        </button>
+
         {/* Quick Fetch OG button for links without thumbnails */}
         {!link.thumbnailUrl && link.url.startsWith("http") && onFetchOg && (
           <button
@@ -560,6 +625,8 @@ export function LinksEditor({
           type: link.type || "link",
           size: link.size || "standard",
           thumbnailUrl: link.thumbnailUrl || null,
+          badge: link.badge || null,
+          isSpotlight: link.isSpotlight ?? false,
           isPinned: false,
         }),
       });
@@ -619,6 +686,8 @@ export function LinksEditor({
       isPinned: link.isPinned ?? false,
       scheduledAt: toDatetimeInputValue(link.scheduledAt),
       expiresAt: toDatetimeInputValue(link.expiresAt),
+      badge: link.badge || "",
+      isSpotlight: link.isSpotlight ?? false,
     });
 
     if (link.type === "upi" || link.url.startsWith("upi:")) {
@@ -661,6 +730,8 @@ export function LinksEditor({
     try {
       const payload = {
         ...form,
+        badge: form.badge.trim() ? form.badge.trim() : null,
+        isSpotlight: Boolean(form.isSpotlight),
         thumbnailUrl: form.thumbnailUrl.trim() ? form.thumbnailUrl.trim() : null,
         scheduledAt: form.scheduledAt.trim() ? form.scheduledAt : null,
         expiresAt: form.expiresAt.trim() ? form.expiresAt : null,
@@ -686,6 +757,21 @@ export function LinksEditor({
       toast.error((err as Error).message);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function togglePin(link: Link) {
+    const nextPinned = !link.isPinned;
+    setLinks((prev) => prev.map((l) => (l.id === link.id ? { ...l, isPinned: nextPinned } : l)));
+    try {
+      await api(`/api/links/${link.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ isPinned: nextPinned }),
+      });
+      toast.success(nextPinned ? "Link pinned to top!" : "Link unpinned");
+    } catch (err) {
+      setLinks((prev) => prev.map((l) => (l.id === link.id ? { ...l, isPinned: !nextPinned } : l)));
+      toast.error((err as Error).message);
     }
   }
 
@@ -900,6 +986,7 @@ export function LinksEditor({
                       onEdit={() => openEdit(link)}
                       onDelete={() => setConfirmDelete(link)}
                       onToggle={(active) => toggleActive(link, active)}
+                      onTogglePin={() => togglePin(link)}
                       onDuplicate={() => duplicateLink(link)}
                       onShowQr={() => setQrModalLink({ url: link.url, title: link.title })}
                       onZoomImage={(url, title) => setZoomImage({ url, title })}
@@ -1327,25 +1414,92 @@ export function LinksEditor({
               </div>
             )}
 
-            {/* Advanced Options: Pin + Schedule + Expiry */}
+            {/* Advanced Options: Pin + Spotlight + Badge + Schedule + Expiry */}
             <div className="sm:col-span-2 rounded-2xl border border-white/10 bg-white/[0.02] p-4 space-y-4">
               <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
-                Advanced Scheduling & Placement
+                Advanced Spotlight, Placement & Scheduling
               </p>
-              <label className="flex items-center gap-3 text-sm text-zinc-300 cursor-pointer">
-                <Switch
-                  checked={form.isPinned}
-                  onCheckedChange={(v) => setForm({ ...form, isPinned: v })}
-                  aria-label="Pin this link"
-                />
-                <span className="flex items-center gap-1.5">
-                  <Pin className="h-3.5 w-3.5 text-amber-400" />
-                  <span>Pin to Top (Featured Card)</span>
-                  <span className="text-xs text-zinc-500">(Always appears at top with ★ PIN badge)</span>
-                </span>
-              </label>
 
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="flex items-center gap-3 text-sm text-zinc-300 cursor-pointer p-2.5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
+                  <Switch
+                    checked={form.isPinned}
+                    onCheckedChange={(v) => setForm({ ...form, isPinned: v })}
+                    aria-label="Pin this link"
+                  />
+                  <div>
+                    <span className="flex items-center gap-1.5 font-medium">
+                      <Pin className="h-3.5 w-3.5 text-amber-400" />
+                      <span>Pin to Top</span>
+                    </span>
+                    <span className="text-[11px] text-zinc-500 block">Featured ★ PIN card at the top</span>
+                  </div>
+                </label>
+
+                <label className="flex items-center gap-3 text-sm text-zinc-300 cursor-pointer p-2.5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
+                  <Switch
+                    checked={form.isSpotlight}
+                    onCheckedChange={(v) => setForm({ ...form, isSpotlight: v })}
+                    aria-label="Spotlight glow"
+                  />
+                  <div>
+                    <span className="flex items-center gap-1.5 font-medium">
+                      <Zap className="h-3.5 w-3.5 text-amber-300" />
+                      <span>Spotlight Glow</span>
+                    </span>
+                    <span className="text-[11px] text-zinc-500 block">Pulsing glow & vibrant border</span>
+                  </div>
+                </label>
+              </div>
+
+              {/* Custom Badge Callout */}
+              <div className="space-y-1.5 pt-1 border-t border-white/5">
+                <Field label="Custom Spotlight Badge (Optional)" hint="e.g. 🔥 HOT, ⚡ NEW, 50% OFF, ⭐ MUST WATCH">
+                  <Input
+                    placeholder="e.g. 🔥 NEW DEAL"
+                    maxLength={30}
+                    value={form.badge}
+                    onChange={(e) => setForm({ ...form, badge: e.target.value })}
+                  />
+                </Field>
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span className="text-[11px] text-zinc-500 mr-1">Quick presets:</span>
+                  {[
+                    "🔥 HOT",
+                    "⚡ NEW",
+                    "⭐ FEATURED",
+                    "🎉 50% OFF",
+                    "🚀 LAUNCH",
+                    "💎 VIP",
+                    "⏱️ LIMITED",
+                  ].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => setForm((prev) => ({ ...prev, badge: preset }))}
+                      className={cn(
+                        "px-2 py-0.5 rounded-lg text-xs font-semibold border transition-all",
+                        form.badge === preset
+                          ? "border-violet-500 bg-violet-500/20 text-violet-200"
+                          : "border-white/10 bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10"
+                      )}
+                    >
+                      {preset}
+                    </button>
+                  ))}
+                  {form.badge && (
+                    <button
+                      type="button"
+                      onClick={() => setForm((prev) => ({ ...prev, badge: "" }))}
+                      className="px-2 py-0.5 rounded-lg text-xs text-zinc-500 hover:text-zinc-300"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2 pt-1 border-t border-white/5">
                 <Field label="Publish Date (Optional)" hint="Card appears only after this date">
                   <Input
                     type="datetime-local"

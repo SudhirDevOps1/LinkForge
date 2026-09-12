@@ -381,7 +381,19 @@ export function BioRenderer({
 }) {
   const theme = getTheme(profile.theme);
   const v = theme.vars;
-  const active = links.filter((l) => l.isActive);
+  const now = new Date();
+  const active = links
+    .filter((l) => {
+      if (!l.isActive) return false;
+      if (l.scheduledAt && new Date(l.scheduledAt) > now) return false;
+      if (l.expiresAt && new Date(l.expiresAt) <= now) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      return (a.position ?? 0) - (b.position ?? 0);
+    });
   const isBento = profile.layout === "bento";
 
   // Manual custom design — theme vars ke upar override (NULL = theme defaults)
@@ -1612,11 +1624,14 @@ export function BioRenderer({
             const effectiveThumbnail = getEffectiveThumbnail(link);
             const brandTheme = getBrandTheme(link, accent);
             const domain = getLinkDomain(link.url);
+            const spotlightClass = link.isSpotlight
+              ? "ring-2 ring-violet-400/80 shadow-[0_0_25px_rgba(139,92,246,0.35)] animate-pulse-subtle"
+              : "";
 
             return (
               <div
                 key={link.id}
-                className={`group relative overflow-hidden flex flex-col justify-center border p-4 ${activeHoverClass} ${spanClass(link.size)} ${entranceClass} ${attentionClass}`}
+                className={`group relative overflow-hidden flex flex-col justify-center border p-4 ${activeHoverClass} ${spanClass(link.size)} ${entranceClass} ${attentionClass} ${spotlightClass}`}
                 style={{
                   ...cardStyleFor(false),
                   animationDelay: `${idx * staggerMs}ms`,
@@ -1640,6 +1655,27 @@ export function BioRenderer({
                   }
                 }}
               >
+                {/* 🌟 Custom Spotlight Badge or Pinned Ribbon */}
+                {link.badge && (
+                  <div className={`absolute z-10 flex items-center pointer-events-none ${effectiveThumbnail && mediaType !== "image" ? "top-2.5 left-2.5" : "top-2.5 right-2.5"}`}>
+                    <span
+                      className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase shadow-xl backdrop-blur-md border border-white/25 text-white"
+                      style={{
+                        background: `linear-gradient(135deg, ${accent}, #ec4899)`,
+                      }}
+                    >
+                      {link.badge}
+                    </span>
+                  </div>
+                )}
+                {!link.badge && link.isPinned && (
+                  <div className={`absolute z-10 flex items-center pointer-events-none ${effectiveThumbnail && mediaType !== "image" ? "top-2.5 left-2.5" : "top-2.5 right-2.5"}`}>
+                    <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase shadow-md backdrop-blur-md bg-amber-500/25 text-amber-300 border border-amber-500/35">
+                      <Star className="w-2.5 h-2.5 fill-amber-300" />
+                      <span>FEATURED</span>
+                    </span>
+                  </div>
+                )}
                 {isShimmer && (
                   <div
                     className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_3s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent"

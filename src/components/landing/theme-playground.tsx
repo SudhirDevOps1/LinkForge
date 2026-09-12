@@ -22,6 +22,8 @@ function sampleLink(partial: Partial<Link> & { title: string; url: string }): Li
     isActive: true,
     thumbnailUrl: null,
     isPinned: false,
+    badge: null,
+    isSpotlight: false,
     scheduledAt: null,
     expiresAt: null,
     createdAt: new Date(),

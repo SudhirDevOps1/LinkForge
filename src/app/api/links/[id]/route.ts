@@ -27,7 +27,7 @@ export const PATCH = handle(async (req: Request, ctx: Ctx) => {
         const d = new Date(value as string | number);
         patch[key] = isNaN(d.getTime()) ? null : d;
       }
-    } else if (key === "thumbnailUrl") {
+    } else if (key === "thumbnailUrl" || key === "badge") {
       patch[key] = value === "" || value === null ? null : value;
     } else {
       patch[key] = value;

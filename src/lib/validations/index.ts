@@ -187,8 +187,10 @@ export const linkCreateSchema = z.object({
   type: z.enum(LINK_TYPES).optional().default("link"),
   size: z.enum(LINK_SIZES).optional().default("standard"),
   thumbnailUrl: z.union([urlSchema, z.literal(""), z.null()]).optional(),
-  // 📌 Pin / 🗓️ Schedule / ⏰ Expiry
+  // 📌 Pin / 🗓️ Schedule / ⏰ Expiry / 🏷️ Spotlight Badge
   isPinned: z.boolean().optional().default(false),
+  badge: z.string().trim().max(40).transform((v) => sanitizeText(v)).nullable().optional(),
+  isSpotlight: z.boolean().optional().default(false),
   scheduledAt: z.string().nullable().optional(), // ISO date string
   expiresAt: z.string().nullable().optional(),   // ISO date string
 });

@@ -1,9 +1,9 @@
 // 🔗 Dashboard — Links editor page (server data → client editor)
-import { asc, eq } from "drizzle-orm";
+import { and, asc, count, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { LinksEditor } from "@/components/links-editor";
 import { db } from "@/db";
-import { links } from "@/db/schema";
+import { events, links } from "@/db/schema";
 import { getSessionUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +20,30 @@ export default async function LinksPage() {
     .where(eq(links.profileId, profile.id))
     .orderBy(asc(links.position));
 
+  // Query clicks count per link
+  const clicksMap = new Map<string, number>();
+  try {
+    const clickCounts = await db
+      .select({
+        linkId: events.linkId,
+        clicks: count(),
+      })
+      .from(events)
+      .where(and(eq(events.profileId, profile.id), eq(events.type, "click")))
+      .groupBy(events.linkId);
+
+    for (const c of clickCounts) {
+      if (c.linkId) clicksMap.set(c.linkId, Number(c.clicks));
+    }
+  } catch {
+    // Graceful fallback
+  }
+
+  const enrichedLinks = profileLinks.map((l) => ({
+    ...l,
+    clicks: clicksMap.get(l.id) ?? 0,
+  }));
+
   return (
     <LinksEditor
       profile={{
@@ -29,7 +53,7 @@ export default async function LinksPage() {
         theme: profile.theme,
         layout: profile.layout,
       }}
-      initialLinks={profileLinks}
+      initialLinks={enrichedLinks}
     />
   );
 }
